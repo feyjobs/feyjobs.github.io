@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="查看数据库表占用空间查看数据库占用空间12345SELECT CONCAT(TRUNCATE(SUM(data_length)/1024/1024,2),&apos;MB&apos;) AS data_size,CONCAT(TRUNCATE(SUM(max_data_length)/1024/1024,2),&apos;MB&apos;) AS max_data_size,CONCAT(TRUNCATE(SUM(data_free)/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据库">
+<meta property="og:url" content="http://yoursite.com/2017/09/19/数据库/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="查看数据库表占用空间查看数据库占用空间12345SELECT CONCAT(TRUNCATE(SUM(data_length)/1024/1024,2),&apos;MB&apos;) AS data_size,CONCAT(TRUNCATE(SUM(max_data_length)/1024/1024,2),&apos;MB&apos;) AS max_data_size,CONCAT(TRUNCATE(SUM(data_free)/">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://yoursite.com/uploads/sql.png">
+<meta property="og:image" content="http://yoursite.com/uploads/sql_no_index.png">
+<meta property="og:updated_time" content="2018-12-26T04:05:09.414Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据库">
+<meta name="twitter:description" content="查看数据库表占用空间查看数据库占用空间12345SELECT CONCAT(TRUNCATE(SUM(data_length)/1024/1024,2),&apos;MB&apos;) AS data_size,CONCAT(TRUNCATE(SUM(max_data_length)/1024/1024,2),&apos;MB&apos;) AS max_data_size,CONCAT(TRUNCATE(SUM(data_free)/">
+<meta name="twitter:image" content="http://yoursite.com/uploads/sql.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/09/19/数据库/">
+
+
+
+
+
+  <title>数据库 | Hexo</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/19/数据库/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">数据库</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-09-19T11:00:00+08:00">
+                2017-09-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="查看数据库表占用空间"><a href="#查看数据库表占用空间" class="headerlink" title="查看数据库表占用空间"></a>查看数据库表占用空间</h2><h3 id="查看数据库占用空间"><a href="#查看数据库占用空间" class="headerlink" title="查看数据库占用空间"></a>查看数据库占用空间</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(max_data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> max_data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_free)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_free,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(index_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> index_size</span><br><span class="line"><span class="keyword">FROM</span> information_schema.tables <span class="keyword">WHERE</span> TABLE_SCHEMA = <span class="string">''</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="查看表占用空间"><a href="#查看表占用空间" class="headerlink" title="查看表占用空间"></a>查看表占用空间</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(max_data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> max_data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_free)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_free,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(index_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> index_size</span><br><span class="line"><span class="keyword">FROM</span> information_schema.tables <span class="keyword">WHERE</span> TABLE_NAME = <span class="string">'表名'</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="向数据库中存储json字符串"><a href="#向数据库中存储json字符串" class="headerlink" title="向数据库中存储json字符串"></a>向数据库中存储json字符串</h3><p>注意需要向字符串两边加上’’</p>
+<h3 id="Mysql-information-schema数据库表"><a href="#Mysql-information-schema数据库表" class="headerlink" title="Mysql information_schema数据库表"></a>Mysql information_schema数据库表</h3><p>Mysql的INFORMATION_SCHEMA数据库包含了一些表和视图，提供了访问数据库元数据的方式。<br>元数据是关于数据的数据，如数据库名或表名，列的数据类型，或访问权限等。有些时候用于表述该信息的其他术语包括“数据词典”和“系统目录”。</p>
+<p><strong>SCHEMATA表</strong>：提供了当前mysql实例中所有数据库的信息。是show databases的结果取之此表。</p>
+<p><strong>TABLES表</strong>：提供了关于数据库中的表的信息（包括视图）。详细表述了某个表属于哪个schema，表类型，表引擎，创建时间等信息。是show tables from schemaname的结果取之此表。</p>
+<p><strong>COLUMNS表</strong>：提供了表中的列信息。详细表述了某张表的所有列以及每个列的信息。是show columns from schemaname.tablename的结果取之此表。</p>
+<p><strong>STATISTICS表</strong>：提供了关于表索引的信息。是show index from schemaname.tablename的结果取之此表。</p>
+<p><strong>USER_PRIVILEGES（用户权限）表</strong>：给出了关于全程权限的信息。该信息源自mysql.user授权表。是非标准表。</p>
+<p><strong>SCHEMA_PRIVILEGES（方案权限）表</strong>：给出了关于方案（数据库）权限的信息。该信息来自mysql.db授权表。是非标准表。</p>
+<p><strong>TABLE_PRIVILEGES（表权限）表</strong>：给出了关于表权限的信息。该信息源自mysql.tables_priv授权表。是非标准表。</p>
+<p><strong>COLUMN_PRIVILEGES（列权限）表</strong>：给出了关于列权限的信息。该信息源自mysql.columns_priv授权表。是非标准表。</p>
+<p><strong>CHARACTER_SETS（字符集）表</strong>：提供了mysql实例可用字符集的信息。是SHOW CHARACTER SET结果集取之此表。</p>
+<p><strong>COLLATIONS表</strong>：提供了关于各字符集的对照信息。</p>
+<p><strong>COLLATION_CHARACTER_SET_APPLICABILITY表</strong>：指明了可用于校对的字符集。这些列等效于SHOW COLLATION的前两个显示字段。</p>
+<p><strong>TABLE_CONSTRAINTS表</strong>：描述了存在约束的表。以及表的约束类型。</p>
+<p><strong>KEY_COLUMN_USAGE表</strong>：描述了具有约束的键列。</p>
+<p><strong>ROUTINES表</strong>：提供了关于存储子程序（存储程序和函数）的信息。此时，ROUTINES表不包含自定义函数（UDF）。名为“mysql.proc name”的列指明了对应于INFORMATION_SCHEMA.ROUTINES表的mysql.proc表列。</p>
+<p><strong>VIEWS表</strong>：给出了关于数据库中的视图的信息。需要有show views权限，否则无法查看视图信息。</p>
+<p><strong>TRIGGERS表</strong>：提供了关于触发程序的信息。必须有super权限才能查看该表</p>
+<h3 id="mysql锁机制"><a href="#mysql锁机制" class="headerlink" title="mysql锁机制"></a>mysql锁机制</h3><h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><table>
+<thead>
+<tr>
+<th style="text-align:left">锁</th>
+<th style="text-align:left">存储引擎代表</th>
+<th style="text-align:right">开销</th>
+<th style="text-align:right">加锁速度</th>
+<th style="text-align:right">死锁</th>
+<th style="text-align:right">粒度</th>
+<th style="text-align:right">并发性能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">表级锁</td>
+<td style="text-align:left">MyISAM</td>
+<td style="text-align:right">小</td>
+<td style="text-align:right">快</td>
+<td style="text-align:right">无死锁</td>
+<td style="text-align:right">粒度大</td>
+<td style="text-align:right">发生冲突概率最高并发度最低</td>
+</tr>
+<tr>
+<td style="text-align:left">行级锁</td>
+<td style="text-align:left">innoDB</td>
+<td style="text-align:right">大</td>
+<td style="text-align:right">慢</td>
+<td style="text-align:right">有死锁</td>
+<td style="text-align:right">粒度最小</td>
+<td style="text-align:right">发生冲突概率最低并发度最高</td>
+</tr>
+<tr>
+<td style="text-align:left">页面锁</td>
+<td style="text-align:left">BDB</td>
+<td style="text-align:right">中</td>
+<td style="text-align:right">中</td>
+<td style="text-align:right">有死锁</td>
+<td style="text-align:right">粒度中</td>
+<td style="text-align:right">发生冲突概率中并发度中</td>
+</tr>
+</tbody>
+</table>
+<h4 id="innoDB"><a href="#innoDB" class="headerlink" title="innoDB"></a>innoDB</h4><h2 id="索引效率实践"><a href="#索引效率实践" class="headerlink" title="索引效率实践"></a>索引效率实践</h2><h3 id="表结构"><a href="#表结构" class="headerlink" title="表结构"></a>表结构</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`fact_baoguang_detail`</span> (</span><br><span class="line">   <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">   <span class="string">`wid`</span> <span class="built_in">varchar</span>(<span class="number">32</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">   <span class="string">`index_day`</span> <span class="built_in">int</span>(<span class="number">8</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'统计日期'</span>,</span><br><span class="line">   <span class="string">`statistic_interval`</span> <span class="built_in">int</span>(<span class="number">8</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'统计区间'</span>,</span><br><span class="line">   <span class="string">`baoguang_uv`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'曝光人数'</span>,</span><br><span class="line">   <span class="string">`home`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'主页曝光人数'</span>,</span><br><span class="line">   <span class="string">`shoplist`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'店铺列表曝光人数'</span>,</span><br><span class="line">   <span class="string">`orderlist`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'订单列表'</span>,</span><br><span class="line">   <span class="string">`searchresult`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'搜索结果'</span>,</span><br><span class="line">   <span class="string">`qita`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'其他'</span>,</span><br><span class="line">   <span class="string">`liushi_user_num`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'流失人数'</span>,</span><br><span class="line">   <span class="string">`liushi_top5`</span> <span class="built_in">varchar</span>(<span class="number">200</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'流失去向'</span>,</span><br><span class="line">   PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line">   <span class="keyword">KEY</span> <span class="string">`wid_indexday_interval`</span> (<span class="string">`wid`</span>,<span class="string">`index_day`</span>,<span class="string">`statistic_interval`</span>)</span><br><span class="line"> ) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">13825589</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8 <span class="keyword">COMMENT</span>=<span class="string">'商户曝光详细信息'</span></span><br></pre></td></tr></table></figure>
+<p>运行sql<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> </span><br><span class="line">baoguang_uv baoguang_user_num, home, shoplist, orderlist, searchresult, qita, liushi_user_num baoguang_liushi_user_num </span><br><span class="line"><span class="keyword">FROM</span> fact_baoguang_detail </span><br><span class="line"><span class="keyword">WHERE</span> (wid=  <span class="string">'1541585876'</span>) <span class="keyword">AND</span> (statistic_interval=  <span class="string">'1'</span>) <span class="keyword">AND</span> (index_day=  <span class="string">'20170910'</span>)</span><br></pre></td></tr></table></figure></p>
+<p>耗时 47ms</p>
+<p>explain一下<br><img src="/uploads/sql.png" alt="explain"><br>可以看到完美命中,索引检索结果只需要一行数据</p>
+<p>如果去掉索引呢<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> <span class="string">`gaohao_b_da_waimai`</span>.<span class="string">`fact_baoguang_detail`</span> </span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">INDEX</span> <span class="string">`wid_indexday_interval`</span> ;</span><br></pre></td></tr></table></figure></p>
+<p>同样运行了上一句sql</p>
+<p>耗时 969ms相差20倍左右</p>
+<p>explain 看一下<br><img src="/uploads/sql_no_index.png" alt="explain"><br>可以看到扫全表 195w加条记录</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/12/Linux/" rel="next" title="Linux系统">
+                <i class="fa fa-chevron-left"></i> Linux系统
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/20/log/" rel="prev" title="log">
+                log <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">John Doe</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#查看数据库表占用空间"><span class="nav-number">1.</span> <span class="nav-text">查看数据库表占用空间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#查看数据库占用空间"><span class="nav-number">1.1.</span> <span class="nav-text">查看数据库占用空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#查看表占用空间"><span class="nav-number">1.2.</span> <span class="nav-text">查看表占用空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#向数据库中存储json字符串"><span class="nav-number">1.3.</span> <span class="nav-text">向数据库中存储json字符串</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mysql-information-schema数据库表"><span class="nav-number">1.4.</span> <span class="nav-text">Mysql information_schema数据库表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mysql锁机制"><span class="nav-number">1.5.</span> <span class="nav-text">mysql锁机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#简介"><span class="nav-number">1.5.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#innoDB"><span class="nav-number">1.5.2.</span> <span class="nav-text">innoDB</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#索引效率实践"><span class="nav-number">2.</span> <span class="nav-text">索引效率实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#表结构"><span class="nav-number">2.1.</span> <span class="nav-text">表结构</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

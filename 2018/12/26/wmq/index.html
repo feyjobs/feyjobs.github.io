@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="[TOC]WMQ代码解读 背景WMQ由三部分构成：Proxy、Kafka、Pusher。 Proxy负责生产消息，将消息存储到Kafka中。 Kafka负责持久化消息。 Pusher负责从Kafka取消息，将消息发送消费者。 涉及两个开源库：  sarama：kafka SDK kazoo：zookeeper SD K  Proxy开HTTP服务，回调messageHandler。 流程：  读取">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/2018/12/26/wmq/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="[TOC]WMQ代码解读 背景WMQ由三部分构成：Proxy、Kafka、Pusher。 Proxy负责生产消息，将消息存储到Kafka中。 Kafka负责持久化消息。 Pusher负责从Kafka取消息，将消息发送消费者。 涉及两个开源库：  sarama：kafka SDK kazoo：zookeeper SD K  Proxy开HTTP服务，回调messageHandler。 流程：  读取">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-12-26T04:12:05.537Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="[TOC]WMQ代码解读 背景WMQ由三部分构成：Proxy、Kafka、Pusher。 Proxy负责生产消息，将消息存储到Kafka中。 Kafka负责持久化消息。 Pusher负责从Kafka取消息，将消息发送消费者。 涉及两个开源库：  sarama：kafka SDK kazoo：zookeeper SD K  Proxy开HTTP服务，回调messageHandler。 流程：  读取">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/12/26/wmq/">
+
+
+
+
+
+  <title> | Hexo</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/26/wmq/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-26T12:12:05+08:00">
+                2018-12-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>[TOC]<br>WMQ代码解读</p>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>WMQ由三部分构成：Proxy、Kafka、Pusher。</p>
+<p>Proxy负责生产消息，将消息存储到Kafka中。</p>
+<p>Kafka负责持久化消息。</p>
+<p>Pusher负责从Kafka取消息，将消息发送消费者。</p>
+<p>涉及两个开源库：</p>
+<ul>
+<li>sarama：kafka SDK</li>
+<li>kazoo：zookeeper SD</li>
+<li>K</li>
+</ul>
+<h1 id="Proxy"><a href="#Proxy" class="headerlink" title="Proxy"></a>Proxy</h1><p>开HTTP服务，回调messageHandler。</p>
+<p>流程：</p>
+<ol>
+<li>读取Request</li>
+<li>构造sarama消息msg</li>
+<li>过滤器（白名单）</li>
+<li>同步发送到Kafka</li>
+<li>或者异步发送到Kafka</li>
+</ol>
+<h1 id="Pusher"><a href="#Pusher" class="headerlink" title="Pusher"></a>Pusher</h1><p>Pusher中最小的配置单元为consumerGroup。</p>
+<p>每个consumerGroup创建了一个haulerManager。</p>
+<p>haulerManager执行generateHaulers，获取topic全部的partitions。</p>
+<p>每个partition创建一个Hauler。</p>
+<p>在Hauler中初始化sarama，并初始化OffsetManager，由OffsetManager监听offsetCh进行offset提交。</p>
+<p>根据Type（PUSH or PULL）进入Loop。</p>
+<ul>
+<li>在PUSH模式中</li>
+</ul>
+<ol>
+<li>根据windows配置初始化相当数量的bearers。</li>
+<li>通过sarama接口sarama.PartitionConsumer.Messages获取一条kafka消息。</li>
+<li>将消息发送到bearer的channel中。</li>
+<li>之前初始化bearer时，已经开了协程接收msg，收到之后将msg打包HTTP发送给消费者。</li>
+<li>提交offset。</li>
+</ol>
+<ul>
+<li>在PULL模式中</li>
+</ul>
+<ol>
+<li>在main函数中开HTTP服务，拉取消息回调messageHandler。</li>
+<li>在messageHandler中，将msgReq发送给PullCh拉取消息。</li>
+<li>Hauler获取PullCh拉取消息后，发送到request.Messages。</li>
+<li>messageHandler取得request.Messages返回消费者。</li>
+</ol>
+<p>group.topic =&gt; hauler manager =&gt; loop generateHaulers =&gt; newHauler =&gt; loop</p>
+<p>Channel：<br>    probe<br>    skipCh<br>    markCh<br>    statusCh<br>    offsetCh<br>    event<br>    rbsignal</p>
+<p>Coroutine：<br>    go m.loop()<br>    go hauler.loop()<br>    go bearer.start()<br>    go om.loop()</p>
+<h1 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h1><h2 id="SKIP命令"><a href="#SKIP命令" class="headerlink" title="SKIP命令"></a>SKIP命令</h2><h2 id="MARK命令"><a href="#MARK命令" class="headerlink" title="MARK命令"></a>MARK命令</h2><h2 id="STATUS命令"><a href="#STATUS命令" class="headerlink" title="STATUS命令"></a>STATUS命令</h2><h2 id="重新入队"><a href="#重新入队" class="headerlink" title="重新入队"></a>重新入队</h2><h2 id="延时消息"><a href="#延时消息" class="headerlink" title="延时消息"></a>延时消息</h2><h1 id="FAQ"><a href="#FAQ" class="headerlink" title="FAQ"></a>FAQ</h1><ul>
+<li>两次req.Body.Close()，其实应该0次</li>
+<li>PROXY的ZK、异常处理。</li>
+<li>Huskar注册时机</li>
+<li>平滑重启</li>
+<li>文档配置不全啊大哥</li>
+<li><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//compute hash key</span><br><span class="line">index := int32(h.hash.Sum32()) % int32(h.conf.Window)</span><br><span class="line">if index &lt; 0 &#123;</span><br><span class="line">    index = -index</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>partConsumer怎么用</p>
+</li>
+<li>PULL模式缓存消息</li>
+<li>TODO</li>
+<li>Rebalance</li>
+<li>prob怎么触发</li>
+<li>proxy的newDispatcher怎么回事</li>
+<li>配置热加载</li>
+<li>水平扩展</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/19/nginx_shm/" rel="next" title="nginx_shm">
+                <i class="fa fa-chevron-left"></i> nginx_shm
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">John Doe</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Proxy"><span class="nav-number">2.</span> <span class="nav-text">Proxy</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Pusher"><span class="nav-number">3.</span> <span class="nav-text">Pusher</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#特性"><span class="nav-number">4.</span> <span class="nav-text">特性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SKIP命令"><span class="nav-number">4.1.</span> <span class="nav-text">SKIP命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MARK命令"><span class="nav-number">4.2.</span> <span class="nav-text">MARK命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#STATUS命令"><span class="nav-number">4.3.</span> <span class="nav-text">STATUS命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重新入队"><span class="nav-number">4.4.</span> <span class="nav-text">重新入队</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#延时消息"><span class="nav-number">4.5.</span> <span class="nav-text">延时消息</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#FAQ"><span class="nav-number">5.</span> <span class="nav-text">FAQ</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
