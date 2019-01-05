@@ -50,19 +50,19 @@
 
 <link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
 
-<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css">
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
 
 
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=5.1.3">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
 
 
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=5.1.3">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
 
 
-  <link rel="icon" type="image/png" sizes="16x16" href="/uploads/favicon.ico?v=5.1.3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/uploads/favicon.ico?v=5.1.4">
 
 
-  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
 
 
 
@@ -79,13 +79,16 @@
 
 
 
+<meta name="description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Capo">
+<meta property="og:title" content="清风">
 <meta property="og:url" content="http://yoursite.com/categories/Tool/index.html">
-<meta property="og:site_name" content="Capo">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 <meta property="og:locale" content="zh-Hans">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Capo">
+<meta name="twitter:title" content="清风">
+<meta name="twitter:description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 
 
 
@@ -94,11 +97,9 @@
   var CONFIG = {
     root: '/',
     scheme: 'Gemini',
-    version: '5.1.3',
+    version: '5.1.4',
     sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
     fancybox: true,
-    fastclick: ,
-    lazyload: ,
     tabs: true,
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
     duoshuo: {
@@ -123,7 +124,7 @@
 
 
 
-  <title>分类: Tool | Capo</title>
+  <title>分类: Tool | 清风</title>
   
 
 
@@ -146,19 +147,19 @@
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"> <div class="site-brand-wrapper">
+      <div class="header-inner"><div class="site-brand-wrapper">
   <div class="site-meta ">
     
 
     <div class="custom-logo-site-title">
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Capo</span>
+        <span class="site-title">清风</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
       
-        <p class="site-subtitle"></p>
+        <p class="site-subtitle">乱翻书</p>
       
   </div>
 
@@ -181,95 +182,59 @@
         <li class="menu-item menu-item-home">
           <a href="/" rel="section">
             
-
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
             
-              首页
-            
-
+            首页
           </a>
         </li>
       
         
-        <li class="menu-item menu-item-reading">
-          <a href="/Reading/" rel="section">
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
             
-
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
             
-              Reading
-            
-
+            code
           </a>
         </li>
       
         
-        <li class="menu-item menu-item-thinking">
-          <a href="/Thinking/" rel="section">
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
             
-
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
             
-              Thinking
-            
-
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-coding">
-          <a href="/Coding/" rel="section">
-            
-
-            
-              Coding
-            
-
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-gym">
-          <a href="/gym/" rel="section">
-            
-
-            
-              gym
-            
-
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-machine-learning">
-          <a href="/machine-learning/" rel="section">
-            
-
-            
-              machine-learning
-            
-
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-love">
-          <a href="/love/" rel="section">
-            
-
-            
-              love
-            
-
+            game
           </a>
         </li>
       
         
         <li class="menu-item menu-item-guitar">
-          <a href="/Guitar/" rel="section">
+          <a href="/Guitar" rel="section">
             
-
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
             
-              Guitar
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
             
-
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
           </a>
         </li>
       
@@ -277,11 +242,9 @@
         <li class="menu-item menu-item-archives">
           <a href="/archives/" rel="section">
             
-
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
             
-              归档
-            
-
+            归档
           </a>
         </li>
       
@@ -412,10 +375,45 @@
               <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
             
               <p class="site-author-name" itemprop="name">feyjobs</p>
-              <p class="site-description motion-element" itemprop="description"></p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
           </div>
 
-          
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
 
           
 
@@ -446,13 +444,11 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
   <span class="author" itemprop="copyrightHolder">feyjobs</span>
-
-  
 
   
 </div>
@@ -466,7 +462,7 @@
 
 
 
-  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/theme-next/hexo-theme-next">NexT.Gemini</a> v5.1.3</div>
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
 
 
 
@@ -510,13 +506,7 @@
 
 
 
-
-
-
   
-
-
-
 
 
 
@@ -532,6 +522,16 @@
   
   
     <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
   
 
   
@@ -553,28 +553,28 @@
   
 
 
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
 
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
-
-
-
-  
-  
-
-
-  <script type="text/javascript" src="/js/src/affix.js?v=5.1.3"></script>
-
-  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
 
 
 
   
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
 
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
 
 
 
