@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/uploads/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="基础packageGo引入包,可以通过路径引入,包名为路径最后元素123import (    &quot;math/rand&quot;  //包名为rand 调用方法为rand.xxxxx)  package内变量,只有以首字母开头才能在包外被读取123456import (    &amp;quot;math&amp;quot;)pi:=math.Pi//a :=math.pi 无法访问 报错 Functionsgo鬼畜的函数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go">
+<meta property="og:url" content="http://yoursite.com/2018/04/01/linux/Go/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="基础packageGo引入包,可以通过路径引入,包名为路径最后元素123import (    &quot;math/rand&quot;  //包名为rand 调用方法为rand.xxxxx)  package内变量,只有以首字母开头才能在包外被读取123456import (    &amp;quot;math&amp;quot;)pi:=math.Pi//a :=math.pi 无法访问 报错 Functionsgo鬼畜的函数">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-01-16T02:56:49.422Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Go">
+<meta name="twitter:description" content="基础packageGo引入包,可以通过路径引入,包名为路径最后元素123import (    &quot;math/rand&quot;  //包名为rand 调用方法为rand.xxxxx)  package内变量,只有以首字母开头才能在包外被读取123456import (    &amp;quot;math&amp;quot;)pi:=math.Pi//a :=math.pi 无法访问 报错 Functionsgo鬼畜的函数">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/04/01/linux/Go/">
+
+
+
+
+
+  <title>Go | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/01/linux/Go/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Go</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-01T22:56:00+08:00">
+                2018-04-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h1><h2 id="package"><a href="#package" class="headerlink" title="package"></a>package</h2><p>Go引入包,可以通过路径引入,包名为路径最后元素<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"math/rand"</span>  <span class="comment">//包名为rand 调用方法为rand.xxxxx</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>package内变量,只有以首字母开头才能在包外被读取<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">import (</span><br><span class="line">    &quot;math&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">pi:=math.Pi</span><br><span class="line">//a :=math.pi 无法访问 报错</span><br></pre></td></tr></table></figure></p>
+<h2 id="Functions"><a href="#Functions" class="headerlink" title="Functions"></a>Functions</h2><p>go鬼畜的函数申明方式<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">func_name</span><span class="params">(argu1,argu2 type1,argu3,argu4 type2)</span> <span class="title">type3</span></span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>go函数返回能返回好多东西,这个貌似不错,不用天天造数组了<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">love</span><span class="params">()</span> <span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>,<span class="number">21</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">a,b := love()</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>go函数返回值能在函数声明中预定义,并且在函数中直接使用,如果在return语句中没有带上返回值,则默认返回声明的变量.<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">love</span><span class="params">(a,b <span class="keyword">int</span>)</span><span class="params">(x,y <span class="keyword">int</span>)</span></span>&#123;</span><br><span class="line">    x=a</span><br><span class="line">    y=b</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><p>var关键词定义变量,可以在package级别也可以在func级别</p>
+<hr>
+<p>在函数内部,可以使用<strong>:=</strong>关键词,隐式申明一个变量,此时变量类型可以不用申明,根据传的值来确定<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">love</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a := <span class="number">2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是注意在函数外部,任何变量都需要有var,func等关键词申明,否则编译不会通过</p>
+<hr>
+<p>基本类型:<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span>  <span class="keyword">int8</span>  <span class="keyword">int16</span>  <span class="keyword">int32</span>  <span class="keyword">int64</span></span><br><span class="line"><span class="keyword">uint</span> <span class="keyword">uint8</span> <span class="keyword">uint16</span> <span class="keyword">uint32</span> <span class="keyword">uint64</span> <span class="keyword">uintptr</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">byte</span> <span class="comment">// alias for uint8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">rune</span> <span class="comment">// alias for int32</span></span><br><span class="line">     <span class="comment">// represents a Unicode code point</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">float32</span> <span class="keyword">float64</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">complex64</span> <span class="keyword">complex128</span></span><br></pre></td></tr></table></figure></p>
+<p>类似import引入一般,var也可以用()将申明的变量括起来<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	ToBe   <span class="keyword">bool</span>       = <span class="literal">false</span></span><br><span class="line">	MaxInt <span class="keyword">uint64</span>     = <span class="number">1</span>&lt;&lt;<span class="number">64</span> - <span class="number">1</span></span><br><span class="line">	z      <span class="keyword">complex128</span> = cmplx.Sqrt(<span class="number">-5</span> + <span class="number">12i</span>)</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p>如果var申明变量没有被初始化,那么变量会更具类型,设置一个初值</p>
+<blockquote>
+<p>0 for numeric types,<br>false for the boolean type, and<br>“” (the empty string) for strings.</p>
+</blockquote>
+<hr>
+<p>类型转化<br>type(value)即可<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a float = float(b)</span><br><span class="line">d := float(c)</span><br></pre></td></tr></table></figure></p>
+<p>和C语言不同,go在进行类型转化时,不需要进行显示类型申明<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var a = float(b)</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>通过 := 或者说 var方式未进行类型定义的变量,他们的类型值都是通过,右边的值得类型,或者<br>说右边返回值的类型来进行确定的</p>
+<hr>
+<p>const变量</p>
+<ul>
+<li>使用const变量申明</li>
+<li>const变量无法使用:=操作符申明</li>
+<li>const变量类型可以是数字,字符串<h1 id="控制"><a href="#控制" class="headerlink" title="控制"></a>控制</h1><h2 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> init;boolean;post&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>和其他语言没啥区别,for后面没有()把初始值,和判断条件等框起来,{}是必须的<br>init和post是可以木有滴,把init和post都去掉<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> <span class="keyword">bool</span> &#123;</span><br><span class="line">xxx</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>就和其他语言的while循环一样一样的了<br>boolean也是可以木有滴,写个死循环就是easy<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="条件"><a href="#条件" class="headerlink" title="条件"></a>条件</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> statment;<span class="keyword">bool</span> &#123;</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>和for一样,条件判断不需要(),但是{}是必须的<br>statment申明的变量的作用范围在if,以及该if对应的else作用范围内</p>
+<h3 id="switch"><a href="#switch" class="headerlink" title="switch"></a>switch</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> statment;vari&#123;</span><br><span class="line">	<span class="keyword">case</span> xx:</span><br><span class="line">		xxx</span><br><span class="line">	<span class="keyword">case</span> xxx:</span><br><span class="line">		xx</span><br><span class="line">	<span class="keyword">default</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>switch case和其他语言一样,但是不需要在每个case后面加break nice,从上往下匹配,只要有一个case匹配上了就匹配完成</p>
+<p>switch后不加条件默认跟true,可以极大方便简化很多if else语句</p>
+<h3 id="defer"><a href="#defer" class="headerlink" title="defer"></a>defer</h3><p>指向一个函数,该函数会在,该声明所在的代码块执行完之后执行<br>defer函数多次声明,为stack关系,先入函数后执行</p>
+<h2 id="高级数据结构"><a href="#高级数据结构" class="headerlink" title="高级数据结构"></a>高级数据结构</h2><h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>和C语言一样,指针指向一个值得内存地址<br>和C语言一样,&amp;操作符获取一个值得内存地址<br>和C语言一样,*操作符获取某个指针指向的内存的内容<br>和C语言<strong>不一样</strong>,Go指针不支持计算</p>
+<h3 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h3><p>声明方式<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> name <span class="keyword">struct</span>&#123;</span><br><span class="line">    vari   type1</span><br><span class="line">    vari2   type2</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结构体访问方式和C语言一样,<strong>.</strong>访问<br>name.vari例如</p>
+<p>那么结构体指针怎么访问其中的变量呢?<br>v为结构体<br>p := &amp;v<br>(*p).avri可以访问<br>那么可不可以p-&gt;vari呢,<strong>不可以</strong>,Go没有这个选项!,但是可以直接通过指针+.符号访问变量<br><strong>p.vari</strong>稳妥</p>
+<hr>
+<p>初始化方式<br>var (<br>    v1 = name()<br>    v2 = name(vari:x,vari:y)<br>    v3 = name()<br>    v4 = &amp;name(1,2)<br>)</p>
+<h3 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h3><p>声明方式<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> name [size]tye</span><br></pre></td></tr></table></figure></p>
+<p>初始化方式<br>申明后一个一个赋值<br>或者<br>name := [size]type{xx,xx,xx,xx}大括号里元素数量可以和size不一致会用默认类型初始化</p>
+<h3 id="slice"><a href="#slice" class="headerlink" title="slice"></a>slice</h3><p>slice是可以视为一个数组的动态视图，在实际使用中比数组来的更加实用<br>数组方法声明&amp;&amp;初始化方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a []T = array[low:high]</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><strong>注意,low,high都是数组下标，而且l包含low，不包含high 真撒比</strong></li>
+<li>low,high在初始化的时候都可以不填，都会默认上下届<blockquote>
+<p>slice不存储任何数据，slice仅仅是一个数组的视图，你对slice所做的任何修改都会造成数组的修改，以及相对应的该数组其他slice元素的修改</p>
+</blockquote>
+</li>
+</ul>
+<p>自定义声明&amp;&amp;初始化方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">r := []<span class="keyword">bool</span>&#123;<span class="literal">true</span>,<span class="literal">false</span>,<span class="literal">true</span>,<span class="literal">false</span>&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>len() slice含有元素的多少</li>
+<li>cap() 从slice第一个元素算起，array与多少个元素</li>
+<li>空slice nil<h2 id="接口-amp-amp-方法"><a href="#接口-amp-amp-方法" class="headerlink" title="接口&amp;&amp;方法"></a>接口&amp;&amp;方法</h2><h3 id="method"><a href="#method" class="headerlink" title="method"></a>method</h3>method是啥,一种特殊的函数,这种函数在声明时带上了receiver<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(receiver Type)</span><span class="title">funcName</span><span class="params">()</span> <span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>这样在方法内可以访问receiver,receiver调用方法也可以直接用receiver.funcName的方法</p>
+<h2 id="并发-貌似是go语言最主要的特性"><a href="#并发-貌似是go语言最主要的特性" class="headerlink" title="并发(貌似是go语言最主要的特性)"></a>并发(貌似是go语言最主要的特性)</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> f(x,y,z)</span><br></pre></td></tr></table></figure>
+<p>就会新开一个协程运行这个f(x,y,z)函数,所有协程运行于相同的地址空间,所以访问同一块内存时必须保证是同步的<br><strong>sync</strong> package提供了有用的相关功能,虽然你可能是不会经常用到,毕竟还有其他更常用的</p>
+<h3 id="channels"><a href="#channels" class="headerlink" title="channels"></a>channels</h3><p>channels是一种通道数据结构,允许你通过<strong>&lt;-</strong>操作符放入数据,取出数据<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ch &lt;- v   <span class="comment">//v放入ch</span></span><br><span class="line">v &lt;- ch   <span class="comment">//从ch取出数据赋值给v</span></span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>channels申明初始化方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br></pre></td></tr></table></figure></p>
+<p>以上声明方法为不带缓冲区的channels声明方法,程序执行的时候回阻塞在读和写channels的调用处<br>ch&lt;- -&lt;ch <strong>读写管道都会阻塞直到另一边执行完成</strong></p>
+<h4 id="有缓冲channels"><a href="#有缓冲channels" class="headerlink" title="有缓冲channels"></a>有缓冲channels</h4><p>声明方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>,size)</span><br></pre></td></tr></table></figure></p>
+<p>有缓冲就很好理解了,<strong>在缓冲没满的情况下,发送方就不会阻塞,在缓冲区没空的情况下,接收方就不会阻塞</strong></p>
+<h4 id="close-amp-amp-range"><a href="#close-amp-amp-range" class="headerlink" title="close &amp;&amp; range"></a>close &amp;&amp; range</h4><p><strong>发送方</strong>可以选择在适当时候close一个channel<br>range ch 遍历channel中所有元素,直道遇到close<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a,ok := &lt;-ch</span><br><span class="line"><span class="comment">//ok返回bool值,判断当前channel是否被close</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><p>select表达式有点像switch case语句<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> &#123;</span><br><span class="line"><span class="keyword">case</span> xxxx:</span><br><span class="line">    xxx</span><br><span class="line"><span class="keyword">case</span> xxxx:</span><br><span class="line">    xxx</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">    xxxxx</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果两个都可以执行,随便挑一个,好过分</p>
+<h3 id="sync-mutex"><a href="#sync-mutex" class="headerlink" title="sync.mutex"></a>sync.mutex</h3><p>sync包提供了一个变量sync.mutex锁可以对</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/01/linux/gdb/" rel="next" title="gdb">
+                <i class="fa fa-chevron-left"></i> gdb
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/04/18/linux/InnoDB/" rel="prev" title="InnoDB">
+                InnoDB <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">78</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#基础"><span class="nav-number">1.</span> <span class="nav-text">基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#package"><span class="nav-number">1.1.</span> <span class="nav-text">package</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Functions"><span class="nav-number">1.2.</span> <span class="nav-text">Functions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#变量"><span class="nav-number">1.3.</span> <span class="nav-text">变量</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#控制"><span class="nav-number">2.</span> <span class="nav-text">控制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#循环"><span class="nav-number">2.1.</span> <span class="nav-text">循环</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#条件"><span class="nav-number">2.2.</span> <span class="nav-text">条件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#switch"><span class="nav-number">2.2.1.</span> <span class="nav-text">switch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#defer"><span class="nav-number">2.2.2.</span> <span class="nav-text">defer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#高级数据结构"><span class="nav-number">2.3.</span> <span class="nav-text">高级数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#指针"><span class="nav-number">2.3.1.</span> <span class="nav-text">指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结构体"><span class="nav-number">2.3.2.</span> <span class="nav-text">结构体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数组"><span class="nav-number">2.3.3.</span> <span class="nav-text">数组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#slice"><span class="nav-number">2.3.4.</span> <span class="nav-text">slice</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#接口-amp-amp-方法"><span class="nav-number">2.4.</span> <span class="nav-text">接口&amp;&amp;方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#method"><span class="nav-number">2.4.1.</span> <span class="nav-text">method</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#并发-貌似是go语言最主要的特性"><span class="nav-number">2.5.</span> <span class="nav-text">并发(貌似是go语言最主要的特性)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#channels"><span class="nav-number">2.5.1.</span> <span class="nav-text">channels</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#有缓冲channels"><span class="nav-number">2.5.1.1.</span> <span class="nav-text">有缓冲channels</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#close-amp-amp-range"><span class="nav-number">2.5.1.2.</span> <span class="nav-text">close &amp;&amp; range</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#select"><span class="nav-number">2.5.1.3.</span> <span class="nav-text">select</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sync-mutex"><span class="nav-number">2.5.2.</span> <span class="nav-text">sync.mutex</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/08/PHPUnit/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/31/nginx/nginx_source/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/01/08/PHPUnit/" itemprop="url">PHPUnit</a></h1>
+                <a class="post-title-link" href="/2018/05/31/nginx/nginx_source/" itemprop="url">nginx源码学习</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,275 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-08T14:55:00+08:00">
-                2018-01-08
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-31T11:31:00+08:00">
+                2018-05-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="编译篇"><a href="#编译篇" class="headerlink" title="编译篇"></a>编译篇</h1><p>本篇旨在说明解析nginx编译脚本的运行过程</p>
+<h2 id="开源版"><a href="#开源版" class="headerlink" title="开源版"></a>开源版</h2><h2 id="BROC"><a href="#BROC" class="headerlink" title="BROC"></a>BROC</h2><h1 id="code"><a href="#code" class="headerlink" title="code"></a>code</h1><p>通用各个模块</p>
+<ul>
+<li>init_master 暂时无用</li>
+<li><p>init_module<br>main-&gt;ngx_init_cycle-&gt;ngx_init_cycle-&gt;init_module</p>
+</li>
+<li><p>init_process(fork之后在各自子进程)<br>main-&gt;ngx_master_process_cycle-&gt;ngx_start_worker_processes-&gt;ngx_spawn_process(fork)-&gt;ngx_worker_process_cycle-&gt;ngx_worker_process_init</p>
+</li>
+<li><p>init_thread 暂时无用</p>
+</li>
+<li>exit_thread 暂时无用</li>
+<li>exit_process<br>main-&gt;ngx_master_process_cycle-&gt;ngx_start_worker_processes-&gt;ngx_spawn_process(fork)-&gt;ngx_worker_process_cycle-&gt;ngx_worker_process_exit</li>
+<li>exit_master<br>main-&gt;ngx_master_process_cycle-&gt;ngx_master_process_exit</li>
+</ul>
+<h2 id="HTTP模块"><a href="#HTTP模块" class="headerlink" title="HTTP模块"></a>HTTP模块</h2><p>main-&gt;ngx_init_cycle-&gt;ngx_conf_parse-&gt;ngx_conf_handler-&gt;ngx_http_block(http command set function)</p>
+<ul>
+<li>create_main_conf</li>
+<li>create_srv_conf</li>
+<li>create_loc_conf</li>
+<li>preconfiguration</li>
+<li>init_main_conf</li>
+<li>merge_srv_conf</li>
+<li>merge_loc_conf</li>
+<li>postconfiguration</li>
+</ul>
+<p>连接事件框架<br>ngx_http_block-&gt;ngx_http_optimize_servers-&gt;ngx_http_init_listening-&gt;ngx_http_add_listening-&gt;ngx_http_init_connection</p>
+<h2 id="通用数据结构"><a href="#通用数据结构" class="headerlink" title="通用数据结构"></a>通用数据结构</h2><h3 id="ngx-pool-t"><a href="#ngx-pool-t" class="headerlink" title="ngx_pool_t"></a>ngx_pool_t</h3><h4 id="主结构"><a href="#主结构" class="headerlink" title="主结构"></a>主结构</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ngx_pool_s</span> &#123;</span></span><br><span class="line">    <span class="keyword">ngx_pool_data_t</span>       d;</span><br><span class="line">    <span class="keyword">size_t</span>                max;</span><br><span class="line">    <span class="keyword">ngx_pool_t</span>           *current;</span><br><span class="line">    <span class="keyword">ngx_chain_t</span>          *chain;</span><br><span class="line">    <span class="keyword">ngx_pool_large_t</span>     *large;</span><br><span class="line">    <span class="keyword">ngx_pool_cleanup_t</span>   *cleanup;</span><br><span class="line">    <span class="keyword">ngx_log_t</span>            *<span class="built_in">log</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    u_char               *last;</span><br><span class="line">    u_char               *end;</span><br><span class="line">    <span class="keyword">ngx_pool_t</span>           *next;</span><br><span class="line">    <span class="keyword">ngx_uint_t</span>            failed;</span><br><span class="line">&#125; <span class="keyword">ngx_pool_data_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ngx_pool_large_s</span> &#123;</span></span><br><span class="line">    <span class="keyword">ngx_pool_large_t</span>     *next;</span><br><span class="line">    <span class="keyword">void</span>                 *alloc;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>###</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/23/c++/Broc/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/23/c++/Broc/" itemprop="url">Broc</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-23T14:42:00+08:00">
+                2018-05-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p><a href="https://github.com/baidu/broc/wiki/broc-tutorial" target="_blank" rel="noopener">https://github.com/baidu/broc/wiki/broc-tutorial</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/18/linux/InnoDB/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/18/linux/InnoDB/" itemprop="url">InnoDB</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-18T13:12:00+08:00">
+                2018-04-18
               </time>
             
 
@@ -401,7 +668,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/08/ssh/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/01/linux/Go/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -420,7 +687,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/01/08/ssh/" itemprop="url">ssh登陆</a></h1>
+                <a class="post-title-link" href="/2018/04/01/linux/Go/" itemprop="url">Go</a></h1>
         
 
         <div class="post-meta">
@@ -432,8 +699,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-08T01:00:00+08:00">
-                2018-01-08
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-01T22:56:00+08:00">
+                2018-04-01
               </time>
             
 
@@ -442,28 +709,6 @@
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Linux/" itemprop="url" rel="index">
-                    <span itemprop="name">Linux</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -494,1167 +739,82 @@
       
         
           
-            <p>用上了公司发的新mac,很开森。回家开始折腾和家里的电脑联通，经过小小的折腾终于搞定</p>
-<h2 id="登陆"><a href="#登陆" class="headerlink" title="登陆"></a>登陆</h2><p>首先就是登陆了,mac,linux互相在同一个局域网内,<br>Linux测确保开启sshd server<br>mac这边直接在<strong>系统偏好设置-共享-远程登陆</strong>中设置开启共享即可，随后即可双方通过 ssh user@(hostname|ip)进行账号密码登陆了</p>
-<h2 id="免密码"><a href="#免密码" class="headerlink" title="免密码"></a>免密码</h2><p>老是用密码肯定是烦得不行，所以琢磨了下如何设置rsa登陆，下面将描述A免密登陆B机器描述如下<br>在B机器(可以视为server)中当前账号的 .ssh文件夹下新建一个 <strong>authorized_keys</strong> 文本文件。<br>将A机器上生成的公钥(一般为id_rsa.pub) 中的内容添加到authorized_keys中(cat id_rsa.pub &gt;&gt; authorized_keys)<br>将B机器上的authorized_keys文件权限设置为<strong>600</strong>,据其他博客说不是600不可行,还未尝试，至少本宝宝目前添加了这步操作。</p>
-<p>至此 A机器上就可以直接 ssh免密码登陆B机器了 </p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/27/每天一个Linux命令/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/12/27/每天一个Linux命令/" itemprop="url">每天一个Linux命令</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-27T08:30:10+08:00">
-                2017-12-27
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Linux/" itemprop="url" rel="index">
-                    <span itemprop="name">Linux</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="perf"><a href="#perf" class="headerlink" title="perf"></a>perf</h2><h2 id="top"><a href="#top" class="headerlink" title="top"></a>top</h2><p>常用的查看系统状态的命令,楼下的<strong>htop</strong>貌似更吊一点,更加人性化<br><img src="/uploads/每天一个Linux命令/top.png" alt="-name"></p>
-<h3 id="解释-送上到下"><a href="#解释-送上到下" class="headerlink" title="解释/送上到下"></a>解释/送上到下</h3><p>top - xx:xx:xx 当前系统时间<br>up xxdays xx:xx 系统已运行时间<br>n user  n个用户当前登录<br>load average</p>
+            <h1 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h1><h2 id="package"><a href="#package" class="headerlink" title="package"></a>package</h2><p>Go引入包,可以通过路径引入,包名为路径最后元素<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"math/rand"</span>  <span class="comment">//包名为rand 调用方法为rand.xxxxx</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>package内变量,只有以首字母开头才能在包外被读取<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">import (</span><br><span class="line">    &quot;math&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">pi:=math.Pi</span><br><span class="line">//a :=math.pi 无法访问 报错</span><br></pre></td></tr></table></figure></p>
+<h2 id="Functions"><a href="#Functions" class="headerlink" title="Functions"></a>Functions</h2><p>go鬼畜的函数申明方式<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">func_name</span><span class="params">(argu1,argu2 type1,argu3,argu4 type2)</span> <span class="title">type3</span></span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>go函数返回能返回好多东西,这个貌似不错,不用天天造数组了<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">love</span><span class="params">()</span> <span class="params">(<span class="keyword">int</span>, <span class="keyword">int</span>)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>,<span class="number">21</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">a,b := love()</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>go函数返回值能在函数声明中预定义,并且在函数中直接使用,如果在return语句中没有带上返回值,则默认返回声明的变量.<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">love</span><span class="params">(a,b <span class="keyword">int</span>)</span><span class="params">(x,y <span class="keyword">int</span>)</span></span>&#123;</span><br><span class="line">    x=a</span><br><span class="line">    y=b</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><p>var关键词定义变量,可以在package级别也可以在func级别</p>
+<hr>
+<p>在函数内部,可以使用<strong>:=</strong>关键词,隐式申明一个变量,此时变量类型可以不用申明,根据传的值来确定<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">love</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a := <span class="number">2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是注意在函数外部,任何变量都需要有var,func等关键词申明,否则编译不会通过</p>
+<hr>
+<p>基本类型:<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span>  <span class="keyword">int8</span>  <span class="keyword">int16</span>  <span class="keyword">int32</span>  <span class="keyword">int64</span></span><br><span class="line"><span class="keyword">uint</span> <span class="keyword">uint8</span> <span class="keyword">uint16</span> <span class="keyword">uint32</span> <span class="keyword">uint64</span> <span class="keyword">uintptr</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">byte</span> <span class="comment">// alias for uint8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">rune</span> <span class="comment">// alias for int32</span></span><br><span class="line">     <span class="comment">// represents a Unicode code point</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">float32</span> <span class="keyword">float64</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">complex64</span> <span class="keyword">complex128</span></span><br></pre></td></tr></table></figure></p>
+<p>类似import引入一般,var也可以用()将申明的变量括起来<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	ToBe   <span class="keyword">bool</span>       = <span class="literal">false</span></span><br><span class="line">	MaxInt <span class="keyword">uint64</span>     = <span class="number">1</span>&lt;&lt;<span class="number">64</span> - <span class="number">1</span></span><br><span class="line">	z      <span class="keyword">complex128</span> = cmplx.Sqrt(<span class="number">-5</span> + <span class="number">12i</span>)</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p>如果var申明变量没有被初始化,那么变量会更具类型,设置一个初值</p>
 <blockquote>
-<p>load average这个参数还是充满了文章,直译过来就是机器cpu平均负载<br>该参数会带三个值 x,y,z 分别表示在1min,5min,15min内的机器平均负载<br>那么机器平均负载是什么呢:特定时间内,运行队列中的平均进程数,哪些进程会被算在里面<br>当前正在运行的进程,当前正在排队的进程,比如当前运行进程12,排队进程13,那么load就是25,load average不知道怎么算<br>load average的值为0-<strong>1</strong>,1的时候表示所有进程都在运行中无等待<br>多核cpu,的load average值会与核数成正比<br>总的来说,我们要搞清楚load average描述的是什么事情,<strong>一段时间内,cpu所平均处理的进程数</strong><br>那他和cpu的压力什么关系,两个维度,可能一个进程占用了cpu,但是挂机不干活,那么cpu的压力就打打减小了</p>
+<p>0 for numeric types,<br>false for the boolean type, and<br>“” (the empty string) for strings.</p>
 </blockquote>
-<p>tasks 当前进程统计信息</p>
+<hr>
+<p>类型转化<br>type(value)即可<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a float = float(b)</span><br><span class="line">d := float(c)</span><br></pre></td></tr></table></figure></p>
+<p>和C语言不同,go在进行类型转化时,不需要进行显示类型申明<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var a = float(b)</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>通过 := 或者说 var方式未进行类型定义的变量,他们的类型值都是通过,右边的值得类型,或者<br>说右边返回值的类型来进行确定的</p>
+<hr>
+<p>const变量</p>
 <ul>
-<li>total 总数</li>
-<li>running 正在运行</li>
-<li>sleeping 睡眠进程数</li>
-<li>stop 停止进程数</li>
-<li>zombie 僵尸进程数</li>
-</ul>
-<p>cpu cpu时间花费统计信息% 百分比信息</p>
-<ul>
-<li>us 用户空间时间占用cpu百分比</li>
-<li>sy 内核空间时间占用cpu百分比</li>
-<li>ni 用户进程空间内改变过优先级的进程占用CPU百分比</li>
-<li>id 空闲cpu占比</li>
-<li>wa 等待输入输出的cpu时间百分比</li>
-<li>hi 硬中断</li>
-<li>si 软中断</li>
-<li>st 实时</li>
-</ul>
-<p>mem 内存使用状况统计</p>
-<ul>
-<li>total内存总量</li>
-<li>used 使用的物理内存总量</li>
-<li>free 空间内存总量</li>
-<li>buffers  用作内核缓存的内存量</li>
-</ul>
-<p>swap 交换区信息</p>
-<ul>
-<li>total 交换区总量</li>
-<li>used 已使用交换分区总量</li>
-<li>free 空闲的交换分区总量</li>
-<li>cache 缓冲的交换分区总量</li>
-</ul>
-<p>重点扯一下 buffers和cached<br>A buffer is something that has yet to be “written” to disk. A cache is something that has been “read” from the disk and stored for later use.</p>
-<h3 id="进程描述部分"><a href="#进程描述部分" class="headerlink" title="进程描述部分"></a>进程描述部分</h3><p>PR 进程优先权</p>
-<h2 id="htop"><a href="#htop" class="headerlink" title="htop"></a>htop</h2><h2 id="ps"><a href="#ps" class="headerlink" title="ps"></a>ps</h2><h2 id="amp-amp"><a href="#amp-amp" class="headerlink" title="${} &amp;&amp; $()"></a>${} &amp;&amp; $()</h2><h3 id=""><a href="#" class="headerlink" title="$()"></a>$()</h3><p>执行括号中的代码返回的结果</p>
-<h4 id="与的异同"><a href="#与的异同" class="headerlink" title="与的异同"></a>与<code></code>的异同</h4><p><a href="https://blog.csdn.net/foreordination_/article/details/73740966" target="_blank" rel="noopener">https://blog.csdn.net/foreordination_/article/details/73740966</a></p>
-<h3 id="-1"><a href="#-1" class="headerlink" title="${}"></a>${}</h3><p>访问括号中的变量返回的结果</p>
-<h2 id="readlink"><a href="#readlink" class="headerlink" title="readlink"></a>readlink</h2><p>主要用来找出符号链接所指向的位置,可以获取到绝对路径</p>
-<h3 id="f"><a href="#f" class="headerlink" title="-f"></a>-f</h3><p>-f 选项可以递归跟随给出文件名的所有符号链接以标准化，除最后一个外所有组件必须存在</p>
-<h2 id="patchelf"><a href="#patchelf" class="headerlink" title="patchelf"></a>patchelf</h2><p>修改动态链接库的地址<br>patchelf –set-interpreter gcc_lib_dir/ld-linux-x86-64.so.2 $ngx_bin_path</p>
-<h2 id="chrpath"><a href="#chrpath" class="headerlink" title="chrpath"></a>chrpath</h2><h2 id="pushd-amp-amp-popd"><a href="#pushd-amp-amp-popd" class="headerlink" title="pushd &amp;&amp; popd"></a>pushd &amp;&amp; popd</h2><p>两个很简单的命令,一般用于多个文件路径需要频繁切换的状况</p>
-<h3 id="pushd"><a href="#pushd" class="headerlink" title="pushd"></a>pushd</h3><p>基本功能很简单:每次pushd xxxx,xxxx文件将会进入栈顶;每次pushd 栈顶两元素互换位置,再次进入栈顶元素路径</p>
-<h3 id="popd"><a href="#popd" class="headerlink" title="popd"></a>popd</h3><p>这个就更简单了,每次popd,栈顶元素出栈,进入当前栈顶的路劲<br><img src="/uploads/每天一个Linux命令/pushd&amp;&amp;popd.png" alt="-name"></p>
-<h2 id="git-–diff-amp-amp-git-–patch"><a href="#git-–diff-amp-amp-git-–patch" class="headerlink" title="git –diff &amp;&amp; git –patch"></a>git –diff &amp;&amp; git –patch</h2><p>忽然发现hin尴尬,貌似公司nginx项目使用git做的diff和patch</p>
-<h2 id="diff-amp-amp-patch"><a href="#diff-amp-amp-patch" class="headerlink" title="diff&amp;&amp;patch"></a>diff&amp;&amp;patch</h2><p>看公司nginx项目发现通过diff patch的方式对源码做了修改,很有用的命令,学一下</p>
-<h2 id="route"><a href="#route" class="headerlink" title="route"></a>route</h2><p>mirror机路由不到某台机器,大帅哥尝试用这个命令拯救一下,虽然最后失败了</p>
-<h2 id="ifconfig"><a href="#ifconfig" class="headerlink" title="ifconfig"></a>ifconfig</h2><p>天天在用的命令,但是没怎么仔细看懂过,貌似大多都这样<br><img src="/uploads/每天一个Linux命令/ifconfig.png" alt="-name"></p>
-<h3 id="参数解析"><a href="#参数解析" class="headerlink" title="参数解析"></a>参数解析</h3><p>Link encap: 暂时理解成网络类型,常见的有 Ethernet,Local Loopback<br>HWaddr:网卡地址(mac地址)<br>inet addr:网络地址<br>inet6 addr:ipv6地址,简单明了<br>UP（代表网卡开启状态）RUNNING（代表网卡的网线被接上）MULTICAST（支持组播）MTU:1500（最大传输单元）：1500字节<br>RX: 接受数据包统计 下面还有接收字节数<br>TX: 发送数据包统计 下面还有发送字节数<br>Bcast:广播地址<br>Mask:掩码</p>
-<h3 id="lookback"><a href="#lookback" class="headerlink" title="lookback"></a>lookback</h3><p>骚三的电脑ifconfig出来有两个lo,很好,你成功得引起了我的注意,事情要从lookback是什么说起<br>简单来说,顾名思义,环回地址,就是回到原来地方的地址,我们在正常的互联网操作中,都会使用ip地址表示发送方,但是!如果你的设备处于断网状态,专业点说网络管理设备down了,那你怎么是用网络服务呢,最简单的例子,你不联网想开发个网站,不都是127.0.0.1搞起吗.<br>不走网关,直接通过cpu连上本地的ip,就是环回地址。<br>注意,环回地址是需要系统配置的.<br>所以有很多路由器有一些奇怪的现象,ping自己居然耗时比ping别人还长,因为人家没有配环回,出去绕了一圈回来的</p>
-<h2 id="tcpdump"><a href="#tcpdump" class="headerlink" title="tcpdump"></a>tcpdump</h2><p>总的来说,一个抓包工具</p>
-<h3 id="i-xxx"><a href="#i-xxx" class="headerlink" title="-i xxx"></a>-i xxx</h3><p>指定监听的网卡.</p>
-<h3 id="host"><a href="#host" class="headerlink" title="host"></a>host</h3><p>指定监听的网站<br>以豆瓣为例<br><img src="/uploads/每天一个Linux命令/tcpdump01.png" alt="-name"></p>
-<h3 id="port"><a href="#port" class="headerlink" title="port"></a>port</h3><p>监视指定主机与端口的数据包<br><strong>注意:</strong>不知道为什么 tcp后面必须先跟port然后再写ip才能进行监听<br><img src="/uploads/每天一个Linux命令/tcpdump04.png" alt="-name"></p>
-<h3 id="src"><a href="#src" class="headerlink" title="src"></a>src</h3><p>指定发送方host<br>指定从豆瓣发过来的<br><img src="/uploads/每天一个Linux命令/tcpdump02.png" alt="-name"></p>
-<h3 id="host-1"><a href="#host-1" class="headerlink" title="host"></a>host</h3><p><strong>指定监听的域名,也可以是ip</strong></p>
-<h3 id="X"><a href="#X" class="headerlink" title="-X"></a>-X</h3><h2 id="ldd"><a href="#ldd" class="headerlink" title="ldd"></a>ldd</h2><p>nginx编译之后上传mirror启动失败,大帅哥秀了一手ldd定位编译文件问题,必须记一下</p>
-<h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>ldd=(list, dynamic, dependencies)<br>意思就是列出动态库依赖关系<br><img src="/uploads/每天一个Linux命令/ldd.png" alt="-name"><br>然后你就发现了这个二进制文件所依赖的所有动态库,以及他们所在的路径,但是你会发现一个很牛逼的动态库<br><strong>linux-vdso.so.1</strong>他居然没有路径,好奇之下查了下资料,其实是把内核态的系统调用映射到用户态的系统空间中。</p>
-<h2 id="nslookup"><a href="#nslookup" class="headerlink" title="nslookup"></a>nslookup</h2><blockquote>
-<p>师傅秀了一手nslookup,还不告诉我。查之<br>作用:查询域名</p>
-</blockquote>
-<h2 id="zcat"><a href="#zcat" class="headerlink" title="zcat"></a>zcat</h2><p>今天(20180109)师傅让我查一手线上问题,一番折腾,随后想看师傅秀一手shell,结果师傅跪了,zcat,zgrep都没出来,故在此总结</p>
-<p>zcat会把所有的.gz文件的内容都输出到标准输出上<br>zgrep可以grep单个.gz文件,师傅跪了是因为zgrep了.tar.gz文件包</p>
-<h2 id="zgrep"><a href="#zgrep" class="headerlink" title="zgrep"></a>zgrep</h2><h2 id="type"><a href="#type" class="headerlink" title="type"></a>type</h2><h2 id="which"><a href="#which" class="headerlink" title="which"></a>which</h2><h2 id="locate"><a href="#locate" class="headerlink" title="locate"></a>locate</h2><h2 id="whereis"><a href="#whereis" class="headerlink" title="whereis"></a>whereis</h2><p>定位一个命令的二进制文件路径,文档路径,源码路径</p>
-<h3 id="option"><a href="#option" class="headerlink" title="option"></a>option</h3><h4 id="b"><a href="#b" class="headerlink" title="-b"></a>-b</h4><p>定位可执行文件<br><img src="/uploads/每天一个Linux命令/whereis-b.png" alt="-name"></p>
-<h4 id="s"><a href="#s" class="headerlink" title="-s"></a>-s</h4><p>定位源代码文件</p>
-<h4 id="m"><a href="#m" class="headerlink" title="-m"></a>-m</h4><p>定位文档文件<br><img src="/uploads/每天一个Linux命令/whereis-m.png" alt="-name"></p>
-<h2 id="xargs"><a href="#xargs" class="headerlink" title="xargs"></a>xargs</h2><h2 id="find"><a href="#find" class="headerlink" title="find"></a>find</h2><p>作用:在指定目录下查找<strong>文件/文件夹</strong>.<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find [filepath] [option]</span><br></pre></td></tr></table></figure></p>
-<h3 id="option-1"><a href="#option-1" class="headerlink" title="option"></a>option</h3><h4 id="name"><a href="#name" class="headerlink" title="-name"></a>-name</h4><p>紧跟模式匹配,输出文件名符合该模式的文件<br><img src="/uploads/每天一个Linux命令/find-name.png" alt="-name"></p>
-<h4 id="perm"><a href="#perm" class="headerlink" title="-perm"></a>-perm</h4><p>按照文件的读写权限属性来进行筛选<br><img src="/uploads/每天一个Linux命令/find-perm.png" alt="-name"></p>
-<h4 id="user-nouser"><a href="#user-nouser" class="headerlink" title="-user -nouser"></a>-user -nouser</h4><p>按照文件属主查找文件<br><img src="/uploads/每天一个Linux命令/find-user.png" alt="-name"><br>为了查找属主帐户已经被删除的文件，可以使用-nouser选项。不试了</p>
-<h4 id="group-nogroup"><a href="#group-nogroup" class="headerlink" title="-group -nogroup"></a>-group -nogroup</h4><p>和user差不多,不试了</p>
-<h4 id="mtime"><a href="#mtime" class="headerlink" title="-mtime"></a>-mtime</h4><blockquote>
-<p>File’s data was last modified n*24 hours ago.  See the comments for  -atime  to  understand how rounding affects the interpretation of file modification times.</p>
-</blockquote>
-<p>表示这个文件的修改时间 后面跟时间<font color="red">+n,-n</font><br>+表示在n小时前修改的<br>-表示在n小时内修改的<br><img src="/uploads/每天一个Linux命令/find-mtime.png" alt="-name"><br>-mmin类似</p>
-<h4 id="ctime"><a href="#ctime" class="headerlink" title="-ctime"></a>-ctime</h4><p>change time文件状态改变时间，指文件的i结点被修改的时间，如通过chmod修改文件属性，ctime就会被修改。<br><img src="/uploads/每天一个Linux命令/find-ctime.png" alt="-name"><br>可以看到貌似对文件进行编辑也会造成change time的变化</p>
-<p>-cmin类似 换成分钟</p>
-<h4 id="atime"><a href="#atime" class="headerlink" title="-atime"></a>-atime</h4><p>access time查看文件的状态<br><img src="/uploads/每天一个Linux命令/find-atime.png" alt="-name"></p>
-<p>-amin类似</p>
-<h4 id="type-1"><a href="#type-1" class="headerlink" title="-type"></a>-type</h4><p>根据文件类型来查找<br>-type f 文件类型<br>-type d 文件夹类型<br>b/d/c/p/l/f<br><img src="/uploads/每天一个Linux命令/find-type.png" alt="-name"></p>
-<h4 id="empty"><a href="#empty" class="headerlink" title="-empty"></a>-empty</h4><p> 查找空文件,文件夹<br><img src="/uploads/每天一个Linux命令/find-empty.png" alt="-name"></p>
-<h4 id="size"><a href="#size" class="headerlink" title="-size"></a>-size</h4><p>按照文件大小搜索,需要写明单位<br>+-好和时间一样,+大-小<br><img src="/uploads/每天一个Linux命令/find-size.png" alt="-name"></p>
-<h4 id="exec"><a href="#exec" class="headerlink" title="-exec"></a>-exec</h4><blockquote>
-<p>-exec command ;<br>Execute command; true if 0 status is returned.  All following arguments to find are taken to be arguments to the command until an argument consisting of <code>;&#39; is encountered.  The string</code>{}’ is replaced by the current file name being processed everywhere it occurs in the arguments to the command, not just in arguments where it is alone, as in some  versions  of  find.Both  of these constructions might need to be escaped (with a `\’) or quoted to protect them from expansion by the shell.  See the EXAMPLES section for examples of the use of the -exec option.  The specified command is run once for each matched file.  The command is executed in the starting directory.   There are unavoidable security problems surrounding use  of  the -exec action; you should use the -execdir option instead.</p>
-</blockquote>
-<p>作用执行命令:如果返回0状态则为true.<br>所有被find指令查找到的文件都会被作为<strong>command</strong>命令所处理,command命令需要;作为标示表示结束,<strong>{}</strong>在command表示当前正在被处理的文件。在有些shell版本中需要在命令最后加上(excaped)或者说quoted字符。详情见例子。</p>
-<p>总的来说就是</p>
-<p>find xxxxxx -exec command \;(我的版本)<br>在command中你所要所做的命令操作的对象可以通过{}来替代</p>
-<p><img src="/uploads/每天一个Linux命令/find-exec.png" alt="-name"></p>
-<h4 id="newer-cnewer-anewer"><a href="#newer-cnewer-anewer" class="headerlink" title="-newer -cnewer -anewer"></a>-newer -cnewer -anewer</h4><p>-newer -cnewer -anewer <file><br>比file m时间, c时间, a时间更靠近当前时间的文本,就是更新的<br><img src="/uploads/每天一个Linux命令/find-newer.png" alt="-name"></file></p>
-<h4 id="-2"><a href="#-2" class="headerlink" title="!"></a>!</h4><p>最后一个,find可以支持反向查找,在以上匹配命令前,加上!，表示不符合这个条件的查找条件<br><img src="/uploads/每天一个Linux命令/find-!.png" alt="-name"></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/24/hexo/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/12/24/hexo/" itemprop="url">Hexo</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-24T17:43:10+08:00">
-                2017-12-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Blog/" itemprop="url" rel="index">
-                    <span itemprop="name">Blog</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Blog/Tool/" itemprop="url" rel="index">
-                    <span itemprop="name">Tool</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Hexo无法解析部分字符"><a href="#Hexo无法解析部分字符" class="headerlink" title="Hexo无法解析部分字符"></a>Hexo无法解析部分字符</h2><table>
-<thead>
-<tr>
-<th>char</th>
-<th style="text-align:center">replace</th>
-<th style="text-align:right">description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>&#33;</td>
-<td style="text-align:center">\&#33;</td>
-<td style="text-align:right">— 惊叹号Exclamation mark </td>
-</tr>
-<tr>
-<td>&#34;</td>
-<td style="text-align:center">\&#34;</td>
-<td style="text-align:right">&quot; 双引号Quotation mark </td>
-</tr>
-<tr>
-<td>&#35;</td>
-<td style="text-align:center">\&#35;</td>
-<td style="text-align:right">— 数字标志Number sign </td>
-</tr>
-<tr>
-<td>&#36;</td>
-<td style="text-align:center">\&#36;</td>
-<td style="text-align:right">— 美元标志Dollar sign </td>
-</tr>
-<tr>
-<td>&#37;</td>
-<td style="text-align:center">\&#37;</td>
-<td style="text-align:right">— 百分号Percent sign </td>
-</tr>
-<tr>
-<td>&#38;</td>
-<td style="text-align:center">\&#38;</td>
-<td style="text-align:right">&amp; Ampersand </td>
-</tr>
-<tr>
-<td>&#39;</td>
-<td style="text-align:center">\&#39;</td>
-<td style="text-align:right">— 单引号Apostrophe </td>
-</tr>
-<tr>
-<td>&#40;</td>
-<td style="text-align:center">\&#40;</td>
-<td style="text-align:right">— 小括号左边部分Left parenthesis </td>
-</tr>
-<tr>
-<td>&#41;</td>
-<td style="text-align:center">\&#41;</td>
-<td style="text-align:right">— 小括号右边部分Right parenthesis </td>
-</tr>
-<tr>
-<td>&#42;</td>
-<td style="text-align:center">\&#42;</td>
-<td style="text-align:right">— 星号Asterisk </td>
-</tr>
-<tr>
-<td>&#43;</td>
-<td style="text-align:center">\&#43;</td>
-<td style="text-align:right">— 加号Plus sign </td>
-</tr>
-<tr>
-<td>&#60;</td>
-<td style="text-align:center">\&#60;</td>
-<td style="text-align:right">&lt; 小于号Less than </td>
-</tr>
-<tr>
-<td>&#61;</td>
-<td style="text-align:center">\&#61;</td>
-<td style="text-align:right">— 等于符号Equals sign </td>
-</tr>
-<tr>
-<td>&#62;</td>
-<td style="text-align:center">\&#62;</td>
-<td style="text-align:right">&gt; 大于号Greater than </td>
-</tr>
-<tr>
-<td>&#63;</td>
-<td style="text-align:center">\&#63;</td>
-<td style="text-align:right">— 问号Question mark </td>
-</tr>
-<tr>
-<td>&#64;</td>
-<td style="text-align:center">\&#64;</td>
-<td style="text-align:right">— Commercial at </td>
-</tr>
-<tr>
-<td>&#91;</td>
-<td style="text-align:center">\&#91;</td>
-<td style="text-align:right">— 中括号左边部分Left square bracket </td>
-</tr>
-<tr>
-<td>&#92;</td>
-<td style="text-align:center">\&#92;</td>
-<td style="text-align:right">— 反斜杠Reverse solidus (backslash) </td>
-</tr>
-<tr>
-<td>&#93;</td>
-<td style="text-align:center">\&#93;</td>
-<td style="text-align:right">— 中括号右边部分Right square bracket </td>
-</tr>
-<tr>
-<td>&#123;</td>
-<td style="text-align:center">\&#123;</td>
-<td style="text-align:right">— 大括号左边部分Left curly brace </td>
-</tr>
-<tr>
-<td>&#124;</td>
-<td style="text-align:center">\&#124;</td>
-<td style="text-align:right">— 竖线Vertical bar </td>
-</tr>
-<tr>
-<td>&#125;</td>
-<td style="text-align:center">\&#125;</td>
-<td style="text-align:right">— 大括号右边部分Right curly brace </td>
-</tr>
-</tbody>
-</table>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/23/程序员修炼之道/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/12/23/程序员修炼之道/" itemprop="url">程序员修炼之道</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-23T23:01:10+08:00">
-                2017-12-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Read/" itemprop="url" rel="index">
-                    <span itemprop="name">Read</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><blockquote>
-<p>能不能让正确的原则指导真确的行动本身,其实就是区分是否是高手的一个显著标志</p>
-</blockquote>
-<p>加强知识的内化速度的方法:</p>
-<ul>
-<li>频繁的高强度的外部刺激</li>
-<li>自主的有意识的反复提醒&#40;主要&#41;</li>
-</ul>
-<p>阅读方法:<br>先大致记得和理解里面的Tip,然后每周争取实践2-3个tip。强化内在记忆,不要浮于阅读</p>
-<h1 id="注重实效的哲学"><a href="#注重实效的哲学" class="headerlink" title="注重实效的哲学"></a>注重实效的哲学</h1><h2 id="我的源码让猫给吃了"><a href="#我的源码让猫给吃了" class="headerlink" title="我的源码让猫给吃了"></a>我的源码让猫给吃了</h2><blockquote>
-<p>所有弱点中,最大的弱点就是害怕暴露弱点。</p>
-</blockquote>
-<h3 id="负责"><a href="#负责" class="headerlink" title="负责"></a>负责</h3><p>负责的意义: 不仅是要努力完成职责所在的项目,同时也包括,对各个以外情况的兼容处理,还包括对自身错误的理性分析,不东拼西凑借口。</p>
-<p>也许你的对接方在错误中扮演了某种角色。但你可以选择提供结局方案,而不是直接尽快推脱责任。&#40;顾客管理1.2&#41;</p>
-<p>谈话预演:在描述一个事实,现象的时候,先预演对方可能会说什么。</p>
-<h2 id="软件的熵"><a href="#软件的熵" class="headerlink" title="软件的熵"></a>软件的熵</h2><p>熵: 系统中无序的总量<br>软件系统熵最主要的原因:破窗户</p>
-<blockquote>
-<p>破窗户: 一扇破窗户,只要有那么一段时间不修理。就会渐渐给建筑的居民带来一种废弃感–一种职权部门不关心这座建筑的感觉。于是有一扇窗户破了,人们开始乱扔垃圾,出现乱涂乱画。严重的结构损坏开始了。<br>Don’t Live with Broken Windows!</p>
-</blockquote>
-<p>解决方法:</p>
-<ul>
-<li>发现一个解决一个</li>
-<li>没时间修理,把问题代码永注释做出标记,给后来人做出标示 表明当前的这个问题在控制之中</li>
-</ul>
-<font color="red">一旦窗户开始破裂,就会相当迅速的恶化</font>
-
-<h2 id="石头汤与青蛙"><a href="#石头汤与青蛙" class="headerlink" title="石头汤与青蛙"></a>石头汤与青蛙</h2><p><del>看了,不是很能理解</del><br>这个讲的道理,貌似是一个作为项目管理者的行事方式:<br>启动杂役:与其一开始就分配好规规整整的分工,可以先完成自身上的主线部分,然后给出Demo,告诉各自分工的人,他们的职责,以及他们对主线的贡献,能加快项目的推动。</p>
-<h2 id="足够好的软件"><a href="#足够好的软件" class="headerlink" title="足够好的软件"></a>足够好的软件</h2><blockquote>
-<p>欲求更好,常把好事变糟</p>
-</blockquote>
-<p>市场人员有需要信守的承诺,最终用户有基于交付时间表制定了的各种计划,公司有现金流方面的约束,无视这些用户的需求,一味给程序增加新特性,一次一次润饰代码,是毫无职业素养的。<br>我们要的是:在规定的时间内,在规定的功能需求内,保证代码的质量。</p>
-<font color="red">不要过度修饰和过于求精而毁损完好的程序。</font> 最为一个工程师,在时间的基础上,让你的代码凭他自己的质量站立一会儿<br><br>&gt;质量应该成为需求问题<br><br>## 你的知识资产<br>&gt;知识上的投资总能得到最好的回报<br><br>### 经营你的资产<br><em> <font color="red">定期投资</font>
-</em> 多元化:你知道的不同的事情越多,你就越有价值。底线:目前你所使用的几项技术的各种特性。<br><em> 管理风险:不要把所有的技术鸡蛋放在一个篮子里
-</em> 低买高卖: 新兴流行之前就掌握他,就像原始股上市一样刺激<br><em> 重新评估和平衡: 定期评估<br><br>### 目标
-</em> 每年至少一门新语言:不同语言 以不同方式解决相同的问题,学习不同语言可以拓宽你的思维&#40;shell&#41;<br><em> 每季度阅读一本技术书籍=&gt;每个月一本
-</em> 也要阅读非技术书籍<br><em> 上课
-</em> 参加本地用户组织<br><em> 折腾折腾环境&#40;操作系统/IDE&#41;
-</em> 跟上潮流<br><em> 上网<br><br>&gt;学习的关键是什么:拓展你的思维,就是让你不要思维僵化,让你能想到,卧操,这特么也可以,使你向新的可能新和新的做事方式拓展。进行思想的”异花授粉”<br><br><br>### 学习的机会<br><font color="blue">不要就此止步</font><br>当在你的领域发现一个问题,不找出正确答案不要罢休&#33;&#33;&#33; 因为他会重复出现的&#33;&#33;&#33;
-</em> 先去查资料<br><em> 资料查不到去问人,还可以建立不同的人际资产，不同的解决方案
-</em> 规划好自己的阅读和研究的时间&#33;<br><br>## 交流<br><em> 知道你想说什么
-</em> 了解你的听众<br><em> 选择时间,弄清目标听众当前的轻重缓急
-</em> 选择目标听众的交流风格<br><em> 美化文档find(选项)(参数)
-</em> 与文档的使用者共同参与文档的撰写<br><em> 做好倾听
-</em> <font color="red">立马回复</font>
-
-
-<h1 id="注重实效的途径"><a href="#注重实效的途径" class="headerlink" title="注重实效的途径"></a>注重实效的途径</h1><h2 id="重复的危害"><a href="#重复的危害" class="headerlink" title="重复的危害"></a>重复的危害</h2><p>什么是维护: 重新组织和表达我们在系统中的知识!</p>
-<p>这个过程不止在软件发布之后,确保软件的正常运行,同时也在开发中,由于qa,pm的活动而进行着。</p>
-<p>为了使我们的开发过程更加可靠,并让我们的开发更加易于理解和维护,重点：</p>
-<blockquote>
-<p>DRY-Don’t repeat yourself<br>系统中的每一项知识都必须有<font color="green">单一,无歧义,权威</font>的表示。</p>
-</blockquote>
-<h3 id="强加的重复"><a href="#强加的重复" class="headerlink" title="强加的重复"></a>强加的重复</h3><p>Case:建立包含重复信息的文档,写一份包含有重复代码的文档,多目标平台开发常常带有重复代码。</p>
-<h4 id="信息的多种表示"><a href="#信息的多种表示" class="headerlink" title="信息的多种表示"></a>信息的多种表示</h4><p>问题: 再多平台需要表示同一信息。<br>case: 需要同时在客户端-服务器表示同一数据结构,类。<br>Ans: 过滤器/代码生成器<br>将共有特性存入数据库,在预处理时，根据数据库内容,生成当前代码库所需要的代码</p>
-<p>问题: 代码中的文档</p>
-<blockquote>
-<p>把低级的知识放在代码中,把注释留给高级的说明</p>
-</blockquote>
-<p>在代码细节处的注释是不靠谱的,维护人员常常不会随着迭代同步更新代码</p>
-<p>问题： 文档与代码<br>case: 由于实践紧迫,文档无法随着代码同步更新</p>
-<p>问题：语言问题<br>Ans: 没什么简单的技术可以克服语言的这些需求</p>
-<h4 id="无意的重复"><a href="#无意的重复" class="headerlink" title="无意的重复"></a>无意的重复</h4><p>在设计类的时候,我们可能无意中出现了一些信息点上的重复。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Line</span> &#123;</span></span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        Point start;</span><br><span class="line">        Point end;</span><br><span class="line">        <span class="keyword">double</span> length;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>例如在这个Case中,length显然可以通过start,end来求出,这个变量名出现了重复,每次start,end值出现了修改,length都会随之修改。<br>所以最好将其变为函数<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Line</span>&#123;</span></span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        Point start;</span><br><span class="line">        Point end;</span><br><span class="line">        <span class="function"><span class="keyword">double</span> <span class="title">length</span><span class="params">()</span></span>&#123;<span class="keyword">return</span> start.distanceTo(end)&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>但是这个每次获取length,都会需要走length函数,如果后续要减少运算,采用缓存呢。<br>这就不得不违反DRY原则,但是<font color="red">使影响局部化</font> 。保证对外依然不存在重复信息<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Line</span>&#123;</span></span><br><span class="line">    <span class="keyword">private</span>:</span><br><span class="line">        <span class="keyword">bool</span> changed;</span><br><span class="line">        <span class="keyword">double</span> length;</span><br><span class="line">        Point start;</span><br><span class="line">        Point end;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        <span class="function">Point <span class="title">getStart</span><span class="params">()</span></span>&#123;<span class="keyword">return</span> start&#125;;</span><br><span class="line">        <span class="function">Point <span class="title">getEnd</span><span class="params">()</span></span>&#123;<span class="keyword">return</span> end&#125;;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">setStart</span><span class="params">(Point p)</span></span>&#123;start=p;changed=<span class="literal">true</span>&#125;;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">setEnd</span><span class="params">(Point p)</span></span>&#123;end=p;changed=<span class="literal">true</span>&#125;;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">double</span> <span class="title">getLength</span><span class="params">()</span></span>&#123;</span><br><span class="line">            <span class="keyword">if</span>(changed)&#123;</span><br><span class="line">                lenth = start.distanceTo(end);</span><br><span class="line">                changed = <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> length;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>这么写,既保证了对外依然只暴露长度获取依然是通过函数的形式来保证,同时也使得能用缓存来进行优化。</p>
-<p><strong>总结:你的类中应该尽量保证初始元素的单一,可靠,嗯,怎么说呢,有点像,一个R维向量空间的线性无关向量组</strong></p>
-<h4 id="无耐性的重复"><a href="#无耐性的重复" class="headerlink" title="无耐性的重复"></a>无耐性的重复</h4><blockquote>
-<p>欲速则不达<br>也许你现在可以节省几秒钟,但是后续却要损失好几个小时。<br>不要屈从于时间的压力,而做一些简单的复制粘贴的事情。<br>&#40;营业状态&#33;&#33;获取&#41;</p>
-</blockquote>
-<h4 id="开发者之间的重复"><a href="#开发者之间的重复" class="headerlink" title="开发者之间的重复"></a>开发者之间的重复</h4><p>最简单的例子:掌柜商户Common类,各种奇奇怪怪的获取商户信息的Common方法<br>解决方法:</p>
-<ul>
-<li>鼓励开发者互相主动交流</li>
-<li>review他人源代码,也鼓励他人review你的代码</li>
-</ul>
-<h2 id="正交性"><a href="#正交性" class="headerlink" title="正交性"></a>正交性</h2><h3 id="什么是正交性"><a href="#什么是正交性" class="headerlink" title="什么是正交性"></a>什么是正交性</h3><p>几何：两条直线相交成直角,他们就是正交的<br>计算机: 解耦,表示两个系统互相不依赖</p>
-<h3 id="正交的好处"><a href="#正交的好处" class="headerlink" title="正交的好处"></a>正交的好处</h3><blockquote>
-<p>Eliminate Effects Between Unrelated Things.</p>
-</blockquote>
-<h4 id="提高生产率"><a href="#提高生产率" class="headerlink" title="提高生产率"></a>提高生产率</h4><ul>
-<li>大模块被划分为n个小模块,小模块的开发时间,测试时间都比较少,且难度低</li>
-<li>促进复用,组件之间可以随意组合,不再仅仅是定制化。</li>
-<li>通过正交可以使生产率得以提高</li>
-</ul>
-<h4 id="降低风险"><a href="#降低风险" class="headerlink" title="降低风险"></a>降低风险</h4><ul>
-<li>问题可以定位到单一模块</li>
-<li>修改可以定位到单一模块</li>
-<li>测试可以更加简单易行</li>
-</ul>
-<h3 id="正交原则"><a href="#正交原则" class="headerlink" title="正交原则"></a>正交原则</h3><h4 id="项目团队"><a href="#项目团队" class="headerlink" title="项目团队"></a>项目团队</h4><p>如何划分良好的团队分工，取决于项目本身。通用意义上的：</p>
-<ul>
-<li>基础设施</li>
-<li>应用</li>
-</ul>
-<p>判断团队正交性的方法:每次需求的改动造成的人员波及,波及越多，正交性越差</p>
-<h4 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h4><h4 id="工具箱与库"><a href="#工具箱与库" class="headerlink" title="工具箱与库"></a>工具箱与库</h4><p>引入第三方库时:反思一下会对当前库类造成什么影响。</p>
-<ul>
-<li>第三方库类是对象持久模型,正交</li>
-<li>需要你在代码库中创建访问对象,不够正交,应将他们与具体代码隔离</li>
-</ul>
-<h4 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h4><ul>
-<li>让你的代码保持解耦， 如果你需要改变一个对象的状态,让这个对象去做</li>
-<li>（无法理解 todo）避免使用全局数据,</li>
-<li>避免编写相似的函数</li>
-</ul>
-<h1 id="基本工具"><a href="#基本工具" class="headerlink" title="基本工具"></a>基本工具</h1><h2 id="纯文本的威力"><a href="#纯文本的威力" class="headerlink" title="纯文本的威力"></a>纯文本的威力</h2><blockquote>
-<p>持久得知识存储方式是<font color="green">纯文本</font></p>
-</blockquote>
-<p>不要使用二进制数据格式,我才word和pdf就算其中的一种,可以采用一些其他的格式,比如xml,markdown等等</p>
-<p>缺点:</p>
-<ul>
-<li>纯文本所需要的空间更大</li>
-<li>纯文本的处理更加耗时</li>
-</ul>
-<p>优点：</p>
-<ul>
-<li>保证不过时</li>
-<li>杠杆作用&#40;万物皆文本&#41;</li>
-<li>易于测试,增删该查可以通过文本解析工具轻松分析出来</li>
-</ul>
-<h2 id="shell游戏"><a href="#shell游戏" class="headerlink" title="shell游戏"></a>shell游戏</h2><blockquote>
-<p>GUI的好处:所见即所得 GUI的坏处：所见即全部</p>
-</blockquote>
-<h2 id="强力编辑"><a href="#强力编辑" class="headerlink" title="强力编辑"></a>强力编辑</h2><p>精通一种编辑器</p>
-<blockquote>
-<p>Use a Single Editor Well</p>
-</blockquote>
-<h3 id="然后做什么"><a href="#然后做什么" class="headerlink" title="然后做什么"></a>然后做什么</h3><p><del>感觉很有意思,就抄下来了</del></p>
-<h2 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h2><h3 id="调试心理学"><a href="#调试心理学" class="headerlink" title="调试心理学"></a>调试心理学</h3><blockquote>
-<p>要修正问题,而不是发出指责<br>bug是你的过错还是别人的过错,并不是真的很有关系.他仍然是你的问题。</p>
-</blockquote>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/18/PHP源码解析/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/12/18/PHP源码解析/" itemprop="url">PHP源码解析</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-18T16:08:10+08:00">
-                2017-12-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Code/" itemprop="url" rel="index">
-                    <span itemprop="name">Code</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Code/PHP/" itemprop="url" rel="index">
-                    <span itemprop="name">PHP</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Code/PHP/SourceCode/" itemprop="url" rel="index">
-                    <span itemprop="name">SourceCode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="基本调试命令"><a href="#基本调试命令" class="headerlink" title="基本调试命令"></a>基本调试命令</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/opt/compiler/gcc-4.8.2/bin/gdb php/bin/php-cgi</span><br><span class="line">set solib-search-path php/ext:lib/gcc-4.8.2</span><br><span class="line">r -c /home/map/Documents/wodp_debug/php/etc/php.ini -p /home/map/Documents/wodp_debug/php --fpm-config /home/map/Documents/wodp_debug/php/etc/php-fpm.conf</span><br></pre></td></tr></table></figure>
-<p>#工具篇</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/16/C/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/12/16/C/" itemprop="url">C</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-16T11:28:10+08:00">
-                2017-12-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Code/" itemprop="url" rel="index">
-                    <span itemprop="name">Code</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Code/C/" itemprop="url" rel="index">
-                    <span itemprop="name">C</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="常用宏"><a href="#常用宏" class="headerlink" title="常用宏"></a>常用宏</h1><h2 id="offsetof"><a href="#offsetof" class="headerlink" title="offsetof"></a>offsetof</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define offsetof(type,member)((size_t)&amp;((type*)0)-&gt;member)</span><br></pre></td></tr></table></figure>
-<p>解析:<br>0<br>(type<em>)0    强行将0作为type类型的指针<br>((type</em>)0)-&gt;member    获取member对象<br>&amp;((type<em>)0)-&gt;member         获取membe对象地址<br>(size_t)&amp;((type</em>)0)-&gt;member     将地址转化为size_t</p>
-<h2 id="文件I-O"><a href="#文件I-O" class="headerlink" title="文件I/O"></a>文件I/O</h2><h3 id="文件"><a href="#文件" class="headerlink" title="文件"></a>文件</h3><h4 id="文本视图和二进制视图"><a href="#文本视图和二进制视图" class="headerlink" title="文本视图和二进制视图"></a>文本视图和二进制视图</h4><blockquote>
-<p>通常对于文本文件使用文本视图,对二进制文件使用二进制视图,但是对于同一个文件,其存储的内容是一致的,关键在于怎么解析看待这个文件,一个文本文件也可以解析为二进制文件</p>
-</blockquote>
-<p><img src="/uploads/C/文本视图与二进制视图.png" alt="各个文件视图"></p>
-<blockquote>
-<p>在文本视图中,程序所看到的内容和文件的内容会有所不同</p>
-</blockquote>
-<p>解释: C语言会对当前操作系统环境对文本信息做不同的解析,如写入一个换行符都写入了\n,如果操作系统是windows则是写入\n\r,linux则是\r</p>
-<h4 id="I-O级别"><a href="#I-O级别" class="headerlink" title="I/O级别"></a>I/O级别</h4><ul>
-<li>低级别I/O,由操作系统提供的I/O服务</li>
-<li>高级别I/O，由ANSI C提供的C语言标准I/O服务</li>
-</ul>
-<p>优劣势：</p>
-<ul>
-<li>标准I/O提供多个专用函数</li>
-<li>标准I/O自带缓冲区</li>
-</ul>
-<h4 id="标准文件"><a href="#标准文件" class="headerlink" title="标准文件"></a>标准文件</h4><ul>
-<li>标准输入 stdin      读取默认的输入设备(p.s.键盘)</li>
-<li>标准输出 stdout     写入默认的标准输出(p.s.显示屏)</li>
-<li>标准错误 stderr     写入默认的标准输出(p.s.显示屏)</li>
-</ul>
-<h4 id="函数众"><a href="#函数众" class="headerlink" title="函数众"></a>函数众</h4><p>说道这里,有点无聊,来个程序先嗨一发,<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ch;</span><br><span class="line">    FILE* fp;</span><br><span class="line">    <span class="keyword">long</span> count;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(argc != <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"intput the file u want to open!"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>((fp = fopen(argv[<span class="number">1</span>],<span class="string">"r"</span>)) == <span class="literal">NULL</span>)&#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"open file %s failed!"</span>, argv[<span class="number">1</span>]);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>((ch = getc(fp)) != EOF) &#123;</span><br><span class="line">        putc(ch, <span class="built_in">stdout</span>);</span><br><span class="line">        count++;</span><br><span class="line">    &#125;</span><br><span class="line">    fclose(fp);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"File %s has %d characters"</span>,argv[<span class="number">1</span>], count);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>这个程序是干什么的,</p>
-<ul>
-<li>从命令行接收参数,参数为要打开的文件</li>
-<li>打开相应的文件,将文件内容再输出到标准输出里,并统计文件内的字符数<br>运行结果:<br>./count count.c<br><img src="/uploads/C/count_run.png" alt="各个文件视图"><h5 id="fopen"><a href="#fopen" class="headerlink" title="fopen"></a>fopen</h5>一本正经的函数声明:<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">FILE * <span class="title">fopen</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> * path, <span class="keyword">const</span> <span class="keyword">char</span> * mode)</span></span>;</span><br></pre></td></tr></table></figure>
+<li>使用const变量申明</li>
+<li>const变量无法使用:=操作符申明</li>
+<li>const变量类型可以是数字,字符串<h1 id="控制"><a href="#控制" class="headerlink" title="控制"></a>控制</h1><h2 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> init;boolean;post&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
-<h6 id="传参说明"><a href="#传参说明" class="headerlink" title="传参说明"></a>传参说明</h6><p>path:很easy，文件路径,默认在当前执行文件路径查找<br>| mode      |     意义|<br>| :——– | ——–:|<br>| r|   可读|<br>| w|   可写,可创建|<br>| a|   可追加,可创建|<br>| r+|   可读写|<br>| w+|   可读写,若问件存在,则初始化为0|<br>| a+|   可读追加写,可以新建|<br>| rb,wb,ab,ab+,a+b,wb+,w+b,ab+,a+b|   类似于上面,二进制模式|<br>额 好多,剩下的自己查</p>
-<blockquote>
-<p>p.s. 注意带有<font color="red">w</font>的都会把原先的内容清空掉,谨慎,谨慎</p>
-</blockquote>
-<h6 id="返回参数说明"><a href="#返回参数说明" class="headerlink" title="返回参数说明"></a>返回参数说明</h6><p>FILE类型</p>
+<p>和其他语言没啥区别,for后面没有()把初始值,和判断条件等框起来,{}是必须的<br>init和post是可以木有滴,把init和post都去掉<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> <span class="keyword">bool</span> &#123;</span><br><span class="line">xxx</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>就和其他语言的while循环一样一样的了<br>boolean也是可以木有滴,写个死循环就是easy<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="条件"><a href="#条件" class="headerlink" title="条件"></a>条件</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> statment;<span class="keyword">bool</span> &#123;</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>和for一样,条件判断不需要(),但是{}是必须的<br>statment申明的变量的作用范围在if,以及该if对应的else作用范围内</p>
+<h3 id="switch"><a href="#switch" class="headerlink" title="switch"></a>switch</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> statment;vari&#123;</span><br><span class="line">	<span class="keyword">case</span> xx:</span><br><span class="line">		xxx</span><br><span class="line">	<span class="keyword">case</span> xxx:</span><br><span class="line">		xx</span><br><span class="line">	<span class="keyword">default</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>switch case和其他语言一样,但是不需要在每个case后面加break nice,从上往下匹配,只要有一个case匹配上了就匹配完成</p>
+<p>switch后不加条件默认跟true,可以极大方便简化很多if else语句</p>
+<h3 id="defer"><a href="#defer" class="headerlink" title="defer"></a>defer</h3><p>指向一个函数,该函数会在,该声明所在的代码块执行完之后执行<br>defer函数多次声明,为stack关系,先入函数后执行</p>
+<h2 id="高级数据结构"><a href="#高级数据结构" class="headerlink" title="高级数据结构"></a>高级数据结构</h2><h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>和C语言一样,指针指向一个值得内存地址<br>和C语言一样,&amp;操作符获取一个值得内存地址<br>和C语言一样,*操作符获取某个指针指向的内存的内容<br>和C语言<strong>不一样</strong>,Go指针不支持计算</p>
+<h3 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h3><p>声明方式<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> name <span class="keyword">struct</span>&#123;</span><br><span class="line">    vari   type1</span><br><span class="line">    vari2   type2</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结构体访问方式和C语言一样,<strong>.</strong>访问<br>name.vari例如</p>
+<p>那么结构体指针怎么访问其中的变量呢?<br>v为结构体<br>p := &amp;v<br>(*p).avri可以访问<br>那么可不可以p-&gt;vari呢,<strong>不可以</strong>,Go没有这个选项!,但是可以直接通过指针+.符号访问变量<br><strong>p.vari</strong>稳妥</p>
+<hr>
+<p>初始化方式<br>var (<br>    v1 = name()<br>    v2 = name(vari:x,vari:y)<br>    v3 = name()<br>    v4 = &amp;name(1,2)<br>)</p>
+<h3 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h3><p>声明方式<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> name [size]tye</span><br></pre></td></tr></table></figure></p>
+<p>初始化方式<br>申明后一个一个赋值<br>或者<br>name := [size]type{xx,xx,xx,xx}大括号里元素数量可以和size不一致会用默认类型初始化</p>
+<h3 id="slice"><a href="#slice" class="headerlink" title="slice"></a>slice</h3><p>slice是可以视为一个数组的动态视图，在实际使用中比数组来的更加实用<br>数组方法声明&amp;&amp;初始化方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a []T = array[low:high]</span><br></pre></td></tr></table></figure></p>
 <ul>
-<li>文件指针</li>
-<li>不指向实际文件,而是指向一个文件的数据包(包含文件的各种信息,包括缓冲区,)<br>以上为C primer pluse的解释 那么FILE到底是如何定义的呢！<br>找到系统/usr/include/stdio.h下<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IO_FILE</span> <span class="title">FILE</span>;</span></span><br></pre></td></tr></table></figure>
+<li><strong>注意,low,high都是数组下标，而且l包含low，不包含high 真撒比</strong></li>
+<li>low,high在初始化的时候都可以不填，都会默认上下届<blockquote>
+<p>slice不存储任何数据，slice仅仅是一个数组的视图，你对slice所做的任何修改都会造成数组的修改，以及相对应的该数组其他slice元素的修改</p>
+</blockquote>
 </li>
 </ul>
-<p>将struct _IO_FILE 解析成了FILE再追,查到_IO_FILE在libio.h里<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">IO_FILE</span> &#123;</span></span><br><span class="line">  <span class="keyword">int</span> _flags;		<span class="comment">/* High-order word is _IO_MAGIC; rest is flags. */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _IO_file_flags _flags</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* The following pointers correspond to the C++ streambuf protocol. */</span></span><br><span class="line">  <span class="comment">/* Note:  Tk uses the _IO_read_ptr and _IO_read_end fields directly. */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_read_ptr;	<span class="comment">/* Current read pointer */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_read_end;	<span class="comment">/* End of get area. */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_read_base;	<span class="comment">/* Start of putback+get area. */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_write_base;	<span class="comment">/* Start of put area. */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_write_ptr;	<span class="comment">/* Current put pointer. */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_write_end;	<span class="comment">/* End of put area. */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_buf_base;	<span class="comment">/* Start of reserve area. */</span></span><br><span class="line">  <span class="keyword">char</span>* _IO_buf_end;	<span class="comment">/* End of reserve area. */</span></span><br><span class="line">  <span class="comment">/* The following fields are used to support backing up and undo. */</span></span><br><span class="line">  <span class="keyword">char</span> *_IO_save_base; <span class="comment">/* Pointer to start of non-current get area. */</span></span><br><span class="line">  <span class="keyword">char</span> *_IO_backup_base;  <span class="comment">/* Pointer to first valid character of backup area */</span></span><br><span class="line">  <span class="keyword">char</span> *_IO_save_end; <span class="comment">/* Pointer to end of non-current get area. */</span></span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> _<span class="title">IO_marker</span> *_<span class="title">markers</span>;</span></span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> _<span class="title">IO_FILE</span> *_<span class="title">chain</span>;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">int</span> _fileno;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> 0</span></span><br><span class="line">  <span class="keyword">int</span> _blksize;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">  <span class="keyword">int</span> _flags2;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">  _IO_off_t _old_offset; <span class="comment">/* This used to be _offset but it's too small.  */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __HAVE_COLUMN <span class="comment">/* temporary */</span></span></span><br><span class="line">  <span class="comment">/* 1+column number of pbase(); 0 is unknown. */</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">short</span> _cur_column;</span><br><span class="line">  <span class="keyword">signed</span> <span class="keyword">char</span> _vtable_offset;</span><br><span class="line">  <span class="keyword">char</span> _shortbuf[<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">  <span class="comment">/*  char* _save_gptr;  char* _save_egptr; */</span></span><br><span class="line"></span><br><span class="line">  _IO_lock_t *_lock;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> _IO_USE_OLD_IO_FILE</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>好吧，有点小复杂,不深究了。</p>
-<h5 id="getc-putc"><a href="#getc-putc" class="headerlink" title="getc putc"></a>getc putc</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">getc</span><span class="params">(FILE *stream)</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fputc</span><span class="params">(<span class="keyword">int</span> ch,FILE*fp)</span></span></span><br></pre></td></tr></table></figure>
-<p>与getchar() putchar()类似 就是把输入输出可以重定位了,不只是标准输入输出</p>
-<blockquote>
-<p>文件末尾的问题:getc()在读取一个文件末尾的时候,将会返回特殊值EOF,所以C语言只有在读到超过文件末尾的时候才能判断文件的末尾,所以为了避免读到空文件,对文件末尾的判断要加在循环开始的地方</p>
-</blockquote>
-<h5 id="puts"><a href="#puts" class="headerlink" title="puts"></a>puts</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">puts</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *<span class="built_in">string</span>)</span></span>;</span><br></pre></td></tr></table></figure>
-<p>将字符串输出到标准输出上</p>
-<h5 id="fclose"><a href="#fclose" class="headerlink" title="fclose()"></a>fclose()</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fclose</span><span class="params">( FILE *fp )</span></span>;</span><br></pre></td></tr></table></figure>
-<p>返回值 0关闭成功 其余关闭失败<br>关闭一个文件流,简单易懂</p>
-<blockquote>
-<p>但是也可能出现关闭失败的现象,比如移动硬盘被拔了,磁盘满了</p>
-</blockquote>
-<h5 id="fprintf-fscanf"><a href="#fprintf-fscanf" class="headerlink" title="fprintf fscanf"></a>fprintf fscanf</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fprintf</span> <span class="params">(FILE* stream, <span class="keyword">const</span> <span class="keyword">char</span>*format, [argument])</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fscanf</span><span class="params">(FILE*stream,constchar*format,[argument...])</span></span>;</span><br></pre></td></tr></table></figure>
-<h5 id="rewind"><a href="#rewind" class="headerlink" title="rewind"></a>rewind</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">rewind</span><span class="params">(FILE *stream)</span></span>;</span><br></pre></td></tr></table></figure>
-<p>将文件流指针移到开始</p>
+<p>自定义声明&amp;&amp;初始化方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">r := []<span class="keyword">bool</span>&#123;<span class="literal">true</span>,<span class="literal">false</span>,<span class="literal">true</span>,<span class="literal">false</span>&#125;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>len() slice含有元素的多少</li>
+<li>cap() 从slice第一个元素算起，array与多少个元素</li>
+<li>空slice nil<h2 id="接口-amp-amp-方法"><a href="#接口-amp-amp-方法" class="headerlink" title="接口&amp;&amp;方法"></a>接口&amp;&amp;方法</h2><h3 id="method"><a href="#method" class="headerlink" title="method"></a>method</h3>method是啥,一种特殊的函数,这种函数在声明时带上了receiver<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(receiver Type)</span><span class="title">funcName</span><span class="params">()</span> <span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>这样在方法内可以访问receiver,receiver调用方法也可以直接用receiver.funcName的方法</p>
+<h2 id="并发-貌似是go语言最主要的特性"><a href="#并发-貌似是go语言最主要的特性" class="headerlink" title="并发(貌似是go语言最主要的特性)"></a>并发(貌似是go语言最主要的特性)</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> f(x,y,z)</span><br></pre></td></tr></table></figure>
+<p>就会新开一个协程运行这个f(x,y,z)函数,所有协程运行于相同的地址空间,所以访问同一块内存时必须保证是同步的<br><strong>sync</strong> package提供了有用的相关功能,虽然你可能是不会经常用到,毕竟还有其他更常用的</p>
+<h3 id="channels"><a href="#channels" class="headerlink" title="channels"></a>channels</h3><p>channels是一种通道数据结构,允许你通过<strong>&lt;-</strong>操作符放入数据,取出数据<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ch &lt;- v   <span class="comment">//v放入ch</span></span><br><span class="line">v &lt;- ch   <span class="comment">//从ch取出数据赋值给v</span></span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>channels申明初始化方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br></pre></td></tr></table></figure></p>
+<p>以上声明方法为不带缓冲区的channels声明方法,程序执行的时候回阻塞在读和写channels的调用处<br>ch&lt;- -&lt;ch <strong>读写管道都会阻塞直到另一边执行完成</strong></p>
+<h4 id="有缓冲channels"><a href="#有缓冲channels" class="headerlink" title="有缓冲channels"></a>有缓冲channels</h4><p>声明方法<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>,size)</span><br></pre></td></tr></table></figure></p>
+<p>有缓冲就很好理解了,<strong>在缓冲没满的情况下,发送方就不会阻塞,在缓冲区没空的情况下,接收方就不会阻塞</strong></p>
+<h4 id="close-amp-amp-range"><a href="#close-amp-amp-range" class="headerlink" title="close &amp;&amp; range"></a>close &amp;&amp; range</h4><p><strong>发送方</strong>可以选择在适当时候close一个channel<br>range ch 遍历channel中所有元素,直道遇到close<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a,ok := &lt;-ch</span><br><span class="line"><span class="comment">//ok返回bool值,判断当前channel是否被close</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="select"><a href="#select" class="headerlink" title="select"></a>select</h4><p>select表达式有点像switch case语句<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> &#123;</span><br><span class="line"><span class="keyword">case</span> xxxx:</span><br><span class="line">    xxx</span><br><span class="line"><span class="keyword">case</span> xxxx:</span><br><span class="line">    xxx</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">    xxxxx</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果两个都可以执行,随便挑一个,好过分</p>
+<h3 id="sync-mutex"><a href="#sync-mutex" class="headerlink" title="sync.mutex"></a>sync.mutex</h3><p>sync包提供了一个变量sync.mutex锁可以对</p>
 
           
         
@@ -1703,7 +863,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/20/成长/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/01/linux/gdb/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1722,7 +882,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/09/20/成长/" itemprop="url">成长</a></h1>
+                <a class="post-title-link" href="/2018/03/01/linux/gdb/" itemprop="url">gdb</a></h1>
         
 
         <div class="post-meta">
@@ -1734,8 +894,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-20T10:02:10+08:00">
-                2017-09-20
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-01T10:48:00+08:00">
+                2018-03-01
               </time>
             
 
@@ -1744,28 +904,6 @@
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/思考/" itemprop="url" rel="index">
-                    <span itemprop="name">思考</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -1796,7 +934,7 @@
       
         
           
-            <h2 id="成长"><a href="#成长" class="headerlink" title="成长"></a>成长</h2><h3 id="记录"><a href="#记录" class="headerlink" title="记录"></a>记录</h3><p>魔兽世界大法师卡德加常年挂在嘴边的一句话:<strong>观察,与反馈</strong><br>如果任由生活原来的节奏继续下去,每天都在反悔的懊恼与对明天的坚定决心的盲目信任中度过的话,也许我低估了生活本身的复杂度。懊恼的事情如果反复发生,那么就是不是一个坚定决心就能改变的事实,而应该记录生活,分析生活,反馈日常,才能有所改变。</p>
+            <p>之前刷算法题,在linux下面总是不好调试,而且貌似看各种linux下的框架源码都需要这货,早学早轻松,2333</p>
 
           
         
@@ -1845,7 +983,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/20/log/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/23/algorithm/TrieTree/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1864,7 +1002,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/09/20/log/" itemprop="url">log</a></h1>
+                <a class="post-title-link" href="/2018/02/23/algorithm/TrieTree/" itemprop="url">TrieTree</a></h1>
         
 
         <div class="post-meta">
@@ -1876,8 +1014,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-20T10:00:10+08:00">
-                2017-09-20
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-23T17:11:00+08:00">
+                2018-02-23
               </time>
             
 
@@ -1886,28 +1024,6 @@
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/思考/" itemprop="url" rel="index">
-                    <span itemprop="name">思考</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -1938,22 +1054,8 @@
       
         
           
-            <h2 id="case"><a href="#case" class="headerlink" title="case"></a>case</h2><h3 id="工作玩手机"><a href="#工作玩手机" class="headerlink" title="工作玩手机"></a>工作玩手机</h3><table>
-<thead>
-<tr>
-<th style="text-align:center">时间</th>
-<th style="text-align:center">环境</th>
-<th style="text-align:center">原因</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">shit</td>
-<td style="text-align:center">shit</td>
-<td style="text-align:center">shit</td>
-</tr>
-</tbody>
-</table>
+            <p>老是看到这个数据结构,但是至今没有好好琢磨过,实现一发。</p>
+<p>#</p>
 
           
         
@@ -2002,7 +1104,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/19/数据库/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/11/代码方法论/designPattern/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -2021,7 +1123,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/09/19/数据库/" itemprop="url">数据库</a></h1>
+                <a class="post-title-link" href="/2018/02/11/代码方法论/designPattern/" itemprop="url">设计模式</a></h1>
         
 
         <div class="post-meta">
@@ -2033,8 +1135,155 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-19T11:00:00+08:00">
-                2017-09-19
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-11T21:20:00+08:00">
+                2018-02-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="创建型模式"><a href="#创建型模式" class="headerlink" title="创建型模式"></a>创建型模式</h1><ul>
+<li>类创建型模式使用继承改变被实例化的类</li>
+<li><p>对象创建型模式将实例化委托给另一个对象</p>
+<p>创建型对象的意义:系统的演化越来越复杂,重心从一组固定行为的硬编码转移为定义一个较小的基本行为集,这些行为集可以被任意组合成任意更加复杂的行为,这样创建有特定行为的对象要求的不仅仅是实例化一个类</p>
+</li>
+<li><p>将系统使用了哪些具体的类信息封装起来</p>
+</li>
+<li>隐藏了这些类的实例是如何被创建和放在一期的</li>
+</ul>
+<p>迷宫初始化case:<br>我们初始化一个迷宫,而不考虑玩家的具体行为,仅仅做初始化,在这个case中首先声明有以下基本组件</p>
+<ul>
+<li>房间(room)</li>
+<li>墙(wall)</li>
+<li>门(door)</li>
+</ul>
+<p>首先有一个组建基类<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MapSite</span> &#123;</span></span><br><span class="line">    <span class="keyword">public</span> :</span><br><span class="line">        <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Enter</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>其余的三个组建都要继承这个类</p>
+<p>room类<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Room</span> :</span> <span class="keyword">public</span> MapSite &#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        Room(<span class="keyword">int</span> roomNo);</span><br><span class="line"></span><br><span class="line">        <span class="function">MapSite* <span class="title">GetSide</span><span class="params">(Direction)</span></span>;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">SetSide</span><span class="params">(Direction, MapSite*)</span></span>;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Enter</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="keyword">private</span>:</span><br><span class="line">        MapSite* _sides[<span class="number">4</span>];</span><br><span class="line">        <span class="keyword">int</span> _roomNumber;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>wall类<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Wall</span> :</span> <span class="keyword">public</span> MapSite &#123;</span><br><span class="line">    <span class="keyword">public</span> :</span><br><span class="line">        Wall();</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Enter</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>door类<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Door</span> :</span> <span class="keyword">public</span> MapSite &#123;</span><br><span class="line">    <span class="keyword">public</span> :</span><br><span class="line">        <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Enter</span><span class="params">()</span></span>;</span><br><span class="line">        </span><br><span class="line">        Door(Room* = <span class="number">0</span>, Room* = <span class="number">0</span>);</span><br><span class="line">        <span class="function">Room* <span class="title">OtherSideFrom</span><span class="params">(Room*)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> :</span><br><span class="line">        Room* _room1;</span><br><span class="line">        Room* _room2;</span><br><span class="line">        <span class="keyword">bool</span> _isOpen;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>迷宫类<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Maze</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span> :</span><br><span class="line">    Maze();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">AddRoom</span><span class="params">(Room*)</span></span>;</span><br><span class="line">    <span class="function">Room* <span class="title">RoomNo</span><span class="params">(<span class="keyword">int</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> :</span><br><span class="line">    <span class="comment">//</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>同时定义迷宫游戏类初始化迷宫地图<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Maze* MazeGame::CreateMaze()&#123;</span><br><span class="line">    Maze* aMaze = <span class="keyword">new</span> Maze();</span><br><span class="line"></span><br><span class="line">    Room* r1 = <span class="keyword">new</span> Room(<span class="number">1</span>);</span><br><span class="line">    Room* r2 = <span class="keyword">new</span> Room(<span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    Door* theDoor = <span class="keyword">new</span> Door(r1,r2);</span><br><span class="line">    aMaze-&gt;addRoom(r1);</span><br><span class="line">    aMaze-&gt;addRoom(r2);</span><br><span class="line"></span><br><span class="line">    r1-&gt;setSide(North, <span class="keyword">new</span> Wall);</span><br><span class="line">    r1-&gt;setSide(East, theDoor);</span><br><span class="line">    r1-&gt;setSide(South, <span class="keyword">new</span> Wall);</span><br><span class="line">    r1-&gt;setSide(West, <span class="keyword">new</span> Wall);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    r1-&gt;setSide(North, <span class="keyword">new</span> Wall);</span><br><span class="line">    r1-&gt;setSide(East,  theDoor);</span><br><span class="line">    r1-&gt;setSide(South, <span class="keyword">new</span> Wall);</span><br><span class="line">    r1-&gt;setSide(West, <span class="keyword">new</span> Wall);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>ok,这样我们就完成了一个迷宫类的基本实现,仅仅有两个宫格的迷宫就有如此多代码,显然是相当复杂的。我们可以将那一堆setSide在Room初始化的时候默认初始化为墙，会使得代码更加精简,但是这个代码的根本 问题不在于代码的长度,而是在于,迷宫的实际生成都依赖于硬编码,如果需要改变布局就需要,改变这个成员函数,这个不方便代码的重用。</p>
+<p>创建型模式可以将这个系统设计的更加灵活,但是不一定为更小,特别是，它们将便于修改定义一个迷宫构件的类</p>
+<h2 id="Abstract-Factory"><a href="#Abstract-Factory" class="headerlink" title="Abstract Factory"></a>Abstract Factory</h2><h3 id="意图"><a href="#意图" class="headerlink" title="意图"></a>意图</h3><p>提供一个创建一系列相关或者相互依赖的=对象的接口,而无需指定它们具体的类</p>
+<h3 id="别名"><a href="#别名" class="headerlink" title="别名"></a>别名</h3><p>Kit(工具箱)</p>
+<h3 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h3><p>比如说我们要实现一个支持多个画风的用户界面工具包(滚动条,窗口,按钮等),那么我们不应该在具体的窗口组件上编码他的视感风格,否则实例化之后,不方便切换画风。</p>
+<p>为了解决这个问题,我们可以定义一个抽象的WidgetFactory类,这个类声明了一个用来创建每一类基本窗口组件的接口。每一个窗口组件有一个抽象类,而具体的子类则实现了窗口组件的特定视感风格,<br>对于每一个抽象窗口组件类,WidgetFactory接口都有一个返回新窗口组件对象的操作。</p>
+<h1 id="责任链模型"><a href="#责任链模型" class="headerlink" title="责任链模型"></a>责任链模型</h1>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/07/linux/wget_error/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/02/07/linux/wget_error/" itemprop="url">wget_error</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-07T16:43:00+08:00">
+                2018-02-07
               </time>
             
 
@@ -2056,8 +1305,30 @@
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/数据库/" itemprop="url" rel="index">
-                    <span itemprop="name">数据库</span>
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/wget/" itemprop="url" rel="index">
+                    <span itemprop="name">wget</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/wget/curl/" itemprop="url" rel="index">
+                    <span itemprop="name">curl</span>
                   </a>
                 </span>
 
@@ -2095,76 +1366,329 @@
       
         
           
-            <h2 id="查看数据库表占用空间"><a href="#查看数据库表占用空间" class="headerlink" title="查看数据库表占用空间"></a>查看数据库表占用空间</h2><h3 id="查看数据库占用空间"><a href="#查看数据库占用空间" class="headerlink" title="查看数据库占用空间"></a>查看数据库占用空间</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(max_data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> max_data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_free)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_free,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(index_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> index_size</span><br><span class="line"><span class="keyword">FROM</span> information_schema.tables <span class="keyword">WHERE</span> TABLE_SCHEMA = <span class="string">''</span>;</span><br></pre></td></tr></table></figure>
-<h3 id="查看表占用空间"><a href="#查看表占用空间" class="headerlink" title="查看表占用空间"></a>查看表占用空间</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(max_data_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> max_data_size,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(data_free)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> data_free,</span><br><span class="line"><span class="keyword">CONCAT</span>(<span class="keyword">TRUNCATE</span>(<span class="keyword">SUM</span>(index_length)/<span class="number">1024</span>/<span class="number">1024</span>,<span class="number">2</span>),<span class="string">'MB'</span>) <span class="keyword">AS</span> index_size</span><br><span class="line"><span class="keyword">FROM</span> information_schema.tables <span class="keyword">WHERE</span> TABLE_NAME = <span class="string">'表名'</span>;</span><br></pre></td></tr></table></figure>
-<h3 id="向数据库中存储json字符串"><a href="#向数据库中存储json字符串" class="headerlink" title="向数据库中存储json字符串"></a>向数据库中存储json字符串</h3><p>注意需要向字符串两边加上’’</p>
-<h3 id="Mysql-information-schema数据库表"><a href="#Mysql-information-schema数据库表" class="headerlink" title="Mysql information_schema数据库表"></a>Mysql information_schema数据库表</h3><p>Mysql的INFORMATION_SCHEMA数据库包含了一些表和视图，提供了访问数据库元数据的方式。<br>元数据是关于数据的数据，如数据库名或表名，列的数据类型，或访问权限等。有些时候用于表述该信息的其他术语包括“数据词典”和“系统目录”。</p>
-<p><strong>SCHEMATA表</strong>：提供了当前mysql实例中所有数据库的信息。是show databases的结果取之此表。</p>
-<p><strong>TABLES表</strong>：提供了关于数据库中的表的信息（包括视图）。详细表述了某个表属于哪个schema，表类型，表引擎，创建时间等信息。是show tables from schemaname的结果取之此表。</p>
-<p><strong>COLUMNS表</strong>：提供了表中的列信息。详细表述了某张表的所有列以及每个列的信息。是show columns from schemaname.tablename的结果取之此表。</p>
-<p><strong>STATISTICS表</strong>：提供了关于表索引的信息。是show index from schemaname.tablename的结果取之此表。</p>
-<p><strong>USER_PRIVILEGES（用户权限）表</strong>：给出了关于全程权限的信息。该信息源自mysql.user授权表。是非标准表。</p>
-<p><strong>SCHEMA_PRIVILEGES（方案权限）表</strong>：给出了关于方案（数据库）权限的信息。该信息来自mysql.db授权表。是非标准表。</p>
-<p><strong>TABLE_PRIVILEGES（表权限）表</strong>：给出了关于表权限的信息。该信息源自mysql.tables_priv授权表。是非标准表。</p>
-<p><strong>COLUMN_PRIVILEGES（列权限）表</strong>：给出了关于列权限的信息。该信息源自mysql.columns_priv授权表。是非标准表。</p>
-<p><strong>CHARACTER_SETS（字符集）表</strong>：提供了mysql实例可用字符集的信息。是SHOW CHARACTER SET结果集取之此表。</p>
-<p><strong>COLLATIONS表</strong>：提供了关于各字符集的对照信息。</p>
-<p><strong>COLLATION_CHARACTER_SET_APPLICABILITY表</strong>：指明了可用于校对的字符集。这些列等效于SHOW COLLATION的前两个显示字段。</p>
-<p><strong>TABLE_CONSTRAINTS表</strong>：描述了存在约束的表。以及表的约束类型。</p>
-<p><strong>KEY_COLUMN_USAGE表</strong>：描述了具有约束的键列。</p>
-<p><strong>ROUTINES表</strong>：提供了关于存储子程序（存储程序和函数）的信息。此时，ROUTINES表不包含自定义函数（UDF）。名为“mysql.proc name”的列指明了对应于INFORMATION_SCHEMA.ROUTINES表的mysql.proc表列。</p>
-<p><strong>VIEWS表</strong>：给出了关于数据库中的视图的信息。需要有show views权限，否则无法查看视图信息。</p>
-<p><strong>TRIGGERS表</strong>：提供了关于触发程序的信息。必须有super权限才能查看该表</p>
-<h3 id="mysql锁机制"><a href="#mysql锁机制" class="headerlink" title="mysql锁机制"></a>mysql锁机制</h3><h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><table>
-<thead>
-<tr>
-<th style="text-align:left">锁</th>
-<th style="text-align:left">存储引擎代表</th>
-<th style="text-align:right">开销</th>
-<th style="text-align:right">加锁速度</th>
-<th style="text-align:right">死锁</th>
-<th style="text-align:right">粒度</th>
-<th style="text-align:right">并发性能</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">表级锁</td>
-<td style="text-align:left">MyISAM</td>
-<td style="text-align:right">小</td>
-<td style="text-align:right">快</td>
-<td style="text-align:right">无死锁</td>
-<td style="text-align:right">粒度大</td>
-<td style="text-align:right">发生冲突概率最高并发度最低</td>
-</tr>
-<tr>
-<td style="text-align:left">行级锁</td>
-<td style="text-align:left">innoDB</td>
-<td style="text-align:right">大</td>
-<td style="text-align:right">慢</td>
-<td style="text-align:right">有死锁</td>
-<td style="text-align:right">粒度最小</td>
-<td style="text-align:right">发生冲突概率最低并发度最高</td>
-</tr>
-<tr>
-<td style="text-align:left">页面锁</td>
-<td style="text-align:left">BDB</td>
-<td style="text-align:right">中</td>
-<td style="text-align:right">中</td>
-<td style="text-align:right">有死锁</td>
-<td style="text-align:right">粒度中</td>
-<td style="text-align:right">发生冲突概率中并发度中</td>
-</tr>
-</tbody>
-</table>
-<h4 id="innoDB"><a href="#innoDB" class="headerlink" title="innoDB"></a>innoDB</h4><h2 id="索引效率实践"><a href="#索引效率实践" class="headerlink" title="索引效率实践"></a>索引效率实践</h2><h3 id="表结构"><a href="#表结构" class="headerlink" title="表结构"></a>表结构</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`fact_baoguang_detail`</span> (</span><br><span class="line">   <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">   <span class="string">`wid`</span> <span class="built_in">varchar</span>(<span class="number">32</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">   <span class="string">`index_day`</span> <span class="built_in">int</span>(<span class="number">8</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'统计日期'</span>,</span><br><span class="line">   <span class="string">`statistic_interval`</span> <span class="built_in">int</span>(<span class="number">8</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'统计区间'</span>,</span><br><span class="line">   <span class="string">`baoguang_uv`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'曝光人数'</span>,</span><br><span class="line">   <span class="string">`home`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'主页曝光人数'</span>,</span><br><span class="line">   <span class="string">`shoplist`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'店铺列表曝光人数'</span>,</span><br><span class="line">   <span class="string">`orderlist`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'订单列表'</span>,</span><br><span class="line">   <span class="string">`searchresult`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'搜索结果'</span>,</span><br><span class="line">   <span class="string">`qita`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'其他'</span>,</span><br><span class="line">   <span class="string">`liushi_user_num`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'流失人数'</span>,</span><br><span class="line">   <span class="string">`liushi_top5`</span> <span class="built_in">varchar</span>(<span class="number">200</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span> <span class="keyword">COMMENT</span> <span class="string">'流失去向'</span>,</span><br><span class="line">   PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line">   <span class="keyword">KEY</span> <span class="string">`wid_indexday_interval`</span> (<span class="string">`wid`</span>,<span class="string">`index_day`</span>,<span class="string">`statistic_interval`</span>)</span><br><span class="line"> ) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">13825589</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8 <span class="keyword">COMMENT</span>=<span class="string">'商户曝光详细信息'</span></span><br></pre></td></tr></table></figure>
-<p>运行sql<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> </span><br><span class="line">baoguang_uv baoguang_user_num, home, shoplist, orderlist, searchresult, qita, liushi_user_num baoguang_liushi_user_num </span><br><span class="line"><span class="keyword">FROM</span> fact_baoguang_detail </span><br><span class="line"><span class="keyword">WHERE</span> (wid=  <span class="string">'1541585876'</span>) <span class="keyword">AND</span> (statistic_interval=  <span class="string">'1'</span>) <span class="keyword">AND</span> (index_day=  <span class="string">'20170910'</span>)</span><br></pre></td></tr></table></figure></p>
-<p>耗时 47ms</p>
-<p>explain一下<br><img src="/uploads/sql.png" alt="explain"><br>可以看到完美命中,索引检索结果只需要一行数据</p>
-<p>如果去掉索引呢<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> <span class="string">`gaohao_b_da_waimai`</span>.<span class="string">`fact_baoguang_detail`</span> </span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">INDEX</span> <span class="string">`wid_indexday_interval`</span> ;</span><br></pre></td></tr></table></figure></p>
-<p>同样运行了上一句sql</p>
-<p>耗时 969ms相差20倍左右</p>
-<p>explain 看一下<br><img src="/uploads/sql_no_index.png" alt="explain"><br>可以看到扫全表 195w加条记录</p>
+            <p>今天准备下载一个openresty源码玩玩,然而wget一直报错<br><img src="/uploads/wget_error.png" alt="wget_error"><br>最后用<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl https://openresty.org/download/openresty-1.13.6.1.tar.gz &gt; openresty-1.13.6.1.tar.gz</span><br></pre></td></tr></table></figure></p>
+<p>搞定了,查了下网上的说法,解释说默写网站不支持非浏览器的方法去访问,所以wget跪了,更加简练的方法是<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -O  https://openresty.org/download/openresty-1.13.6.1.tar.gz</span><br></pre></td></tr></table></figure></p>
+<p>-O选项使用URL中默认的文件名保存文件到本地</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/30/linux/lua/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/01/30/linux/lua/" itemprop="url">lua</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-30T11:49:00+08:00">
+                2018-01-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="关键词"><a href="#关键词" class="headerlink" title="关键词"></a>关键词</h2><h3 id="require"><a href="#require" class="headerlink" title="require"></a>require</h3>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/26/nginx/nginx/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/01/26/nginx/nginx/" itemprop="url">nginx</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-26T14:55:00+08:00">
+                2018-01-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h1 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h1><p>该部分学习内容摘自 agentzh的nginx教程系列,可以理解为阅读笔记。<br><a href="http://openresty.org/download/agentzh-nginx-tutorials-zhcn.html#00-Foreword01" target="_blank" rel="noopener">agentzh的教程</a></p>
+<p>初次接触nginx最大的给我的感触就是,配置文件好特么麻烦！完全就是学一门新的语言= =</p>
+<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><p>在配置文件中,变量只能有一种类型,那就是字符串！</p>
+<p>赋值方法:<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">set</span> <span class="variable">$a</span> <span class="string">"hello world"</span>; <span class="comment">#nginx_rewrite set命令方式赋值</span></span><br><span class="line"></span><br><span class="line"><span class="attribute">geo</span> <span class="variable">$doller</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="string">"$"</span>;</span><br><span class="line">&#125;                      <span class="comment">#geo命令赋值</span></span><br><span class="line"></span><br><span class="line"><span class="attribute">set_unescape_uri</span> <span class="variable">$name</span> <span class="variable">$arr_name</span>;<span class="comment">#设置name为$arr_name转码后的变量值,创建,赋值一条龙服务</span></span><br></pre></td></tr></table></figure></p>
+<p><a href="###geo">geo命令</a></p>
+<p>变量名必须带有$前缀(PHP程序员可能觉得没什么问题,但是Java,C++的筒子们可能觉得难受了),其实好处很简单:在字符串内的变量拼接变得很简单了<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /test&#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="string">"hello"</span>;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$b</span> <span class="string">"<span class="variable">$a</span> xx <span class="variable">$a</span>"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$b</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>注意在echo 时 $符是无法转义的,不要妄想\$可以完成转义,处理办法可以将$赋值给某个变量然后输出那个变量,通过geo方法,<strong>通过set方法会失败的</strong>,<br>比如<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">set</span> <span class="variable">$a</span> <span class="string">"$"</span>;<span class="comment">#nginx: [emerg] invalid variable name报错!</span></span><br></pre></td></tr></table></figure></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl Hostname/test</span><br><span class="line"><span class="meta">#</span>ans</span><br><span class="line">hello xx hello</span><br></pre></td></tr></table></figure>
+<p>如果变量解析时需要与其余字符串结合例如<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">set</span> <span class="variable">$a</span> <span class="string">"aa"</span>;</span><br><span class="line"><span class="attribute">echo</span> <span class="variable">$ab</span>;  <span class="comment">#这个时候你就无法解析$a了</span></span><br><span class="line"><span class="attribute">echo</span> <span class="variable">$&#123;a&#125;</span>b;  <span class="comment">#这个才是正确的姿势,以我PHP的角度看,肥肠顺眼</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="变量的赋值与创建"><a href="#变量的赋值与创建" class="headerlink" title="变量的赋值与创建"></a>变量的赋值与创建</h3><p>set,geo指令可以在给变量赋值之余还可以进行变量的创建,<strong>nginx变量的创建发生在nginx加载配置文件的时候,而变量的赋值发生在实际请求的处理的时候</strong>。<br>一个变量如果没有set 后者geo直接处理,则会造成nginx启动失败！</p>
+<p>同时,nginx的变量可以理解为一个全局变量(对单次请求而言！！！),只要在某一个模块做了赋值,无需在其他模块再做创建操作,可以直接调用,修改,但是实际的值,还是依赖于<font color="red"><strong>实际请求过程中的流程中数据的流转</strong></font><br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8080</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /foo &#123;</span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"foo = [<span class="variable">$foo</span>]"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /bar &#123;</span><br><span class="line">        <span class="attribute">set</span> <span class="variable">$foo</span> <span class="number">32</span>;</span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"foo = [<span class="variable">$foo</span>]"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> curl 'http://localhost:8080/foo'</span><br><span class="line">foo = []</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span> curl 'http://localhost:8080/bar'</span><br><span class="line">foo = [32]</span><br><span class="line"></span><br><span class="line"><span class="meta">$</span> curl 'http://localhost:8080/foo'</span><br><span class="line">foo = []</span><br></pre></td></tr></table></figure>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"> <span class="section">server</span> &#123;</span><br><span class="line">     <span class="attribute">listen</span> <span class="number">8080</span>;</span><br><span class="line"></span><br><span class="line">     <span class="attribute">location</span> /foo &#123;</span><br><span class="line">         <span class="attribute">set</span> <span class="variable">$a</span> hello;</span><br><span class="line"><span class="attribute">echo_exec</span> /bar</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     location /bar &#123;</span><br><span class="line">         <span class="attribute">echo</span> <span class="string">"a = [<span class="variable">$a</span>]"</span>;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>echo_exec可以实现location之间的跳转,rewrite规则也可以实现这个跳转</p>
+<h3 id="内建变量"><a href="#内建变量" class="headerlink" title="内建变量"></a>内建变量</h3><p>最常见的内建变量是一些关于请求信息的变量</p>
+<ul>
+<li>$uri 当前请求uri(经过解码,不包含请求参数)</li>
+<li>$request_uri(原始uri)</li>
+<li>$arg_xxxx变量群(xxxx匹配各个各个请求的变量名,注意:<strong>不区分大小写</strong>,uri中的参数不解码!!,想要查看解码的参数？参见<a href="###set_unescape_uri">set_unescape_uri</a>,<font color="red">不知道为什么如果参数是&amp;的形式传进去的答应不出来这个参数需要后续研究</font>)</li>
+<li>$cookie_xxxx变量群</li>
+<li>$http_xxxx变量群</li>
+<li>$send_http_xxxx变量群<br>详情请查阅ngx_http_core模块官方文档</li>
+</ul>
+<p>很多内建变量都是只读的,注意以上变量轻易不要修改,很可能引起崩溃,当然也有支持修改的内建变量</p>
+<ul>
+<li>$args 当前请求的参数(注意$args修改后,$arg_xxx系列也会自己修改,这个参数经过<a href="###proxy_pass">proxy_pass</a>会继续透传到下面的代理服务器,$arg_xxxx系列变量其实是通过时事获取的方式来)</li>
+</ul>
+<h3 id="变量读取方式"><a href="#变量读取方式" class="headerlink" title="变量读取方式"></a>变量读取方式</h3><h4 id="取处理程序"><a href="#取处理程序" class="headerlink" title="取处理程序"></a>取处理程序</h4><p>nginx模块可以自动为其创建的变量使用<strong>值容器</strong>,作为其取处理程序的计算结果的缓存,nginx_map在处理过程中,默认认为取处理程序的结果十分重要,所以默认进行缓存.<br>case:<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">map</span> <span class="variable">$args</span> <span class="variable">$foo</span>&#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="number">0</span>;</span><br><span class="line">    <span class="attribute">debug</span>   <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">8080</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">location</span> /test&#123;</span><br><span class="line">        <span class="attribute">set</span> <span class="variable">$orig_foo</span> <span class="variable">$foo</span>;</span><br><span class="line">        <span class="attribute">set</span> <span class="variable">$args</span> <span class="literal">debug</span>;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"orig: <span class="variable">$orig_foo</span>"</span>;</span><br><span class="line">        <span class="attribute">echo</span> <span class="string">"foo: <span class="variable">$foo</span>"</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>运行访问localhost:8080/test 输出 0 0<br>访问/test?debug 输出1 1<br>说明map指令确实对所有的映射关系做了缓存</p>
+<h3 id="请求"><a href="#请求" class="headerlink" title="请求"></a>请求</h3><p>前面我们说过,nginx变量的值与当前请求相关.但是请求究竟具体意义没有说明,在nginx世界,请求包括主请求和子请求</p>
+<h3 id="主请求"><a href="#主请求" class="headerlink" title="主请求"></a>主请求</h3><p>主请求就是从nginx外部发起,通过http客户端发起的请求</p>
+<h3 id="子请求"><a href="#子请求" class="headerlink" title="子请求"></a>子请求</h3><p>由nginx正在处理的请求发起的内部级联请求。变面上很想http请求,但是实际上和http一点关系没有,只不过是nginx的一种内部的抽象调用,只不过是方便nginx将主请求分解为各个子请求,并行或者串行完成主请求<br>case:<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /main &#123;</span><br><span class="line">    <span class="attribute">echo_location</span> /bar;</span><br><span class="line">    <span class="attribute">echo_location</span> /foo;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="attribute">location</span> /foo &#123;</span><br><span class="line">    <span class="attribute">echo</span> fool;</span><br><span class="line">&#125;</span><br><span class="line"><span class="attribute">location</span> /bar &#123;</span><br><span class="line">    <span class="attribute">echo</span> bar;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>依次调用了/foo /bar 两个location<br>在回到之前关于请求与变量值之间的关系问题,现在我们要谈讨下,子请求的值与主请求的相关性.</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /main &#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$var</span> main;</span><br><span class="line">    <span class="attribute">echo_location</span> /bar;</span><br><span class="line">    <span class="attribute">echo_location</span> /foo;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$var</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="attribute">location</span> /bar&#123;</span><br><span class="line">    <span class="attribute">echo</span> bar;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$var</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="attribute">location</span> /foo&#123;</span><br><span class="line">    <span class="attribute">echo</span> foo;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$var</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到在子请求中的$var的值都是空的,没有进行赋值操作。</p>
+<h4 id="父子请求共享变量"><a href="#父子请求共享变量" class="headerlink" title="父子请求共享变量"></a>父子请求共享变量</h4><p>然而世间万物就是这么麻烦,有一些命令吊起子请求,居然能共享变量,比如说nginx_auth_request的auth_request<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /main&#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$var</span> main;</span><br><span class="line">    <span class="attribute">auth_request</span> /sub;</span><br><span class="line">    <span class="attribute">echo</span> <span class="string">"main <span class="variable">$var</span>;"</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">location /sub &#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$var</span> sub;</span><br><span class="line">    <span class="attribute">echo</span> <span class="string">"sub <span class="variable">$var</span>"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>很好果不其然的输出了, main sub<br>而且在子请求还完全不输出= =<br>为毛,因为auth_request完全ignore子请求的结果!只要返回了20x就开开心心往下跑了!<br>如果不是20x就直接跳到错误页</p>
+<h4 id="只管主请求的变量"><a href="#只管主请求的变量" class="headerlink" title="只管主请求的变量"></a>只管主请求的变量</h4><p>好了上面我们说了有一些子请求的发起方式会造成,父子请求共享变量,接下来我们要介绍一些变量,不管是不是父子请求,他都只管主请求.</p>
+<h5 id="request-method"><a href="#request-method" class="headerlink" title="request_method"></a>request_method</h5><p>$request_method描述的是请求的方法,他只会存储主请求的请求方法<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /main &#123;</span><br><span class="line">    <span class="attribute">echo</span> <span class="string">"main <span class="variable">$request_method</span>"</span>;</span><br><span class="line">    <span class="attribute">echo_location</span> /sub;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="attribute">location</span> /sub &#123;</span><br><span class="line">    <span class="attribute">echo</span> <span class="string">"sub <span class="variable">$request_method</span>"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>无论怎么改变请求方法,两个$request_method打印的都是主请求的方法,同时需要注意的是,缓存所依赖的变量容器是与当前请求绑定的,父子请求不共享变量.<br>所以$request_method的变量始终存储的是主请求的变量<br>那么如何获取当前请求的请求方法呢, <strong>$echo_request_method</strong>这个变量记录当前请求的请求方法</p>
+<h5 id="request-uri"><a href="#request-uri" class="headerlink" title="request_uri"></a>request_uri</h5><h3 id="invalid-amp-missing"><a href="#invalid-amp-missing" class="headerlink" title="invalid &amp; missing"></a>invalid &amp; missing</h3><p>前面说过Nginx的变量只有一种格式就是字符串,但是变量可能不存在也可能没有意义,那么如何区分这两种状态呢!<br>下一节所描述的两个关键词:</p>
+<ul>
+<li>invalid 非法:指的是创建了该变量,但是并没有给他正确的赋值</li>
+<li>missing:指的是没有创建这个变量,但是直接获取该变量</li>
+</ul>
+<p>通过第三方模块ngx_lua,我们可以在lua代码中获取这两个值<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /main &#123;</span><br><span class="line">    <span class="attribute">content_by_lua</span> <span class="string">'</span></span><br><span class="line"><span class="string">        if ngx.var.arg_name == nil then</span></span><br><span class="line"><span class="string">            ngx.say("name: missing")</span></span><br><span class="line"><span class="string">        else </span></span><br><span class="line"><span class="string">            ngx.say("name [",ngx.var.arg_name,"]")</span></span><br><span class="line"><span class="string">        end</span></span><br><span class="line"><span class="string">    '</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过执行访问控制变量的传入可以输出不同的结果,判断该值为valid还是missing<br>通过ngx_lua模块的功能我们区分出了,不同的nginx的值的的功能,<font color="red">这个实现的技巧的关键是lua在读取nginx变量如果没有创建的话会初始化为nil</font></p>
+<h2 id="配置指令的执行顺序"><a href="#配置指令的执行顺序" class="headerlink" title="配置指令的执行顺序"></a>配置指令的执行顺序</h2><p>nginx处理每一个用户请求时,都是按照若干个不同阶段依次处理的<br>例如<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /test&#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="number">32</span>;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$a</span>;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="number">64</span>;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$a</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>访问该请求,我们看到了结果<br>64<br>64<br>Why!<br>因为nginx指令是依赖<strong>执行阶段</strong>进行执行,指令的执行顺序并不依赖于配置项的先后顺序,nginx一共有11项执行顺序,最主要的几个执行阶段依次有rewrite,access,content阶段,<br>echo指令在content阶段执行,set指令在rewrite阶段执行.如何验证</p>
+<p>我们重新编译nginx,使其带上debug功能,./configure –with-debug, 随后设置nginx日志打印等级为debug</p>
+<p>在重新访问刚才的url后,就会发现一大堆debug日志,通过<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -E 'http (output filter|script (set|value))' error.log</span><br></pre></td></tr></table></figure></p>
+<p>即可看到一下信息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">2018/02/07 18:19:51 [debug] 25367#0: *8 http script value: &quot;32&quot;</span><br><span class="line">2018/02/07 18:19:51 [debug] 25367#0: *8 http script set $a</span><br><span class="line">2018/02/07 18:19:51 [debug] 25367#0: *8 http script value: &quot;64&quot;</span><br><span class="line">2018/02/07 18:19:51 [debug] 25367#0: *8 http script set $a</span><br><span class="line">2018/02/07 18:19:51 [debug] 25367#0: *8 http output filter &quot;/test?&quot;</span><br><span class="line">2018/02/07 18:19:51 [debug] 25367#0: *8 http output filter &quot;/test?&quot;</span><br><span class="line">2018/02/07 18:19:51 [debug] 25367#0: *8 http output filter &quot;/test?&quot;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到一条set指令对应一组http script value/set日志,在进行两次set后才执行echo指令对应的output filter日志,由此看出set指令都是在echo之前执行的<br>那么怎么确定一个指令的执行阶段呢?</p>
+<ul>
+<li>看文档(phrase关键词)</li>
+<li>看源码(就是这么调)</li>
+</ul>
+<h3 id="rewrite阶段"><a href="#rewrite阶段" class="headerlink" title="rewrite阶段"></a>rewrite阶段</h3><p>这个阶段nginx只要对一些请求进行修改,或者说声明一些后续需要使用的nginx变量,当然具体你要干啥,你很多都能干,毕竟你能嵌一个lua脚本进去.nginx_rewrite模块中的指令如果配置在location中大部分都在rewrite阶段执行,如果配置在server阶段,则运行在server_rewrite阶段,在这一小节,我们要介绍几个在rewrite阶段可以与nginx_rewrite可以混用依次执行的模块指令!</p>
+<h4 id="set-unescape-uri"><a href="#set-unescape-uri" class="headerlink" title="set_unescape_uri"></a>set_unescape_uri</h4><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /test &#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="string">"hello%20world"</span>;</span><br><span class="line">    <span class="attribute">set_unescape_uri</span> <span class="variable">$b</span> <span class="variable">$a</span>;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$c</span> <span class="string">"<span class="variable">$b</span>!"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$c</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hello world!</span><br></pre></td></tr></table></figure></p>
+<p>查看日志<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -E 'http script (value|copy|set)' error.log</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2018/02/08 12:02:53 [debug] 19525#0: *13 http script value: "hello%20world"</span><br><span class="line">2018/02/08 12:02:53 [debug] 19525#0: *13 http script set $a</span><br><span class="line">2018/02/08 12:02:53 [debug] 19525#0: *13 http script value (post filter): "hello world"</span><br><span class="line">2018/02/08 12:02:53 [debug] 19525#0: *13 http script set $b</span><br><span class="line">2018/02/08 12:02:53 [debug] 19525#0: *13 http script copy: "!"</span><br><span class="line">2018/02/08 12:02:53 [debug] 19525#0: *13 http script set $c</span><br></pre></td></tr></table></figure>
+<p>由日志我们可以看到前两行对应set命令,中间两行对应set_unescape_uri,最后两行对应set,所以set_unescape_uri的执行顺序穿插在了两条set中间.</p>
+<h4 id="set-by-lua"><a href="#set-by-lua" class="headerlink" title="set_by_lua"></a>set_by_lua</h4><p>这个指令有什么用呢:可以通过内联一串lua代码给nginx变量赋值.<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /test &#123;</span><br><span class="line">	<span class="attribute">set</span> <span class="variable">$a</span> <span class="number">32</span>;</span><br><span class="line">	<span class="attribute">set</span> <span class="variable">$b</span> <span class="number">56</span>;</span><br><span class="line">	<span class="attribute">set_by_lua</span> <span class="variable">$c</span> <span class="string">"return ngx.var.a + ngx.var.b"</span>;</span><br><span class="line">	<span class="attribute">set</span> <span class="variable">$equation</span> <span class="string">"<span class="variable">$a</span> + <span class="variable">$b</span> = <span class="variable">$c</span>"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="attribute">echo</span> <span class="variable">$equation</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>运行结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">32 + 56 = 88</span><br></pre></td></tr></table></figure></p>
+<p>有上面的结果看出,set_by_lua执行在了set命令中间</p>
+<h4 id="ngx-array-var"><a href="#ngx-array-var" class="headerlink" title="ngx_array_var"></a>ngx_array_var</h4><h4 id="ngx-encrypted-session"><a href="#ngx-encrypted-session" class="headerlink" title="ngx_encrypted_session"></a>ngx_encrypted_session</h4><hr>
+<p>以上一些nginx命令可以与ngx_rewrite命令混用,上面提到的这些第三方模块都采用了特殊的技术，将它们自己的配置指令“注入”到了 ngx_rewrite 模块的指令序列中（它们都借助了 Marcus Clyne 编写的第三方模块 ngx_devel_kit),但是其余的大部分的nginx命令都无法通过这种方法,来保证执行的顺序,所以nginx配置中的大部分命令都不应该和与顺序强依赖,下面介绍一些与顺序无关的几个命令</p>
+<h4 id="more-set-input-headers"><a href="#more-set-input-headers" class="headerlink" title="more_set_input_headers"></a>more_set_input_headers</h4><p>这个命令有什么用:这个命令可以在rewrite阶段改写http请求头,并且他总是运行在rewrite阶段末尾<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">location</span> /test &#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$value</span> dog;</span><br><span class="line">    <span class="attribute">more_set_input_headers</span> <span class="string">"X-Species: <span class="variable">$value</span>"</span>;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$value</span> cat;</span><br><span class="line">    <span class="attribute">echo</span> <span class="string">"X-Species: <span class="variable">$http_x_species</span>"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>运行结果为:<br>X-Species: cat<br>所以这就说明了more_set_input_headers执行在了set $value cat的后面,<strong>再单个请求阶段内部,一般会以nginx请求模块内部划分子阶段</strong></p>
+<h4 id="rewrite-by-lua"><a href="#rewrite-by-lua" class="headerlink" title="rewrite_by_lua"></a>rewrite_by_lua</h4><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">loacation</span> test/&#123;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="number">1</span>;</span><br><span class="line">    <span class="attribute">rewrite_by_lua</span> <span class="string">"ngx.var.a = ngx.var.a + 1"</span>;</span><br><span class="line">    <span class="attribute">set</span> <span class="variable">$a</span> <span class="number">56</span>;</span><br><span class="line">    <span class="attribute">echo</span> <span class="variable">$a</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行结果:57<br>可以看出rewrite_by_lua运行在了set后面,其实他也运行在rewrite阶段的末尾,那么问题来了,如果都运行在rewrite阶段的末尾,那么是谁先运行呢,答:不知道</p>
+<h3 id="access阶段"><a href="#access阶段" class="headerlink" title="access阶段"></a>access阶段</h3><p>access阶段一般都是进行一些访问控制的命令,比如检查访问ip是否合法等等</p>
+<h4 id="deny-allow"><a href="#deny-allow" class="headerlink" title="deny/allow"></a>deny/allow</h4><p>这两个命令用来控制</p>
+<h2 id="模块作用说明"><a href="#模块作用说明" class="headerlink" title="模块作用说明"></a>模块作用说明</h2><h3 id="ngx-http-geo-module"><a href="#ngx-http-geo-module" class="headerlink" title="ngx_http_geo_module"></a>ngx_http_geo_module</h3><h4 id="geo"><a href="#geo" class="headerlink" title="geo"></a>geo</h4><p>该命令由ngx_http_geo_module提供支持,默认情况下nginx自动编译了该模块<br>该命令主要作用为根据某一个变量值,给另一个变量赋值<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">geo</span> [<span class="variable">$address</span>] <span class="variable">$variable</span> &#123;&#125;</span><br></pre></td></tr></table></figure></p>
+<p>$address为默认值,即默认情况下根据address进行匹配,也可以手动根据某一变量赋值<br>详细解释查看<a href="http://www.ttlsa.com/nginx/using-nginx-geo-method/" target="_blank" rel="noopener">geo网络解释</a></p>
+<h3 id="ngx-echo"><a href="#ngx-echo" class="headerlink" title="ngx_echo"></a>ngx_echo</h3><h4 id="echo-exec"><a href="#echo-exec" class="headerlink" title="echo_exec"></a>echo_exec</h4><h3 id="ngx-rewrite"><a href="#ngx-rewrite" class="headerlink" title="ngx_rewrite"></a>ngx_rewrite</h3><h4 id="rewrite"><a href="#rewrite" class="headerlink" title="rewrite"></a>rewrite</h4><h3 id="ngx-set-misc"><a href="#ngx-set-misc" class="headerlink" title="ngx_set_misc"></a>ngx_set_misc</h3><h4 id="set-unescape-uri-1"><a href="#set-unescape-uri-1" class="headerlink" title="set_unescape_uri"></a>set_unescape_uri</h4><h3 id="ngx-proxy"><a href="#ngx-proxy" class="headerlink" title="ngx_proxy"></a>ngx_proxy</h3><h4 id="proxy-pass"><a href="#proxy-pass" class="headerlink" title="proxy_pass"></a>proxy_pass</h4><h3 id="upstream"><a href="#upstream" class="headerlink" title="upstream"></a>upstream</h3><h4 id="zone"><a href="#zone" class="headerlink" title="zone"></a>zone</h4><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Syntax:    zone name [size];</span><br><span class="line">Default:    —</span><br><span class="line">Context:    upstream]</span><br></pre></td></tr></table></figure>
+<p>用于指定共享内存zone的大小和名称,zone保存集群配置和运行时状态</p>
+<h3 id="ngx-map"><a href="#ngx-map" class="headerlink" title="ngx_map"></a>ngx_map</h3><h4 id="map"><a href="#map" class="headerlink" title="map"></a>map</h4><p>描述一个映射关系<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">map</span> <span class="variable">$args</span> <span class="variable">$foo</span>&#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="number">1</span>;</span><br><span class="line">    <span class="attribute">hello</span>   <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如上所示,表示根据$args来判断$foo的值,如果$args不存在,则$foo为1,其余情况则是,更具$args的值,对$foo进行映射<br>map指令的执行时机,map指令和server一个级别,所以会有小伙伴担心会不会所有location都会被执行这个指令,其实不时的,map指令本质上是为用户变量注册取处理程序,实际的映射关系也是在取处理程序中维护的,然而取处理程序只会在用户读取的 时候 才会精心调用,所以这个指令只会在用户执行读取变量时才会执行<br>这种数据的处理方法称之为<strong>惰性求值</strong>,Haskell也使用了这种思想.</p>
+<h3 id="ngx-lua"><a href="#ngx-lua" class="headerlink" title="ngx_lua"></a>ngx_lua</h3><p>将lua解释器嵌入nginx核心中,lua代码可以直接嵌在nginx配置文件中,也可以放置在外部的.lua文件中,然后在Nginx配置文件中引用这些路径<br>lua代码中引用nginx变量的方法,ngx.var.xxxxx<br>例如nginx有一个变量$arg_name<br>则在lua中引用该变量的方法 ngx.var.arg_name</p>
+<h1 id="执行原理"><a href="#执行原理" class="headerlink" title="执行原理"></a>执行原理</h1><h2 id="nginx执行阶段"><a href="#nginx执行阶段" class="headerlink" title="nginx执行阶段"></a>nginx执行阶段</h2><h3 id="rewrite阶段-1"><a href="#rewrite阶段-1" class="headerlink" title="rewrite阶段"></a>rewrite阶段</h3><h3 id="access阶段-1"><a href="#access阶段-1" class="headerlink" title="access阶段"></a>access阶段</h3><h3 id="content阶段"><a href="#content阶段" class="headerlink" title="content阶段"></a>content阶段</h3><h1 id="拓展开发"><a href="#拓展开发" class="headerlink" title="拓展开发"></a>拓展开发</h1><h2 id="openresty"><a href="#openresty" class="headerlink" title="openresty"></a>openresty</h2><h1 id="平滑升级"><a href="#平滑升级" class="headerlink" title="平滑升级"></a>平滑升级</h1><h1 id="工作问题"><a href="#工作问题" class="headerlink" title="工作问题"></a>工作问题</h1><h2 id="nginx-bin文件替换时没有先杀死原先进程"><a href="#nginx-bin文件替换时没有先杀死原先进程" class="headerlink" title="nginx bin文件替换时没有先杀死原先进程"></a>nginx bin文件替换时没有先杀死原先进程</h2><h2 id="nginx依赖查询"><a href="#nginx依赖查询" class="headerlink" title="nginx依赖查询"></a>nginx依赖查询</h2><p>ldd命令了解下</p>
 
           
         
@@ -2204,7 +1728,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2252,7 +1776,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-count">78</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -2263,7 +1787,7 @@
               
               <div class="site-state-item site-state-categories">
                 
-                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-count">35</span>
                   <span class="site-state-item-name">分类</span>
                 
               </div>
@@ -2274,7 +1798,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">标签</span>
                 
               </div>

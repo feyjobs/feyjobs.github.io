@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/uploads/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="[TOC] 参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.  tcp keepalive http keeplive(与此同时经常出现的还有长短连接的考虑) keepalived  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive    tcp首先抛出一个自己以前的错">
+<meta property="og:type" content="article">
+<meta property="og:title" content="长连接 短连接 连接服用">
+<meta property="og:url" content="http://yoursite.com/2019/05/22/nginx/keepalive/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="[TOC] 参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.  tcp keepalive http keeplive(与此同时经常出现的还有长短连接的考虑) keepalived  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive    tcp首先抛出一个自己以前的错">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/probe.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/tcp_keepalive_probes.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/handshake.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/first.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/second.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/third.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/byebye.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/anzhong.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/anzhong.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/failed.jpg">
+<meta property="og:updated_time" content="2019-05-22T12:50:52.903Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="长连接 短连接 连接服用">
+<meta name="twitter:description" content="[TOC] 参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.  tcp keepalive http keeplive(与此同时经常出现的还有长短连接的考虑) keepalived  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive    tcp首先抛出一个自己以前的错">
+<meta name="twitter:image" content="http://yoursite.com/uploads/nginx/probe.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/22/nginx/keepalive/">
+
+
+
+
+
+  <title>长连接 短连接 连接服用 | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/22/nginx/keepalive/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">长连接 短连接 连接服用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-22T14:51:00+08:00">
+                2019-05-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>[TOC]</p>
+<p>参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.</p>
+<ul>
+<li>tcp keepalive</li>
+<li>http keeplive(与此同时经常出现的还有长短连接的考虑)</li>
+<li>keepalived<p><br>  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive<br></p>
+
+</li>
+</ul>
+<h2 id="tcp"><a href="#tcp" class="headerlink" title="tcp"></a>tcp</h2><p>首先抛出一个自己以前的错误认知:</p>
+<blockquote>
+<p>tcp长连接</p>
+</blockquote>
+<p><strong>tcp没有什么长短连接</strong>,只要不出现网络异常,主动断开,tcp连接可以一直跑下去跑到天荒地老</p>
+<p>那么tcp的那一堆keepalive参数是干什么的呢?首先看下有那些keepalive参数<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /proc/sys/net/ipv4</span><br><span class="line">ll</span><br></pre></td></tr></table></figure></p>
+<p>可以看到有三个keepalive参数</p>
+<ul>
+<li>tcp_keepalive_time</li>
+<li>tcp_keepalive_probes</li>
+<li>tcp_keepalive_intvl</li>
+</ul>
+<p><font color="red">tcp_keepalive_time</font>:一个tcp连接空闲了tcp_keepalive_time秒之后,就要怀疑对方的健康状况了,注意:必须在socket上设置了<strong>SO_KEEPALIVE</strong>选项,才会触发这个机制</p>
+<p><font color="red"> tcp_keepalive_probes</font>:怎么确认对方的健康状况呢,发送侦测包(probe表示探针,也是星际二中萌萌的神族农民),如果对方能正确返回,那就说明对面还活着,这个参数描述发送几个侦测包(毕竟不要一棍子打死)</p>
+<p><img src="/uploads/nginx/probe.jpg" alt="probe"></p>
+<p><font color="red"> tcp_keepalive_intvl</font>:这个描述每隔多少tcp_keepalive_intvl发送一个侦测包</p>
+<p>ok,看到这三个参数的意义,我们就明白了,tcp的keepalive是做tcp<strong>健康检查</strong>的</p>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><h4 id="正常状况"><a href="#正常状况" class="headerlink" title="正常状况"></a>正常状况</h4><p>首先我们使用nc命令启动一个tcp server<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -l 2333</span><br></pre></td></tr></table></figure></p>
+<p>监听2333端口<br>然后我们拿python写一段tcp连接代码<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line">s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line"></span><br><span class="line">s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, <span class="number">1</span>) </span><br><span class="line">s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, <span class="number">20</span>)</span><br><span class="line">s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">s.connect((<span class="string">'127.0.0.1'</span>, <span class="number">2333</span>))</span><br><span class="line"></span><br><span class="line">time.sleep(<span class="number">61</span>)</span><br></pre></td></tr></table></figure></p>
+<p>代码中分别设置了</p>
+<ul>
+<li>SO_KEEPALIVE 启动tcp健康检查</li>
+<li>TCP_KEEPIDLE 空连接20s进行一次检查</li>
+<li>TCP_KEEPINTVL 每隔1s发送一个检查探针</li>
+<li>还有一个参数tcp_keepalive_probes取系统默认的<br>这里是<br><img src="/uploads/nginx/tcp_keepalive_probes.jpg" alt="probe"><br>也就是说,空闲20s后开始发送探测报文,每隔1s发一个最多发2个</li>
+</ul>
+<p>用tcpdump抓包<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i lo tcp port 2333</span><br></pre></td></tr></table></figure></p>
+<p>启动python<br>首先是三次tcp握手<br><img src="/uploads/nginx/handshake.jpg" alt="handshake"></p>
+<p>随后等待20s,第一次探测报文发送,server很快回复ok 表示我还活着<br><img src="/uploads/nginx/first.jpg" alt="handshake"></p>
+<p>然后他们又很无聊得等了20s,又发了一次探测报文,server再次回复ok<br><img src="/uploads/nginx/second.jpg" alt="handshake"></p>
+<p>最后他们又很无聊得等了20s,又发了一次探测报文,server再次回复ok<br><img src="/uploads/nginx/third.jpg" alt="handshake"></p>
+<p>程序退出,挥手再见<br><img src="/uploads/nginx/byebye.jpg" alt="handshake"></p>
+<p>好的,在这个情况下,client与server都愉快得交换了双发意见,达成了互相都健康得共识,接下来看一个不健康的</p>
+<h4 id="异常状况"><a href="#异常状况" class="headerlink" title="异常状况"></a>异常状况</h4><p>依然用nc命令启动server,python代码也不变,但是我们需要断网使用iptables命令<br>具体步骤</p>
+<ul>
+<li><p>启动tcpddump</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i lo tcp port 2333</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>nc启动server</p>
+</li>
+<li>运行python 完成握手</li>
+<li><strong>重要</strong> tcp握手之后快速完成端口屏蔽<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -I INPUT -p tcp --dport 2333 -s 127.0.0.1 -j DROP</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>屏蔽127.0.0.1:2333的网络连接,然后就等着下面这一幕</p>
+<ul>
+<li>兄弟 你还好吗<br><img src="/uploads/nginx/anzhong.jpg" alt="handshake"></li>
+<li>+1s 兄弟 你还好吗<br><img src="/uploads/nginx/anzhong.jpg" alt="handshake"></li>
+<li>死了,发送<strong>rst</strong>报文,表示异常终止<br><img src="/uploads/nginx/failed.jpg" alt="handshake"></li>
+</ul>
+<p>最后<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F</span><br></pre></td></tr></table></figure></p>
+<p>恢复机器路由状况</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/nginx/https/" rel="next" title="https">
+                <i class="fa fa-chevron-left"></i> https
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">78</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp"><span class="nav-number">1.</span> <span class="nav-text">tcp</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">1.1.</span> <span class="nav-text">测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#正常状况"><span class="nav-number">1.1.1.</span> <span class="nav-text">正常状况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#异常状况"><span class="nav-number">1.1.2.</span> <span class="nav-text">异常状况</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
