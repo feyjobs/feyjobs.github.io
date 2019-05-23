@@ -96,7 +96,13 @@
 <meta property="og:image" content="http://yoursite.com/uploads/nginx/anzhong.jpg">
 <meta property="og:image" content="http://yoursite.com/uploads/nginx/anzhong.jpg">
 <meta property="og:image" content="http://yoursite.com/uploads/nginx/failed.jpg">
-<meta property="og:updated_time" content="2019-05-22T13:04:15.794Z">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/nginxconf.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/fuyong.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/yacegood.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/notfuyong.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/yacebad.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/nginx/kqqrlfz.jpg">
+<meta property="og:updated_time" content="2019-05-23T15:25:01.710Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="长连接 短连接 连接服用">
 <meta name="twitter:description" content="[TOC] 参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.  tcp keepalive http keepalive(与此同时经常出现的还有长短连接的考虑) keepalived  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive    tcp首先抛出一个自己以前的">
@@ -421,6 +427,25 @@
 </ul>
 <p>最后<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F</span><br></pre></td></tr></table></figure></p>
 <p>恢复机器路由状况</p>
+<h2 id="http"><a href="#http" class="headerlink" title="http"></a>http</h2><p>http模式下的keepalive是用来保证tcp连接复用的.<br>在最开始的http协议中,并没有关于长连接的概念,单纯得有一个请求就建立一个tcp连接,后来人们发现太浪费了,两个相同终端,发100个请求就会建立100个tcp连接,于是诞生了http长连接keep-alive</p>
+<h3 id="http-1-0-amp-amp-1-1"><a href="#http-1-0-amp-amp-1-1" class="headerlink" title="http 1.0 &amp;&amp; 1.1"></a>http 1.0 &amp;&amp; 1.1</h3><p>在1.0版本http协议客户端就可以通过加入<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: keep-alive</span><br></pre></td></tr></table></figure></p>
+<p>头部发起一个长连接请求,服务器在收到之后如果自身也支持长连接,那么就会在返回体重也返回这个头部,表示支持长连接<br>如果server不支持长连接就可以返回<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: close</span><br></pre></td></tr></table></figure></p>
+<p>头部表示不支持长连接</p>
+<p>版本更新到1.1之后,http请求默认就是长连接,除非在客户端请求中加上<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: close</span><br></pre></td></tr></table></figure></p>
+<p>关闭长连接</p>
+<h3 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h3><p>我们以nginx为例,测试http长短连接的性能对比</p>
+<p>我们在nginx配置文件中加入配置<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">keepalive_timeout</span>  <span class="number">65</span>;</span><br></pre></td></tr></table></figure></p>
+<p>这个命令表示,在处理一个http请求后,65s内没有新的请求过来,我们就关闭当前连接</p>
+<p>我们使用wrk作压测(一个非常不错的http压测工具)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wrk -c 100 -d 10  -t 12 https://localhost:8233</span><br></pre></td></tr></table></figure></p>
+<p>上述命令表示起100个连接 12个线程压10s</p>
+<p>我们在nginx日志内容中加入<strong>$connection_requests</strong>变量,这个变量表示有多少个请求在和当前请求复用这个连接<br><img src="/uploads/nginx/nginxconf.jpg" alt="nginxconf"></p>
+<h4 id="长连接压测"><a href="#长连接压测" class="headerlink" title="长连接压测"></a>长连接压测</h4><p><img src="/uploads/nginx/fuyong.jpg" alt="nginxconf"><br>打印的第一个变量是当前请求的$connection_requests,可以看到所有连接都在处理多个请求</p>
+<p>wrk压测结果如下<br><img src="/uploads/nginx/yacegood.jpg" alt="nginxconf"></p>
+<h4 id="短连接压测"><a href="#短连接压测" class="headerlink" title="短连接压测"></a>短连接压测</h4><p><img src="/uploads/nginx/notfuyong.jpg" alt="nginxconf"><br>可以看到每个请求的当前连接都只处理一个请求</p>
+<p>wrk压测结果如下<br><img src="/uploads/nginx/yacebad.jpg" alt="nginxconf"><br>对比长连接的压测结果,可以看到<br>qps和tps都相差了<strong>12倍</strong>左右,提升效果非常明显</p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>那么长连接还有什么优化的点吗?有的<br>最明显的地方就是,一个长连接上的所有请求都是串行执行的<br>也就是说 第一个请求没有执行完,就不会执行第二个请求,怎么办！</p>
+<p><img src="/uploads/nginx/kqqrlfz.jpg" alt="nginxconf"></p>
+<p><strong><font size="12">http2</font></strong></p>
 
       
     </div>
@@ -616,7 +641,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp"><span class="nav-number">1.</span> <span class="nav-text">tcp</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">1.1.</span> <span class="nav-text">测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#正常状况"><span class="nav-number">1.1.1.</span> <span class="nav-text">正常状况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#异常状况"><span class="nav-number">1.1.2.</span> <span class="nav-text">异常状况</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp"><span class="nav-number">1.</span> <span class="nav-text">tcp</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">1.1.</span> <span class="nav-text">测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#正常状况"><span class="nav-number">1.1.1.</span> <span class="nav-text">正常状况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#异常状况"><span class="nav-number">1.1.2.</span> <span class="nav-text">异常状况</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#http"><span class="nav-number">2.</span> <span class="nav-text">http</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#http-1-0-amp-amp-1-1"><span class="nav-number">2.1.</span> <span class="nav-text">http 1.0 &amp;&amp; 1.1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能"><span class="nav-number">2.2.</span> <span class="nav-text">性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#长连接压测"><span class="nav-number">2.2.1.</span> <span class="nav-text">长连接压测</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#短连接压测"><span class="nav-number">2.2.2.</span> <span class="nav-text">短连接压测</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#问题"><span class="nav-number">2.3.</span> <span class="nav-text">问题</span></a></li></ol></li></ol></div>
             
 
           </div>
