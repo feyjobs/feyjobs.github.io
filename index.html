@@ -430,7 +430,7 @@
 <p>wrk压测结果如下<br><img src="/uploads/nginx/yacegood.jpg" alt="nginxconf"></p>
 <h4 id="短连接压测"><a href="#短连接压测" class="headerlink" title="短连接压测"></a>短连接压测</h4><p><img src="/uploads/nginx/notfuyong.jpg" alt="nginxconf"><br>可以看到每个请求的当前连接都只处理一个请求</p>
 <p>wrk压测结果如下<br><img src="/uploads/nginx/yacebad.jpg" alt="nginxconf"><br>对比长连接的压测结果,可以看到<br>qps和tps都相差了<strong>12倍</strong>左右,提升效果非常明显</p>
-<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>那么长连接还有什么优化的点吗?有的<br>最明显的地方就是,一个长连接上的所有请求都是串行执行的<br>也就是说 第一个请求没有执行完,就不会执行第二个请求,怎么办！</p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>那么长连接还有什么优化的点吗?有的<br>最明显的地方就是,一个长连接上的所有请求都是串行执行的<br>也就是说 第一个请求没有执行完,就不会执行第二个请求,再极端一点<br>客户端需要处理10个请求,但是只开了6个连接,剩下的那4个就要干等着!怎么办！</p>
 <p><img src="/uploads/nginx/kqqrlfz.jpg" alt="nginxconf"></p>
 <p><strong><font size="12">http2</font></strong></p>
 
