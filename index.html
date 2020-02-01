@@ -82,7 +82,7 @@
 <meta name="description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="清风">
-<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:url" content="https://feyjobs.github.io/index.html">
 <meta property="og:site_name" content="清风">
 <meta property="og:description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 <meta property="og:locale" content="zh-Hans">
@@ -118,7 +118,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/">
+  <link rel="canonical" href="https://feyjobs.github.io/">
 
 
 
@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/03/linux/epoll/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/12/03/linux/epoll/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -353,8 +353,15 @@
       
         
           
-            <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1>
+          介绍应用原理
           
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/12/03/linux/epoll/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -401,7 +408,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/22/performance/chapter3/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/11/22/performance/chapter3/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -472,9 +479,16 @@
       
         
           
-            <p>## </p>
+          ## 
 
           
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/11/22/performance/chapter3/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -521,7 +535,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/22/performance/chapter2/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/11/22/performance/chapter2/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -592,71 +606,15 @@
       
         
           
-            <h2 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h2><h3 id="USE"><a href="#USE" class="headerlink" title="USE"></a>USE</h3><p>核心思想, 在问题排查过程中, 以资源为轴, 列举分析各种资源类型, 以及各种资源的关键指标(use), 来分析问题</p>
-<ul>
-<li>资源</li>
-<li>使用率(utilization): 60%以上就要预警了, 因为一般提供的是平均指标, 60%的使用率,很可能意味着某些短时间达到了100%</li>
-<li>饱和度(saturation): 任何饱和现象都是问题</li>
-<li>错误(error): 任何错误都是问题</li>
-</ul>
-<h3 id="工作负载特征归纳"><a href="#工作负载特征归纳" class="headerlink" title="工作负载特征归纳"></a>工作负载特征归纳</h3><p>辨别负载的来源, 有时候系统出了问题不是架构有问题, 而是负载本身就超过了系统的范围</p>
-<h3 id="向下挖掘分析"><a href="#向下挖掘分析" class="headerlink" title="向下挖掘分析"></a>向下挖掘分析</h3><ul>
-<li>检测 高层级的统计数据</li>
-<li>识别 根据问题, 缩小研究范围</li>
-<li>分析<br>5 why</li>
-</ul>
-<h3 id="延时分析"><a href="#延时分析" class="headerlink" title="延时分析"></a>延时分析</h3><p>将延时分段, 然后深入分析关键延时时段, 需要与向下挖掘类似, 自顶向下深度分析</p>
-<h3 id="R方法"><a href="#R方法" class="headerlink" title="R方法"></a>R方法</h3><p>oracle 性能分析方法</p>
-<h3 id="事件追踪"><a href="#事件追踪" class="headerlink" title="事件追踪"></a>事件追踪</h3><p>系统的操作本质是一些离散的事件, cpu指令, 磁盘IO, 网络包的收发等等. 又是系统的指标,汇总数据是看不出问题的所在的, 需要我们<br>深入系统事件,进行问题排查.举个栗子:</p>
-<h4 id="网络事件"><a href="#网络事件" class="headerlink" title="网络事件"></a>网络事件</h4><p>tcpdump逐包排查</p>
-<h4 id="存储设备"><a href="#存储设备" class="headerlink" title="存储设备"></a>存储设备</h4><p>iosnoop排查系统问题</p>
-<h4 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h4><p>strace</p>
-<p>在进行系统事件追踪时, 故障时间段的上下时间段的事件也非常值得一看, 因为有些情况下, 是由于先发事件的问题,<br>导致了问题事件的表象, 实际上还是先发问题的根因造成了这个现象</p>
-<h3 id="基础线性统计"><a href="#基础线性统计" class="headerlink" title="基础线性统计"></a>基础线性统计</h3><p>将各个性能指标与时间等变量作函数曲线,观察变化</p>
-<h3 id="静态性能调整"><a href="#静态性能调整" class="headerlink" title="静态性能调整"></a>静态性能调整</h3><p>就是检查各种系统预加载或者初始系统选项</p>
-<h3 id="缓存调优"><a href="#缓存调优" class="headerlink" title="缓存调优"></a>缓存调优</h3><h3 id="微基准测试"><a href="#微基准测试" class="headerlink" title="微基准测试"></a>微基准测试</h3><h2 id="建模"><a href="#建模" class="headerlink" title="建模"></a>建模</h2><p>分析系统性能三巨头:</p>
-<ul>
-<li>生产系统的观测</li>
-<li>试验性系统的观测, 压测, 仿真</li>
-<li>根据上面的汇总的数据,进行数学建模, 进行数学预测</li>
-</ul>
-<h3 id="可视化"><a href="#可视化" class="headerlink" title="可视化"></a>可视化</h3><p>根据性能随着规模扩大的变化,查看斜率的变化,基础的数学知识</p>
-<ul>
-<li>y=ax+b 线性扩展, 完美的扩展结果</li>
-<li>y=lnx 竞争关系,某些公用的组件回造成扩容时的各个节点的竞争效应, 减小扩容效果</li>
-<li>y=(x-1)^2 分布式关系, 随着节点的增加, 节点之间数据同步备份的消耗超过了扩容带来的增益</li>
-<li>拐点, 某个因素碰到了资源的制约点, 从而改变扩展曲线</li>
-<li>扩容上线</li>
-</ul>
-<h3 id="amdahl扩展定律"><a href="#amdahl扩展定律" class="headerlink" title="amdahl扩展定律"></a>amdahl扩展定律</h3><h3 id="通用扩展定律"><a href="#通用扩展定律" class="headerlink" title="通用扩展定律"></a>通用扩展定律</h3><h3 id="排队理论"><a href="#排队理论" class="headerlink" title="排队理论"></a>排队理论</h3><p>上面上个主要描述了, 各种基于现有数据的拟合模型, 然后进行系统分析, 太特么学院派了, 遭不住</p>
-<h2 id="容量规划"><a href="#容量规划" class="headerlink" title="容量规划"></a>容量规划</h2><h3 id="资源极限"><a href="#资源极限" class="headerlink" title="资源极限"></a>资源极限</h3><p>遍历资源列表, 根据当前资源的使用率, 判断预估这个资源所能支持的最大流量， 然后进行扩容</p>
-<p>资源列表:</p>
-<h4 id="硬件"><a href="#硬件" class="headerlink" title="硬件"></a>硬件</h4><ul>
-<li>cpu使用率</li>
-<li>内存使用率</li>
-<li>磁盘iops</li>
-<li>磁盘吞吐量</li>
-<li>图盘使用率</li>
-<li>网络吞吐量<h4 id="软件"><a href="#软件" class="headerlink" title="软件"></a>软件</h4></li>
-<li>虚拟内存使用情况</li>
-<li>进程/线程/任务</li>
-<li>文件描述符</li>
-</ul>
-<h3 id="因素分析"><a href="#因素分析" class="headerlink" title="因素分析"></a>因素分析</h3><p>怎么判断为了支持一定程度的负载需要什么机器配置呢,内存, cpu, 磁盘, 网卡, 操作系统版本, 文件系统设置等等很多选项, 逐一尝试<br>工作量太大了.<br>方法:</p>
-<ul>
-<li>将所有配置都设置成最高</li>
-<li>逐一改变配置, 测量对性能的影响</li>
-<li>根据测量的结果, 对每个因素对性能的影响以及节省的成本作分析</li>
-<li>从最高性能为起点, 选择最低成本因素, 确保最后的性能可以支持负载</li>
-<li>测试配置<h2 id="统计"><a href="#统计" class="headerlink" title="统计"></a>统计</h2>各种数学学院派的东西, 先跳过</li>
-</ul>
-<h2 id="监视"><a href="#监视" class="headerlink" title="监视"></a>监视</h2><h3 id="基于时间的统计"><a href="#基于时间的统计" class="headerlink" title="基于时间的统计"></a>基于时间的统计</h3><h3 id="监视产品"><a href="#监视产品" class="headerlink" title="监视产品"></a>监视产品</h3><ul>
-<li>自研发, 运行在服务器上, 然后上传, 但是有损系统性能</li>
-<li>snmp协议,  减少客户端程序运行<h3 id="自启动信息"><a href="#自启动信息" class="headerlink" title="自启动信息"></a>自启动信息</h3>还有一些信息是操作系统启动以来自带的信息</li>
-</ul>
-<h2 id="可视化-1"><a href="#可视化-1" class="headerlink" title="可视化"></a>可视化</h2><p>各种图例信息</p>
-
-          
+          方法USE核心思想, 在问题排查过程中, 以资源为轴, 列举分析各种资源类型, 以及各种资源的关键指
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/11/22/performance/chapter2/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -703,7 +661,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/09/tool/mac/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/11/09/tool/mac/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -774,17 +732,16 @@
       
         
           
-            <h1 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h1><h2 id="基本颜色"><a href="#基本颜色" class="headerlink" title="基本颜色"></a>基本颜色</h2><ul>
-<li>iterm2 preference-&gt;profile-&gt;color-&gt;colorpresets</li>
-<li>brew install coreutils   &amp;&amp; gdircolors –print-database &gt; ~/.dir_colors<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if brew list | grep coreutils &gt; /dev/null ; then</span><br><span class="line">  PATH=&quot;$(brew --prefix coreutils)/libexec/gnubin:$PATH&quot;</span><br><span class="line">  alias ls=&apos;ls -F --show-control-chars --color=auto&apos;</span><br><span class="line">  eval `gdircolors -b $HOME/.dir_colors`</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>追加到bash_profile末尾</p>
-<ul>
-<li>(solarized dir颜色)[<a href="https://github.com/seebi/dircolors-solarized]" target="_blank" rel="noopener">https://github.com/seebi/dircolors-solarized]</a> 选择256 dircolors.256dark &gt; ~/.dir_colors<br>重启 结束</li>
-</ul>
-
-          
+          基本配置基本颜色
+iterm2 preference-&gt;profile-&gt;color-&
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/11/09/tool/mac/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -831,7 +788,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/29/distribute/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/10/29/distribute/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -902,8 +859,15 @@
       
         
           
-            
           
+          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/10/29/distribute/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -950,7 +914,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/23/gateway/diff/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/10/23/gateway/diff/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1021,20 +985,15 @@
       
         
           
-            <p>网关产品越来越多, service mesh的崛起也对nginx的冲击越来越大, 今天就来琢磨下mesh主打的网关产品envoy和nginx的对比!</p>
-<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><p>首先抄一下 envoy官网给自己吹的牛逼!</p>
-<h3 id="为什么选择envoy！"><a href="#为什么选择envoy！" class="headerlink" title="为什么选择envoy！"></a>为什么选择envoy！</h3><p>微服务思想的迅猛发展,微服务架构师们也越来越清楚,随着分布式架构的深化,系统的主要问题被分为两大类:网络与可监控性。<br>相对于构架一个简单庞大的应用, 分布式系统的架构在网络方面更加得错综复杂</p>
-<p>envoy是一个基于C++开发的分布式 应用代理软件。其主要用途在于在service mesh架构体系中, 充当应用之间的交互总线。<br>在原有网关代理软件(nginx, haproxy, 硬件代理, 云代理)的基础之上， envoy充当在每一个应用的边车. </p>
-<h3 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h3><ul>
-<li>envoy是一个独立高性能,低内存消耗的服务器, 它可以与任何语言框架配合使用</li>
-<li>envoy支持对gRpc与Http2(上下游同时)的原生支持.并且透明支持http1.1-http2的代理</li>
-<li>envoy支持一些高级的负载均衡功能, 包括自动重试, 熔断, 限流, 全局请求跟踪，本地负载均衡等功能</li>
-<li>envoy提供了api以支持动态修改配置项</li>
-<li>7层流量高度可监控性, 原生支持问题追踪.</li>
-</ul>
-<p>妈的除了 api动态支持和http2上下游支持 和nginx区别也不大呀！ </p>
-
-          
+          网关产品越来越多, service mesh的崛起也对nginx的冲击越来越大, 今天就来琢磨下me
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/10/23/gateway/diff/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1081,7 +1040,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/16/linux/IO/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/09/16/linux/IO/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1152,11 +1111,15 @@
       
         
           
-            <h1 id="引入"><a href="#引入" class="headerlink" title="引入"></a>引入</h1><p>自从工作以来，一只有人给我bb:互联网项目的核心瓶颈在于存储。除了当成一个公里见人就吹外, 其实我也并没有什么深刻的认知。<br>只能肤浅得理解为,由于大容量存储的索引速度依赖于磁盘的读写性能, 而读写性能与cpu,内存的速度天壤之别造成一定程度上，IO制约了cpu,内存的发挥。<br>机制的从业人员于是采用了分布式的方法, 防止单节点读写带来的巨大压力，分布式方法随之而来就是CAP不完全, 就是源源不断的同步问题,本质上是快与容量带来的矛盾。</p>
-<p>虽然说了这么多, 但是接下来要写的和上面说的没啥关系, 就是单纯得想梳理下, 各个IO模型, 以及他们所面对的问题</p>
-<h2 id="核心概念"><a href="#核心概念" class="headerlink" title="核心概念"></a>核心概念</h2><p>设计IO的核心概念其实就是两个<br>同步/异步 与 阻塞/非阻塞</p>
-
-          
+          引入自从工作以来，一只有人给我bb:互联网项目的核心瓶颈在于存储。除了当成一个公里见人就吹外, 其实
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/09/16/linux/IO/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1203,7 +1166,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/03/music/theory/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/08/03/music/theory/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1274,9 +1237,16 @@
       
         
           
-            <p>乐理是什么，一种表达乐曲的方法。</p>
+          乐理是什么，一种表达乐曲的方法。
 
           
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/08/03/music/theory/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1323,7 +1293,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/30/kafka/intro/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/07/30/kafka/intro/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1394,9 +1364,16 @@
       
         
           
-            <p># </p>
+          # 
 
           
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/07/30/kafka/intro/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1443,7 +1420,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/17/linux/sharedmemory/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/07/17/linux/sharedmemory/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1514,23 +1491,16 @@
       
         
           
-            <p>总结几个共享内存的使用方式</p>
-<h2 id="mmap"><a href="#mmap" class="headerlink" title="mmap"></a>mmap</h2><h3 id="dev-zero方式"><a href="#dev-zero方式" class="headerlink" title="/dev/zero方式"></a>/dev/zero方式</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fd = open(<span class="string">"/dev/zero"</span>, O_RDWR);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (fd == <span class="number">-1</span>) &#123;</span><br><span class="line">    ngx_log_error(NGX_LOG_ALERT, shm-&gt;<span class="built_in">log</span>, ngx_errno,</span><br><span class="line">                  <span class="string">"open(\"/dev/zero\") failed"</span>);</span><br><span class="line">    <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">shm-&gt;addr = (u_char *) mmap(<span class="literal">NULL</span>, shm-&gt;size, PROT_READ|PROT_WRITE,</span><br><span class="line">                            MAP_SHARED, fd, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
-<ul>
-<li>需要设置MAP_SHARED选项,申请大小为size向上取页大小的最小倍数</li>
-<li>内存区块初始化为0</li>
-<li>父子进程之间可以共享</li>
-</ul>
-<h3 id="匿名方式"><a href="#匿名方式" class="headerlink" title="匿名方式"></a>匿名方式</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">shm-&gt;addr = (u_char *) mmap(<span class="literal">NULL</span>, shm-&gt;size,</span><br><span class="line">                             PROT_READ|PROT_WRITE,</span><br><span class="line">                             MAP_ANON|MAP_SHARED, <span class="number">-1</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
-<p>和上面类似,把fd设置成-1就可以<br><em>上面两种方式都只能进行父子进程之间进行交互</em></p>
-<h3 id="普通文件映射"><a href="#普通文件映射" class="headerlink" title="普通文件映射"></a>普通文件映射</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void *ptr = mmap(NULL,  20, PROT_WRITE|PROT_READ, MAP_SHARED, fd, 0);</span><br></pre></td></tr></table></figure>
-<p>通过映射实际存在的同一个文件,毫不相关的进程之间也可以通过这种方式共享一块内存</p>
-<h2 id="xsi共享内存"><a href="#xsi共享内存" class="headerlink" title="xsi共享内存"></a>xsi共享内存</h2><p>这个是xsi提供的共享内存方式<br>用起来比较麻烦而且沙雕<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">key_t</span> key = ftok(<span class="string">"path"</span>, <span class="number">1</span>);</span><br><span class="line"><span class="keyword">int</span> shmId = shmget(key, <span class="number">10</span>, <span class="number">0644</span>|IPC_CREAT);</span><br><span class="line"><span class="keyword">void</span> *ptr = shmat(shmId, <span class="number">0</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure></p>
-<p><em>ftok</em>函数用来根据输入路径创建key,然后shmget接受key,申请内存大小,以及flag创建共享内存id<br>key的意义在于方便不同的进程查找获取某一个共享内存<br>flag主要包括了权限系统(与文件系统类似,用户读写,组读写,其他读写当前共享内存的能力),IPC_CREAT表示如果不存在该共享内存,则创建,IPC_EXCL表示如果当前共享内存已经存在,则报错</p>
-<h3 id="IPC-PRIVATE"><a href="#IPC-PRIVATE" class="headerlink" title="IPC_PRIVATE"></a>IPC_PRIVATE</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> shmId = shmget(IPC_PRIVATE, <span class="number">10</span>, <span class="number">0644</span>|IPC_CREAT);</span><br></pre></td></tr></table></figure>
-<p>使用<em>IPC_PRIVATE</em>方式调用shmget每次必然创建一个新的共享内存,可以通过fork子进程依然感知到,但是不方便传输给其他无关进程,一般用于父子进程传输</p>
-
-          
+          总结几个共享内存的使用方式
+mmap/dev/zero方式12345678910fd = open(
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/07/17/linux/sharedmemory/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1627,7 +1597,7 @@
               
               <div class="site-state-item site-state-categories">
                 
-                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-count">35</span>
                   <span class="site-state-item-name">分类</span>
                 
               </div>
