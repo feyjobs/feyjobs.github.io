@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/uploads/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="基础IOOpen123#include &amp;lt;fcntl.h&amp;gt;int open(const char *path, int oflag, .../*mode_t mode*/); int openat(int fd, const char *path, int oflag, .../*mode_t mode*/);    flags meaning     O_RDONLY 只读   O_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux IO">
+<meta property="og:url" content="http://yoursite.com/2019/07/18/linux/io/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="基础IOOpen123#include &amp;lt;fcntl.h&amp;gt;int open(const char *path, int oflag, .../*mode_t mode*/); int openat(int fd, const char *path, int oflag, .../*mode_t mode*/);    flags meaning     O_RDONLY 只读   O_">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-07-30T06:52:12.232Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux IO">
+<meta name="twitter:description" content="基础IOOpen123#include &amp;lt;fcntl.h&amp;gt;int open(const char *path, int oflag, .../*mode_t mode*/); int openat(int fd, const char *path, int oflag, .../*mode_t mode*/);    flags meaning     O_RDONLY 只读   O_">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/18/linux/io/">
+
+
+
+
+
+  <title>Linux IO | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/18/linux/io/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux IO</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-18T19:56:38+08:00">
+                2019-07-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/IO/" itemprop="url" rel="index">
+                    <span itemprop="name">IO</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="基础IO"><a href="#基础IO" class="headerlink" title="基础IO"></a>基础IO</h1><h2 id="Open"><a href="#Open" class="headerlink" title="Open"></a>Open</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">open</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">int</span> oflag, ...<span class="comment">/*mode_t mode*/</span>)</span></span>; </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">openat</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">int</span> oflag, ...<span class="comment">/*mode_t mode*/</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>flags</th>
+<th style="text-align:center">meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O_RDONLY</td>
+<td style="text-align:center">只读</td>
+</tr>
+<tr>
+<td>O_WRONLY</td>
+<td style="text-align:center">只写</td>
+</tr>
+<tr>
+<td>O_RDWR</td>
+<td style="text-align:center">读写</td>
+</tr>
+<tr>
+<td>O_EXEC</td>
+<td style="text-align:center">执行</td>
+</tr>
+<tr>
+<td>O_SEARCH</td>
+<td style="text-align:center">搜索</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><em>O_EXEC</em>在linux里不存在,设计初衷应该是,防止一些文件权限格式是111的,即只有执行权限,然后可以在用fexecve函数时,打开这个文件</li>
+<li><em>O_SEARCH</em>在linux不存在,设计初衷可能是遍历文件夹下文件列表</li>
+<li>以上为必传字段!</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>flags</th>
+<th style="text-align:center">meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O_APPEND</td>
+<td style="text-align:center">追加写</td>
+</tr>
+<tr>
+<td>O_CLOEXEC</td>
+<td style="text-align:center">只写</td>
+</tr>
+<tr>
+<td>O_CREAT</td>
+<td style="text-align:center">创建,如果不存在</td>
+</tr>
+<tr>
+<td>O_DIRECTORY</td>
+<td style="text-align:center">路径必须是目录,否则报错</td>
+</tr>
+<tr>
+<td>O_EXCL</td>
+<td style="text-align:center">如果存在报错</td>
+</tr>
+<tr>
+<td>O_NOFOLLOW</td>
+<td style="text-align:center">path不准是个软连接</td>
+</tr>
+<tr>
+<td>O_NONBLOCK</td>
+<td style="text-align:center">管道文件,块文件,字符文件打开时不再阻塞</td>
+</tr>
+<tr>
+<td>O_SYNC</td>
+<td style="text-align:center">强制刷新到磁盘</td>
+</tr>
+<tr>
+<td>O_TRUNC</td>
+<td style="text-align:center">打开文件,如果已经有内容,清除</td>
+</tr>
+<tr>
+<td>O_DSYNC</td>
+<td style="text-align:center">写入数据,在属性数据更新前返回,O_SYNC在属性更新后返回</td>
+</tr>
+<tr>
+<td>O_RSYNC</td>
+<td style="text-align:center">等待同一部分写入完成后,才读取成功</td>
+</tr>
+<tr>
+<td>O_NOCTTY</td>
+<td style="text-align:center"><em>todo</em></td>
+</tr>
+<tr>
+<td>O_TTY_INIT</td>
+<td style="text-align:center"><em>todo</em></td>
+</tr>
+<tr>
+<td>O_TTY_INIT</td>
+<td style="text-align:center"><em>todo</em></td>
+</tr>
+</tbody>
+</table>
+<h3 id="xxx-amp-amp-xxxat"><a href="#xxx-amp-amp-xxxat" class="headerlink" title="xxx &amp;&amp; xxxat()"></a>xxx &amp;&amp; xxxat()</h3><p>这两个系列函数在linux中非常常见</p>
+<ul>
+<li>path如果传的是个绝对路径,那么fd被忽略,相当于调用open</li>
+<li>path如果传的是个相对路径,fd是一个目录fd，则会根据fd对应的目录确定文件路径</li>
+<li>如果fd设置了<em>AT_FDCWD</em>,那么和调用open一致</li>
+</ul>
+<p>那么这类函数设置了有什么意义呢主要是有两个</p>
+<ul>
+<li>多线程编程的时候进程的当前路径是所有现成共享的,有了这个可以现成创建后创建一个线程的目录,该线程的操作都在这个目录下完成,这样就不会有冲突</li>
+<li>TOCTTOU问题,这个问题是说一些恶意程序,在逻辑上应该是原子新的操作中,插入了恶意代码,从而造成不良影响<br>举个例子,在open文件之前,恶意代码修改当前文件目录到一个敏感地方(chdir),之后的open操作就会在那个目录下进行,然后openat函数指定了打开文件对应的文件目录,所以不会有这个问题</li>
+</ul>
+<h2 id="creat"><a href="#creat" class="headerlink" title="creat"></a>creat</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">creat</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* path, <span class="keyword">mode_t</span> mode)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>垃圾函数,被淘汰，等同于<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">open(path, O_CREAT|O_WRONLY|O_TRUNC,mode);</span><br></pre></td></tr></table></figure></p>
+<h2 id="close"><a href="#close" class="headerlink" title="close"></a>close</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">close</span><span class="params">(<span class="keyword">int</span> fd)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>关闭文件,并且<strong>释放进程加在文件上的记录锁</strong></p>
+<h2 id="lseek"><a href="#lseek" class="headerlink" title="lseek"></a>lseek</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#incude <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="keyword">off_t</span> lseek(<span class="keyword">int</span> fd, <span class="keyword">off_t</span> offset, <span class="keyword">int</span> whence);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>SEEK_SET 文件开始偏移</li>
+<li>SEEK_CUR 当前偏移开始偏移</li>
+<li>SEEK_END 文件末尾偏移<br>设置文件当前偏移量,<br><strong>如果文件以O_APPEND打开,write之后依然会追加到文件末尾</strong></li>
+</ul>
+<h2 id="read"><a href="#read" class="headerlink" title="read"></a>read</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="keyword">ssize_t</span> read(<span class="keyword">int</span> fd, <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> len)</span><br></pre></td></tr></table></figure>
+<p>返回读到的字节数,如果到了文件末尾EOF返回0，读文件末尾需要单独一次read，即剩余3byte,读4byte,第一次read返回3,第二次read返回0</p>
+<p>读各种io设备都有可能造成返回的res != len</p>
+<ul>
+<li>终端 todo</li>
+<li>套接字 todo</li>
+<li>fifo pip todo</li>
+<li>信号中断情况 todo</li>
+</ul>
+<h2 id="write"><a href="#write" class="headerlink" title="write"></a>write</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="keyword">ssize_t</span> read(<span class="keyword">int</span> fd, <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> len)</span><br></pre></td></tr></table></figure>
+<p>写入文件,异常状况</p>
+<ul>
+<li>磁盘写满</li>
+<li>写入量超过进程文件写入量上限</li>
+</ul>
+<h2 id="dup-amp-amp-dup2"><a href="#dup-amp-amp-dup2" class="headerlink" title="dup&amp;&amp;dup2"></a>dup&amp;&amp;dup2</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">dup</span><span class="params">(<span class="keyword">int</span> fd)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">dup2</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> fd2)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>这两个是重定向函数,作用都是创建一个新的文件描述符fd，指向传入参数的fd所对应的文件表项,那为什么要两个呢</p>
+<ul>
+<li>dup返回一个当前文件描述符最新的一个未使用描述符</li>
+<li>dup2使fd2指向fd的文件描述符,如果fd2已经打开,就会先关闭再打开</li>
+</ul>
+<p><strong>dup2</strong>的关闭,打开具有原子性,所以相比fcntl的重定向更加优秀</p>
+<h2 id="sync-amp-amp-fsync-amp-amp-fdatasync"><a href="#sync-amp-amp-fsync-amp-amp-fdatasync" class="headerlink" title="sync &amp;&amp; fsync &amp;&amp; fdatasync"></a>sync &amp;&amp; fsync &amp;&amp; fdatasync</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fsync</span><span class="params">(<span class="keyword">int</span> fd)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fdatasync</span><span class="params">(<span class="keyword">int</span> fd)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sync</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>这几个函数都和缓冲区刷新到磁盘相关,简单介绍下磁盘写入过程,调用write后会先写入内核缓冲区,缓冲区定期会刷新带写入队列,然后再写入到磁盘</p>
+<ul>
+<li>fsync会将当前fd的缓冲区内容写入磁盘,直到写入完成返回</li>
+<li>fdatasync将当前缓冲区内容写入磁盘,但是不等更新文件信息(长度 offset等)就返回</li>
+<li>sync讲当前缓冲区全部扔到写入队列,然后返回</li>
+</ul>
+<h2 id="fcntl"><a href="#fcntl" class="headerlink" title="fcntl"></a>fcntl</h2><p>重头戏中的重头戏,这个函数给我感觉演杂技呢,这么多功能<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fcntl</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> cmd, ...<span class="comment">/*other args*/</span>)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h3 id="复制类"><a href="#复制类" class="headerlink" title="复制类"></a>复制类</h3><ul>
+<li>F_DUPFD 创建fd(新fd为大于等于第三个参数的最小fd)指向第一个参数指向的文件表项,但是描述符标志位是自己的,所以就有了下面的选项</li>
+<li>F_DUPFD_CLOEXEC F_DUPFD的文件描述符创建之后,在exec后fd依然保留,这个选项不保留</li>
+</ul>
+<h3 id="标志位类"><a href="#标志位类" class="headerlink" title="标志位类"></a>标志位类</h3><ul>
+<li>F_SETFD</li>
+<li>F_GETFD<br>这两个是读写文件描述符标志位的功能,目前只支持设置O_CLOEXEC这样的功能,即设置exech后fd是否还保持</li>
+</ul>
+<h3 id="文件状态标志"><a href="#文件状态标志" class="headerlink" title="文件状态标志"></a>文件状态标志</h3><ul>
+<li>F_GETFL</li>
+<li>F_SETFL<br>文件状态标志位获取,嗯 就是open的时候那一堆参数<h4 id="访问权限标志位"><a href="#访问权限标志位" class="headerlink" title="访问权限标志位"></a>访问权限标志位</h4></li>
+<li>O_RDONLY </li>
+<li>O_WRONLY </li>
+<li>O_RDWR   </li>
+<li>O_EXEC   </li>
+<li>O_SEARCH<br>这几个标志位不能通过<strong>F_SETFL</strong>进行修改<br>读取的时候,这几个标志位不能直接 &amp; 来判断是否设置了该标志位,因为这几个标志位非常傻逼得没有设置一个取一位,造成 &amp; 的时候O_RDWR校验O_RDONLY O_WRONLY都能通过,<br>所以正确的姿势是<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">val = fcntl(fd, F_GETFD, <span class="number">0</span>);</span><br><span class="line"><span class="keyword">switch</span> (val &amp; O_ACCMODE)&#123;</span><br><span class="line">    <span class="keyword">case</span> O_RDONLY:</span><br><span class="line">    xxx</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>先用O_ACCMODE去除其他标志位,再一个个比较</p>
+<p>开启某个标志位,先获取当前标志位<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">val = fcntl(fd, F_GETFD, <span class="number">0</span>);</span><br><span class="line">newval = val | O_XXXXX;<span class="comment">/*开*/</span></span><br><span class="line">newval = val &amp; ~O_XXXXX;<span class="comment">/*关*/</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>O_SYNC</strong>在linux系统中无法通过fcntl设置,没错,返回成功也没设置上,不信那下面的代码试试<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> fd = open(<span class="string">"fcntltxt"</span>,O_RDWR);</span><br><span class="line">    <span class="keyword">int</span> val =  fcntl(fd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">    val |= O_SYNC;</span><br><span class="line">    <span class="keyword">int</span> res = fcntl(fd, F_SETFL, val);</span><br><span class="line">    perror(<span class="literal">NULL</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%d"</span>, res);</span><br><span class="line">    val = fcntl(fd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(val &amp; O_SYNC)&#123;</span><br><span class="line">        perror(<span class="string">"has"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> fd2 = open(<span class="string">"aa"</span>,O_RDWR|O_SYNC);</span><br><span class="line">    val = fcntl(fd2, F_GETFL, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(val &amp; O_SYNC)&#123;</span><br><span class="line">        perror(<span class="string">"has2"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到open带上O_SYNC是有该标志位的,而fcntl是没有的</p>
+<h3 id="信号处理类-todo"><a href="#信号处理类-todo" class="headerlink" title="信号处理类(todo)"></a>信号处理类(todo)</h3><ul>
+<li>F_GETOWN</li>
+<li>F_SETOWN</li>
+</ul>
+<h3 id="文件锁类-todo"><a href="#文件锁类-todo" class="headerlink" title="文件锁类(todo)"></a>文件锁类(todo)</h3><ul>
+<li>F_SETLK</li>
+<li>F_GETLK</li>
+<li>F_SETLKW </li>
+</ul>
+<h2 id="ioctl"><a href="#ioctl" class="headerlink" title="ioctl"></a>ioctl</h2><p>终端io经常用该函数操作,对一些其他io设备进行特殊操作,先不展开(todo)<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/ioctl.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">ioctl</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">int</span> request,...)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<h1 id="文件与目录"><a href="#文件与目录" class="headerlink" title="文件与目录"></a>文件与目录</h1><p>主要进行文件和目录的属性操作</p>
+<h2 id="基本结构"><a href="#基本结构" class="headerlink" title="基本结构"></a>基本结构</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">stat</span>&#123;</span></span><br><span class="line">    <span class="keyword">mode_t</span> st_mode; <span class="comment">/*权限标志位*/</span></span><br><span class="line">    <span class="keyword">ino_t</span>  st_ino; <span class="comment">/*inode编号*/</span></span><br><span class="line">    <span class="keyword">dev_t</span>  st_dev; <span class="comment">/*设备号*/</span></span><br><span class="line">    <span class="keyword">dev_t</span>  st_rdev;<span class="comment">/*特殊设备设备号*/</span></span><br><span class="line">    <span class="keyword">nlink_t</span> st_nlink; <span class="comment">/*硬链接数*/</span></span><br><span class="line">    <span class="keyword">off_t</span>     st_size;        <span class="comment">/* 大小 */</span></span><br><span class="line">    <span class="keyword">blksize_t</span> st_blksize;     <span class="comment">/* 操作系统单个磁盘块大小 */</span></span><br><span class="line">    <span class="keyword">blkcnt_t</span>  st_blocks;      <span class="comment">/* 磁盘块数 */</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> <span class="title">st_atim</span>;</span>  <span class="comment">/* 最后一次文件内容被访问时间 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> <span class="title">st_mtim</span>;</span>  <span class="comment">/* 最后一次文件内容被修改时间 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span> <span class="title">st_ctim</span>;</span>  <span class="comment">/* 最后一次被修改时间 (除了内容还包括权限,owner等属性)*/</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">uid_t</span>     st_uid;         <span class="comment">/* User ID of owner */</span></span><br><span class="line">    <span class="keyword">gid_t</span>     st_gid;         <span class="comment">/* Group ID of owner */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="获取函数"><a href="#获取函数" class="headerlink" title="获取函数"></a>获取函数</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;ys/stat.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">stat</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *<span class="keyword">restrict</span> path, struct stat *<span class="keyword">restrict</span> buf)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fstat</span><span class="params">(<span class="keyword">int</span> fd, struct stat *<span class="keyword">restrict</span> buf)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">lstat</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *<span class="keyword">restrict</span> path, struct stat *<span class="keyword">restrict</span> buf)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fstatat</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">const</span> <span class="keyword">char</span> *<span class="keyword">restrict</span> path, struct stat *<span class="keyword">restrict</span> buf, <span class="keyword">int</span> flag)</span></span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>stat 根据绝对路径获取文件信息</li>
+<li>fstat 根据fd获取文件信息</li>
+<li>lstat 如果文件是一个软连接,直接返回软连接的文件信息,而不会往下继续追到原始文件</li>
+<li>fstatat 和其他at函数一样,注意如果flag设置了<strong>AT_SYMLINK_NOFOLLOW</strong>,则该函数不会继续往下,而是返回软连接</li>
+</ul>
+<h2 id="文件类型"><a href="#文件类型" class="headerlink" title="文件类型"></a>文件类型</h2><p>文件类型信息有几个宏提供主要用于判断st_mode<br>| type|   macro|<br>|———-|:————-:|<br>| 文件| S_ISREG  |<br>| 目录| S_ISDIR  |<br>| 字符特殊文件|  S_ISCHR|<br>| 块特殊文件 |  S_ISBLK|<br>| 管道| S_ISFIFO |<br>| 软链| S_ISLNK |<br>| 套接字| S_ISSOCK |</p>
+<p>进程间通信对象可以描述为文件,故也有几个宏来描述这个功能,处理对象为stat<br>| type|   macro|<br>|———-|:————-:|<br>| 消息队列| S_TYPEISMQ  |<br>| 信号量| S_TYPEISSEM|<br>| 共享内存| S_TYPEISSHM|</p>
+<h2 id="账号"><a href="#账号" class="headerlink" title="账号"></a>账号</h2><table>
+<thead>
+<tr>
+<th>用户</th>
+<th style="text-align:center">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>实际用户id/组id</td>
+<td style="text-align:center">登陆用户的信息</td>
+</tr>
+<tr>
+<td>有效用户id/组id/附属组id</td>
+<td style="text-align:center">文件访问权限ID</td>
+</tr>
+<tr>
+<td>保存的用户ID/组ID</td>
+<td style="text-align:center">由exec保存</td>
+</tr>
+</tbody>
+</table>
+<p><strong>设置用户id</strong><br>在st_mod中设置了该标志位后,在<strong>执行</strong>该文件时,将进程的有效用户id/组id设置成文件的所有id</p>
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th style="text-align:center">变量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>设置用户id</td>
+<td style="text-align:center">S_ISUID</td>
+</tr>
+<tr>
+<td>设置组id</td>
+<td style="text-align:center">S_ISGID</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">S_ISUID &amp; stat.st_mode</span><br></pre></td></tr></table></figure>
+<p>判断方法如上</p>
+<h2 id="文件访问权限"><a href="#文件访问权限" class="headerlink" title="文件访问权限"></a>文件访问权限</h2><table>
+<thead>
+<tr>
+<th>st_mode屏蔽</th>
+<th style="text-align:center">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S_IRUSR</td>
+<td style="text-align:center">用户读</td>
+</tr>
+<tr>
+<td>S_IWUSR</td>
+<td style="text-align:center">用户写</td>
+</tr>
+<tr>
+<td>S_IXUSR</td>
+<td style="text-align:center">用户执行</td>
+</tr>
+<tr>
+<td>S_IRGRP</td>
+<td style="text-align:center">组读</td>
+</tr>
+<tr>
+<td>S_IWGRP</td>
+<td style="text-align:center">组写</td>
+</tr>
+<tr>
+<td>S_IXGRP</td>
+<td style="text-align:center">组执行</td>
+</tr>
+<tr>
+<td>S_IROTH</td>
+<td style="text-align:center">其他读</td>
+</tr>
+<tr>
+<td>S_IWOTH</td>
+<td style="text-align:center">其他写</td>
+</tr>
+<tr>
+<td>S_IXOTH</td>
+<td style="text-align:center">其他执行</td>
+</tr>
+</tbody>
+</table>
+<p>权限规则：</p>
+<ul>
+<li>我们用绝对路径打开任何一个文件,都需要路径上每个目录的执行权限</li>
+<li>文件读权限对应O_RDONLY|O_RDWR</li>
+<li>文件写权限对应O_WRONLY|O_RDWR</li>
+<li>O_TRUNC打开文件需要文案写权限</li>
+<li>文件夹中创建新文件需要<strong>写</strong>+<strong>执行</strong>权限</li>
+<li>删除一个文件,需要对文件夹有<strong>写</strong>+<strong>执行</strong>权限</li>
+<li>exec函数需要有该文件的执行权限</li>
+</ul>
+<h2 id="新文件与文件夹所有权"><a href="#新文件与文件夹所有权" class="headerlink" title="新文件与文件夹所有权"></a>新文件与文件夹所有权</h2><ul>
+<li>新文件的owner为进程的有效用户id<br>新文件的组id可以是以下两种之一</li>
+<li>有效组id</li>
+<li>所在文件夹组id</li>
+</ul>
+<p>经测试,linux下新文件的所属组id为进程的有效组id</p>
+<h2 id="access-amp-amp-faccessat"><a href="#access-amp-amp-faccessat" class="headerlink" title="access &amp;&amp; faccessat"></a>access &amp;&amp; faccessat</h2><p>这两函数是干啥的:<br>用于检测当前进程的实际用户id是否有对某一文件的权限<br>比方说某个进程设置了 设置用户id位 则在exec之后,进程的有效用户id会变成该文件的所有者用户id但是该程序想check一下进程的实际用户id是否有某文件的读写权限 则需要该函数<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">access</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *pathname, <span class="keyword">int</span> mode)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">faccessat</span><span class="params">(nt fd, <span class="keyword">const</span> <span class="keyword">char</span> *pathname, <span class="keyword">int</span> mode)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<table>
+<thead>
+<tr>
+<th>flag</th>
+<th style="text-align:center">意义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F_OK</td>
+<td style="text-align:center">文件是否存在</td>
+</tr>
+<tr>
+<td>R_OK</td>
+<td style="text-align:center">是否有读权限</td>
+</tr>
+<tr>
+<td>W_OK</td>
+<td style="text-align:center">是否有写权限</td>
+</tr>
+<tr>
+<td>X_OK</td>
+<td style="text-align:center">是否有执行权限</td>
+</tr>
+</tbody>
+</table>
+<h2 id="umask"><a href="#umask" class="headerlink" title="umask"></a>umask</h2><p>umask设置了一个文件创建的时候的屏蔽字,什么意思呢,就是创建的时候,umask包含的权限位,都会被干掉<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="keyword">mode_t</span> umask(<span class="keyword">mode_t</span> mode);</span><br></pre></td></tr></table></figure></p>
+<p>设置了mode的位,创建的时候都会被屏蔽掉</p>
+<h2 id="chmod-amp-amp-fchmod-amp-amp-fchmodat"><a href="#chmod-amp-amp-fchmod-amp-amp-fchmodat" class="headerlink" title="chmod &amp;&amp; fchmod &amp;&amp; fchmodat"></a>chmod &amp;&amp; fchmod &amp;&amp; fchmodat</h2><p>更改文件访问权限函数<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">chmod</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *pathname, <span class="keyword">mode_t</span> mode)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fchmod</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">mode_t</span> mode)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fchmodat</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">const</span> <span class="keyword">char</span> *pathname, <span class="keyword">mode_t</span> mode, <span class="keyword">int</span> flag)</span></span>;a<span class="comment">/*flag位AT_SYMLINK_NOFOLLOW则修改链接文件,不向下继续追到源文件 todo带测试*/</span></span><br></pre></td></tr></table></figure></p>
+<p>该函数执行前提:</p>
+<ul>
+<li>进程有效id等于文件所有id</li>
+<li>root账号</li>
+</ul>
+<p>可以修改的标志位:</p>
+<ul>
+<li>用户读写执行</li>
+<li>组读写执行</li>
+<li>其他读写执行</li>
+<li>设置用户id</li>
+<li>设置组id</li>
+<li>粘着位</li>
+</ul>
+<h2 id="粘着位"><a href="#粘着位" class="headerlink" title="粘着位"></a>粘着位</h2><p>粘着位有什么用,首先我们回顾一个文件夹的操作权限问题<br>如果我们要在一个文件夹内创建新文件,我们必须要有w,x权限,但是如果other有了w+x权限,任何用户都可以在这个文件夹内翻江倒海,我们希望又一个限制,任何用户都可以在这个文件夹内创建,但是别人的文件你没有权限删除,于是有了粘着位<br>在粘着位内删除一个文件</p>
+<ul>
+<li>你是root</li>
+<li>你是相应文件夹的owner<br>可以参考/tmp文件夹,你可以随意在tmp中创建自己的文件,但是不能删除其他账户的文件</li>
+</ul>
+<h2 id="chown-amp-amp-fchown-amp-amp-fchownat-amp-amp-lchown"><a href="#chown-amp-amp-fchown-amp-amp-fchownat-amp-amp-lchown" class="headerlink" title="chown &amp;&amp; fchown &amp;&amp; fchownat &amp;&amp; lchown"></a>chown &amp;&amp; fchown &amp;&amp; fchownat &amp;&amp; lchown</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">chown</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">uid_t</span> uid, <span class="keyword">gid_t</span> gid)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fchown</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">uid_t</span> uid, <span class="keyword">gid_t</span> gid)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">fchownat</span><span class="params">(<span class="keyword">int</span> fd,<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">uid_t</span> uid, <span class="keyword">gid_t</span> gid,<span class="keyword">int</span> flag)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">lchown</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">uid_t</span> uid, <span class="keyword">gid_t</span> gid)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>和linux命令差不多意思,其他也和各种fxxxxat函数,lxxxxx函数差不多意思</p>
+<h2 id="文件长度"><a href="#文件长度" class="headerlink" title="文件长度"></a>文件长度</h2><p>stat结构体包含,size,st_blksize,st_blocks三个字段与文件长度相关</p>
+<ul>
+<li>st_blksize 表示适合读写的区块大小,一般是4k</li>
+<li>st_blocks 表示分配了多少个512byte区块数</li>
+<li>size表示实际的文件大小</li>
+</ul>
+<h3 id="空洞问题"><a href="#空洞问题" class="headerlink" title="空洞问题"></a>空洞问题</h3><p>使用lseek设置偏移写入之后,可能偏移量大于当前文件的长度,造成了空洞,空洞不会算到实际大小中,但是会占用分配的区块数.<br>总体规则是</p>
+<ul>
+<li>ls 返回的是文件的逻辑大小,包含空洞</li>
+<li>stat 返回的block是实际的512块数量不包含空洞</li>
+<li>du 返回的是逻辑的1024块数量,包含空洞</li>
+</ul>
+<h3 id="文件截断"><a href="#文件截断" class="headerlink" title="文件截断"></a>文件截断</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">truncate</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* pathname, <span class="keyword">off_t</span> length)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">ftruncate</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">off_t</span> length)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>讲文件截断为一个length长度的文件,特殊的用O_TRUNCd打开文件,可以将文件截断为0，<br>如果文件长度小于length,可能创造一个空洞,也可能用\0补充</p>
+<h2 id="link-flinkat-unlink-unlinkat-remove"><a href="#link-flinkat-unlink-unlinkat-remove" class="headerlink" title="link flinkat unlink unlinkat remove"></a>link flinkat unlink unlinkat remove</h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/27/nginx/http2/" rel="next" title="http2">
+                <i class="fa fa-chevron-left"></i> http2
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/30/kafka/intro/" rel="prev" title="基础">
+                基础 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">82</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#基础IO"><span class="nav-number">1.</span> <span class="nav-text">基础IO</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Open"><span class="nav-number">1.1.</span> <span class="nav-text">Open</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#xxx-amp-amp-xxxat"><span class="nav-number">1.1.1.</span> <span class="nav-text">xxx &amp;&amp; xxxat()</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#creat"><span class="nav-number">1.2.</span> <span class="nav-text">creat</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#close"><span class="nav-number">1.3.</span> <span class="nav-text">close</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lseek"><span class="nav-number">1.4.</span> <span class="nav-text">lseek</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#read"><span class="nav-number">1.5.</span> <span class="nav-text">read</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#write"><span class="nav-number">1.6.</span> <span class="nav-text">write</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dup-amp-amp-dup2"><span class="nav-number">1.7.</span> <span class="nav-text">dup&amp;&amp;dup2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sync-amp-amp-fsync-amp-amp-fdatasync"><span class="nav-number">1.8.</span> <span class="nav-text">sync &amp;&amp; fsync &amp;&amp; fdatasync</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fcntl"><span class="nav-number">1.9.</span> <span class="nav-text">fcntl</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复制类"><span class="nav-number">1.9.1.</span> <span class="nav-text">复制类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#标志位类"><span class="nav-number">1.9.2.</span> <span class="nav-text">标志位类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件状态标志"><span class="nav-number">1.9.3.</span> <span class="nav-text">文件状态标志</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#访问权限标志位"><span class="nav-number">1.9.3.1.</span> <span class="nav-text">访问权限标志位</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#信号处理类-todo"><span class="nav-number">1.9.4.</span> <span class="nav-text">信号处理类(todo)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件锁类-todo"><span class="nav-number">1.9.5.</span> <span class="nav-text">文件锁类(todo)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ioctl"><span class="nav-number">1.10.</span> <span class="nav-text">ioctl</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文件与目录"><span class="nav-number">2.</span> <span class="nav-text">文件与目录</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本结构"><span class="nav-number">2.1.</span> <span class="nav-text">基本结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取函数"><span class="nav-number">2.2.</span> <span class="nav-text">获取函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件类型"><span class="nav-number">2.3.</span> <span class="nav-text">文件类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#账号"><span class="nav-number">2.4.</span> <span class="nav-text">账号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件访问权限"><span class="nav-number">2.5.</span> <span class="nav-text">文件访问权限</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#新文件与文件夹所有权"><span class="nav-number">2.6.</span> <span class="nav-text">新文件与文件夹所有权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#access-amp-amp-faccessat"><span class="nav-number">2.7.</span> <span class="nav-text">access &amp;&amp; faccessat</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#umask"><span class="nav-number">2.8.</span> <span class="nav-text">umask</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chmod-amp-amp-fchmod-amp-amp-fchmodat"><span class="nav-number">2.9.</span> <span class="nav-text">chmod &amp;&amp; fchmod &amp;&amp; fchmodat</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#粘着位"><span class="nav-number">2.10.</span> <span class="nav-text">粘着位</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chown-amp-amp-fchown-amp-amp-fchownat-amp-amp-lchown"><span class="nav-number">2.11.</span> <span class="nav-text">chown &amp;&amp; fchown &amp;&amp; fchownat &amp;&amp; lchown</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件长度"><span class="nav-number">2.12.</span> <span class="nav-text">文件长度</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#空洞问题"><span class="nav-number">2.12.1.</span> <span class="nav-text">空洞问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件截断"><span class="nav-number">2.12.2.</span> <span class="nav-text">文件截断</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#link-flinkat-unlink-unlinkat-remove"><span class="nav-number">2.13.</span> <span class="nav-text">link flinkat unlink unlinkat remove</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
