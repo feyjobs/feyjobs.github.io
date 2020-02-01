@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/28/c++/restrict/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/11/leveldb/usage/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/28/c++/restrict/" itemprop="url">restrict</a></h1>
+                <a class="post-title-link" href="/2019/07/11/leveldb/usage/" itemprop="url">usage</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-28T17:12:25+08:00">
-                2019-01-28
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-11T13:58:00+08:00">
+                2019-07-11
               </time>
             
 
@@ -353,11 +353,586 @@
       
         
           
-            <h1 id="restrict"><a href="#restrict" class="headerlink" title="restrict"></a>restrict</h1><p>一个c语言关键词,第一次看到是在apue上一直有这个关键词<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">char</span> *<span class="title">inet_pton</span><span class="params">(<span class="keyword">int</span> domain, <span class="keyword">const</span> <span class="keyword">char</span>* <span class="keyword">restrict</span> str, <span class="keyword">void</span>* <span class="keyword">restrict</span> addr)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">char</span> *<span class="title">inet_ntop</span><span class="params">(<span class="keyword">int</span> domain, <span class="keyword">const</span> <span class="keyword">void</span>* <span class="keyword">restrict</span> addr, <span class="keyword">char</span>* <span class="keyword">restrict</span> str, <span class="keyword">socklen_t</span> size)</span></span>;</span><br></pre></td></tr></table></figure></p>
-<p>restrict关键词的意义是</p>
+            <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p build &amp;&amp; cd build</span><br><span class="line">cmake -DCMAKE_BUILD_TYPE=Release .. &amp;&amp; cmake --build .</span><br></pre></td></tr></table></figure>
+<p>为了能够对静态库进行gdb调试,我们在CMakeList.txt文件加入<br><figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">add_definitions</span>(<span class="string">"-Wall -g"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>之后我们就可以进行leveldb编译安装了</p>
+<p>cmake运行之后make &amp;&amp; make install安装</p>
+<h2 id="坑"><a href="#坑" class="headerlink" title="坑"></a>坑</h2><ul>
+<li>安装过程中,系统中有两个g++,使用低版本g++编译了leveldb,高版本编译调用代码后,在链接时出现问题,猜测低版本链接器无法链接高版本文件</li>
+<li>单步调试中,直接s无法进入函数调试,而是去了个奇怪的地方,不确定,但是使用断点然后c是可以进入目标函数的,原因不明</li>
+</ul>
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>使用以下代码进行测试</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;assert.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;leveldb/db.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    leveldb::DB* db;</span><br><span class="line">    leveldb::Options options;</span><br><span class="line">    options.create_if_missing = <span class="literal">true</span>;</span><br><span class="line">    leveldb::Status status = leveldb::DB::Open(options,<span class="string">"testdb"</span>, &amp;db);</span><br><span class="line">    assert(status.ok());</span><br><span class="line"></span><br><span class="line">    <span class="comment">//write key1,value1</span></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> key=<span class="string">"key"</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> value = <span class="string">"value"</span>;</span><br><span class="line"></span><br><span class="line">    status = db-&gt;Put(leveldb::WriteOptions(), key,value);</span><br><span class="line">    assert(status.ok());</span><br><span class="line"></span><br><span class="line">    status = db-&gt;Get(leveldb::ReadOptions(), key, &amp;value);</span><br><span class="line">    assert(status.ok());</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;value&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> key2 = <span class="string">"key2"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//move the value under key to key2</span></span><br><span class="line"></span><br><span class="line">    status = db-&gt;Put(leveldb::WriteOptions(),key2,value);</span><br><span class="line">    assert(status.ok());</span><br><span class="line">    status = db-&gt;Delete(leveldb::WriteOptions(), key);</span><br><span class="line"></span><br><span class="line">    assert(status.ok());</span><br><span class="line"></span><br><span class="line">    status = db-&gt;Get(leveldb::ReadOptions(),key2, &amp;value);</span><br><span class="line"></span><br><span class="line">    assert(status.ok());</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;key2&lt;&lt;<span class="string">"==="</span>&lt;&lt;value&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    status = db-&gt;Get(leveldb::ReadOptions(),key, &amp;value);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(!status.ok()) <span class="built_in">std</span>::<span class="built_in">cerr</span>&lt;&lt;key&lt;&lt;<span class="string">"  "</span>&lt;&lt;status.ToString()&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;key&lt;&lt;<span class="string">"==="</span>&lt;&lt;value&lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">delete</span> db;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在文件运行之后出现一个testdb的数据库</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/11/leveldb/architecture/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/11/leveldb/architecture/" itemprop="url">architecture</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-11T13:57:00+08:00">
+                2019-07-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/10/linux/apue/ipc/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/10/linux/apue/ipc/" itemprop="url">ipc</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-10T14:09:00+08:00">
+                2019-07-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="pipes"><a href="#pipes" class="headerlink" title="pipes"></a>pipes</h2><p>缺陷:</p>
+<ul>
+<li>历史上,pipe是半双工的,虽然后来很多系统的管道都提供了全双工支持,但是我们没做调研的情况下,还是不建议默认作出这个假设</li>
+<li>管道一般用于父子进程之间通行,使用过程:创建pipe，fork，然后父子通信</li>
+</ul>
+<p>连接管道的文件描述符在fstat查看类型的时候,都变成了fifo类型<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">struct stat buf;</span><br><span class="line">fstat(fd[0], &amp;buf);</span><br><span class="line">S_ISFIFO(buf.st_mode); //true</span><br></pre></td></tr></table></figure></p>
+<p><em>如果连接管道的两端是默认STDOUT_FILENO STDIN_FILENO STDERR_FILENO ,那么管道创建后会被重新赋值,连接标准输入输出错误,所以他们永远都是字符设备S_ISCHR</em></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/27/nginx/http2/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/05/27/nginx/http2/" itemprop="url">http2</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-27T11:02:00+08:00">
+                2019-05-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>[toc]</p>
+<h1 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h1><p>研究http2，首先我们要有一个http2的客户端,一般情况下curl不会支持http2，所以我们要重新安装我们的curl，为了使curl支持http2，我们需要先安装nghttp2(严重怀疑和nginx有什么关系吗)依赖库</p>
+<p>curl安装nghttp2依赖之后,只支持h2或者h2c通过http/1.1升级到http2的形式,但是nginx支持的h2c是direct h2c,即没有前置的http/1.1协议升级,直接http2通信,所以要测试h2c direct直接用的nghttp2提供的工具<strong>nghttp</strong></p>
+<h1 id="协议"><a href="#协议" class="headerlink" title="协议"></a>协议</h1><h2 id="流"><a href="#流" class="headerlink" title="流"></a>流</h2><h2 id="帧"><a href="#帧" class="headerlink" title="帧"></a>帧</h2><p>帧是http2传输过程中的最基本单元,一个数据帧的格式如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> 0                   1                   2                   3</span><br><span class="line"> 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1</span><br><span class="line">+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</span><br><span class="line">| R |     Length (14)           |   Type (8)    |   Flags (8)   |</span><br><span class="line">+-+-+-----------+---------------+-------------------------------+</span><br><span class="line">|R|                 Stream Identifier (31)                      |</span><br><span class="line">+=+=============================================================+</span><br><span class="line">|                   Frame Payload (0...)                      ...</span><br><span class="line">+---------------------------------------------------------------+</span><br></pre></td></tr></table></figure></p>
+<p> R: 保留字 2位<br> Length: 帧主体长度,不包括第一行的帧头<br> Type: 帧类型<br> flags: 特定帧类型的标示位<br> R: 保留字<br> Sid: 流id,0号表示当前帧关联整个tcp流<br> Frame Payload:</p>
+<h3 id="DATA帧"><a href="#DATA帧" class="headerlink" title="DATA帧"></a>DATA帧</h3> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">0                   1                   2                   3</span><br><span class="line">0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1</span><br><span class="line">+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</span><br><span class="line">| [Pad High(8)] | [Pad Low (8)] |          Data (*)             .</span><br><span class="line">+---------------+---------------+-------------------------------+</span><br><span class="line">.                            Data (*)                         ...</span><br><span class="line">+---------------------------------------------------------------+</span><br><span class="line">|                           Padding (*)                       ...</span><br><span class="line">+---------------------------------------------------------------+</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/22/nginx/keepalive/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/05/22/nginx/keepalive/" itemprop="url">长连接 短连接 连接服用</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-22T14:51:00+08:00">
+                2019-05-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>[toc]</p>
+<p>参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.</p>
+<ul>
+<li>tcp keepalive</li>
+<li>http keepalive(与此同时经常出现的还有长短连接的考虑) * keepalived<p><br>  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive<br></p>
+
+</li>
+</ul>
+<h2 id="tcp"><a href="#tcp" class="headerlink" title="tcp"></a>tcp</h2><p>首先抛出一个自己以前的错误认知:</p>
 <blockquote>
-<p>告诉编译器,这个指针是这个对象的唯一指针,放心大胆开优化,但是傻逼开发要是不遵循这个约定,会干出啥事 不清楚</p>
+<p>tcp长连接</p>
 </blockquote>
+<p><strong>tcp没有什么长短连接</strong>,只要不出现网络异常,主动断开,tcp连接可以一直跑下去跑到天荒地老</p>
+<p>那么tcp的那一堆keepalive参数是干什么的呢?首先看下有那些keepalive参数<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /proc/sys/net/ipv4</span><br><span class="line">ll</span><br></pre></td></tr></table></figure></p>
+<p>可以看到有三个keepalive参数</p>
+<ul>
+<li>tcp_keepalive_time</li>
+<li>tcp_keepalive_probes</li>
+<li>tcp_keepalive_intvl</li>
+</ul>
+<p><font color="red">tcp_keepalive_time</font>:一个tcp连接空闲了tcp_keepalive_time秒之后,就要怀疑对方的健康状况了,注意:必须在socket上设置了<strong>SO_KEEPALIVE</strong>选项,才会触发这个机制</p>
+<p><font color="red"> tcp_keepalive_probes</font>:怎么确认对方的健康状况呢,发送侦测包(probe表示探针,也是星际二中萌萌的神族农民),如果对方能正确返回,那就说明对面还活着,这个参数描述发送几个侦测包(毕竟不要一棍子打死)</p>
+<p><img src="/uploads/nginx/probe.jpg" alt="probe"></p>
+<p><font color="red"> tcp_keepalive_intvl</font>:这个描述每隔多少tcp_keepalive_intvl发送一个侦测包</p>
+<p>ok,看到这三个参数的意义,我们就明白了,tcp的keepalive是做tcp<strong>健康检查</strong>的</p>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><h4 id="正常状况"><a href="#正常状况" class="headerlink" title="正常状况"></a>正常状况</h4><p>首先我们使用nc命令启动一个tcp server<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -l 2333</span><br></pre></td></tr></table></figure></p>
+<p>监听2333端口<br>然后我们拿python写一段tcp连接代码<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line">s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line"></span><br><span class="line">s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, <span class="number">1</span>) </span><br><span class="line">s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, <span class="number">20</span>)</span><br><span class="line">s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">s.connect((<span class="string">'127.0.0.1'</span>, <span class="number">2333</span>))</span><br><span class="line"></span><br><span class="line">time.sleep(<span class="number">61</span>)</span><br></pre></td></tr></table></figure></p>
+<p>代码中分别设置了</p>
+<ul>
+<li>SO_KEEPALIVE 启动tcp健康检查</li>
+<li>TCP_KEEPIDLE 空连接20s进行一次检查</li>
+<li>TCP_KEEPINTVL 每隔1s发送一个检查探针</li>
+<li>还有一个参数tcp_keepalive_probes取系统默认的<br>这里是<br><img src="/uploads/nginx/tcp_keepalive_probes.jpg" alt="probe"><br>也就是说,空闲20s后开始发送探测报文,每隔1s发一个最多发2个</li>
+</ul>
+<p>用tcpdump抓包<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i lo tcp port 2333</span><br></pre></td></tr></table></figure></p>
+<p>启动python<br>首先是三次tcp握手<br><img src="/uploads/nginx/handshake.jpg" alt="handshake"></p>
+<p>随后等待20s,第一次探测报文发送,server很快回复ok 表示我还活着<br><img src="/uploads/nginx/first.jpg" alt="handshake"></p>
+<p>然后他们又很无聊得等了20s,又发了一次探测报文,server再次回复ok<br><img src="/uploads/nginx/second.jpg" alt="handshake"></p>
+<p>最后他们又很无聊得等了20s,又发了一次探测报文,server再次回复ok<br><img src="/uploads/nginx/third.jpg" alt="handshake"></p>
+<p>程序退出,挥手再见<br><img src="/uploads/nginx/byebye.jpg" alt="handshake"></p>
+<p>好的,在这个情况下,client与server都愉快得交换了双发意见,达成了互相都健康得共识,接下来看一个不健康的</p>
+<h4 id="异常状况"><a href="#异常状况" class="headerlink" title="异常状况"></a>异常状况</h4><p>依然用nc命令启动server,python代码也不变,但是我们需要断网使用iptables命令<br>具体步骤</p>
+<ul>
+<li><p>启动tcpddump</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i lo tcp port 2333</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>nc启动server</p>
+</li>
+<li>运行python 完成握手</li>
+<li><strong>重要</strong> tcp握手之后快速完成端口屏蔽<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -I INPUT -p tcp --dport 2333 -s 127.0.0.1 -j DROP</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>屏蔽127.0.0.1:2333的网络连接,然后就等着下面这一幕</p>
+<ul>
+<li>兄弟 你还好吗<br><img src="/uploads/nginx/anzhong.jpg" alt="handshake"></li>
+<li>+1s 兄弟 你还好吗<br><img src="/uploads/nginx/anzhong.jpg" alt="handshake"></li>
+<li>死了,发送<strong>rst</strong>报文,表示异常终止<br><img src="/uploads/nginx/failed.jpg" alt="handshake"></li>
+</ul>
+<p>最后<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F</span><br></pre></td></tr></table></figure></p>
+<p>恢复机器路由状况</p>
+<h2 id="http"><a href="#http" class="headerlink" title="http"></a>http</h2><p>http模式下的keepalive是用来保证tcp连接复用的.<br>在最开始的http协议中,并没有关于长连接的概念,单纯得有一个请求就建立一个tcp连接,后来人们发现太浪费了,两个相同终端,发100个请求就会建立100个tcp连接,于是诞生了http长连接keep-alive</p>
+<h3 id="http-1-0-amp-amp-1-1"><a href="#http-1-0-amp-amp-1-1" class="headerlink" title="http 1.0 &amp;&amp; 1.1"></a>http 1.0 &amp;&amp; 1.1</h3><p>在1.0版本http协议客户端就可以通过加入<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: keep-alive</span><br></pre></td></tr></table></figure></p>
+<p>头部发起一个长连接请求,服务器在收到之后如果自身也支持长连接,那么就会在返回体重也返回这个头部,表示支持长连接<br>如果server不支持长连接就可以返回<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: close</span><br></pre></td></tr></table></figure></p>
+<p>头部表示不支持长连接</p>
+<p>版本更新到1.1之后,http请求默认就是长连接,除非在客户端请求中加上<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: close</span><br></pre></td></tr></table></figure></p>
+<p>关闭长连接</p>
+<h3 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h3><p>我们以nginx为例,测试http长短连接的性能对比</p>
+<p>我们在nginx配置文件中加入配置<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">keepalive_timeout</span>  <span class="number">65</span>;</span><br></pre></td></tr></table></figure></p>
+<p>这个命令表示,在处理一个http请求后,65s内没有新的请求过来,我们就关闭当前连接</p>
+<p>我们使用wrk作压测(一个非常不错的http压测工具)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wrk -c 100 -d 10  -t 12 https://localhost:8233</span><br></pre></td></tr></table></figure></p>
+<p>上述命令表示起100个连接 12个线程压10s</p>
+<p>我们在nginx日志内容中加入<strong>$connection_requests</strong>变量,这个变量表示有多少个请求在和当前请求复用这个连接<br><img src="/uploads/nginx/nginxconf.jpg" alt="nginxconf"></p>
+<h4 id="长连接压测"><a href="#长连接压测" class="headerlink" title="长连接压测"></a>长连接压测</h4><p><img src="/uploads/nginx/fuyong.jpg" alt="nginxconf"><br>打印的第一个变量是当前请求的$connection_requests,可以看到所有连接都在处理多个请求</p>
+<p>wrk压测结果如下<br><img src="/uploads/nginx/yacegood.jpg" alt="nginxconf"></p>
+<h4 id="短连接压测"><a href="#短连接压测" class="headerlink" title="短连接压测"></a>短连接压测</h4><p><img src="/uploads/nginx/notfuyong.jpg" alt="nginxconf"><br>可以看到每个请求的当前连接都只处理一个请求</p>
+<p>wrk压测结果如下<br><img src="/uploads/nginx/yacebad.jpg" alt="nginxconf"><br>对比长连接的压测结果,可以看到<br>qps和tps都相差了<strong>12倍</strong>左右,提升效果非常明显</p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>那么长连接还有什么优化的点吗?有的<br>最明显的地方就是,一个长连接上的所有请求都是串行执行的<br>也就是说 第一个请求没有执行完,就不会执行第二个请求,再极端一点<br>客户端需要处理10个请求,但是只开了6个连接,剩下的那4个就要干等着!怎么办！</p>
+<p><img src="/uploads/nginx/kqqrlfz.jpg" alt="nginxconf"></p>
+<p><strong><font size="12">http2</font></strong></p>
+<h2 id="nginx-keepalive实现"><a href="#nginx-keepalive实现" class="headerlink" title="nginx keepalive实现"></a>nginx keepalive实现</h2><p>keepalive的关键就是在请求结束的时候不要断开tcp连接,而是继续等待,下一个请求的到来<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">ngx_http_finalize_request(<span class="keyword">ngx_http_request_t</span> *r, <span class="keyword">ngx_int_t</span> rc)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (rc == NGX_DONE) &#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">        *调用ngx_http_finalize_connection释放连接资源</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        ngx_http_finalize_connection(r);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">ngx_http_finalize_connection(<span class="keyword">ngx_http_request_t</span> *r)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *如果没有收到退出命令,并且设置了长连接,长连接未超时,则进入设置keepalive逻辑</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span> (!ngx_terminate</span><br><span class="line">         &amp;&amp; !ngx_exiting</span><br><span class="line">         &amp;&amp; r-&gt;keepalive</span><br><span class="line">         &amp;&amp; clcf-&gt;keepalive_timeout &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        ngx_http_set_keepalive(r);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">ngx_http_set_keepalive(<span class="keyword">ngx_http_request_t</span> *r)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">int</span>                        tcp_nodelay;</span><br><span class="line">    <span class="keyword">ngx_buf_t</span>                 *b, *f;</span><br><span class="line">    <span class="keyword">ngx_chain_t</span>               *cl, *ln;</span><br><span class="line">    <span class="keyword">ngx_event_t</span>               *rev, *wev;</span><br><span class="line">    <span class="keyword">ngx_connection_t</span>          *c;</span><br><span class="line">    <span class="keyword">ngx_http_connection_t</span>     *hc;</span><br><span class="line">    <span class="keyword">ngx_http_core_loc_conf_t</span>  *clcf;</span><br><span class="line"></span><br><span class="line">    c = r-&gt;connection;</span><br><span class="line">    rev = c-&gt;read;</span><br><span class="line"></span><br><span class="line">    clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);</span><br><span class="line"></span><br><span class="line">    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"set http keepalive handler"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (r-&gt;discard_body) &#123;</span><br><span class="line">        r-&gt;write_event_handler = ngx_http_request_empty_handler;</span><br><span class="line">        r-&gt;lingering_time = ngx_time() + (<span class="keyword">time_t</span>) (clcf-&gt;lingering_time / <span class="number">1000</span>);</span><br><span class="line">        ngx_add_timer(rev, clcf-&gt;lingering_timeout);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c-&gt;<span class="built_in">log</span>-&gt;action = <span class="string">"closing request"</span>;</span><br><span class="line"></span><br><span class="line">    hc = r-&gt;http_connection;</span><br><span class="line">    b = r-&gt;header_in;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *pipeline 请求特殊处理</span></span><br><span class="line"><span class="comment">    *pipeline请求就是,客户端在收到返回前先把下一个请求发送给服务端</span></span><br><span class="line"><span class="comment">    *这里把缓存的pipeline请求拿出来</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span> (b-&gt;pos &lt; b-&gt;last) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* the pipelined request */</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (b != c-&gt;buffer) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/*</span></span><br><span class="line"><span class="comment">             * If the large header buffers were allocated while the previous</span></span><br><span class="line"><span class="comment">             * request processing then we do not use c-&gt;buffer for</span></span><br><span class="line"><span class="comment">             * the pipelined request (see ngx_http_create_request()).</span></span><br><span class="line"><span class="comment">             *</span></span><br><span class="line"><span class="comment">             * Now we would move the large header buffers to the free list.</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (cl = hc-&gt;busy; cl; <span class="comment">/* void */</span>) &#123;</span><br><span class="line">                ln = cl;</span><br><span class="line">                cl = cl-&gt;next;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (ln-&gt;buf == b) &#123;</span><br><span class="line">                    ngx_free_chain(c-&gt;pool, ln);</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                f = ln-&gt;buf;</span><br><span class="line">                f-&gt;pos = f-&gt;start;</span><br><span class="line">                f-&gt;last = f-&gt;start;</span><br><span class="line"></span><br><span class="line">                ln-&gt;next = hc-&gt;<span class="built_in">free</span>;</span><br><span class="line">                hc-&gt;<span class="built_in">free</span> = ln;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            cl = ngx_alloc_chain_link(c-&gt;pool);</span><br><span class="line">            <span class="keyword">if</span> (cl == <span class="literal">NULL</span>) &#123;</span><br><span class="line">                ngx_http_close_request(r, <span class="number">0</span>);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            cl-&gt;buf = b;</span><br><span class="line">            cl-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">            hc-&gt;busy = cl;</span><br><span class="line">            hc-&gt;nbusy = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* guard against recursive call from ngx_http_finalize_connection() */</span></span><br><span class="line">    r-&gt;keepalive = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//释放当前请求</span></span><br><span class="line">    ngx_http_free_request(r, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    c-&gt;data = hc;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_handle_read_event(rev, <span class="number">0</span>) != NGX_OK) &#123;</span><br><span class="line">        ngx_http_close_connection(c);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    wev = c-&gt;write;</span><br><span class="line">    wev-&gt;handler = ngx_http_empty_handler;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *如果下一个请求已经被收到了,就直接进入下一个请求的开始处理</span></span><br><span class="line"><span class="comment">    *函数,将 读事件handler设置为 ngx_http_process_request_line,开始下一个请求</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span> (b-&gt;pos &lt; b-&gt;last) &#123;</span><br><span class="line"></span><br><span class="line">        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"pipelined request"</span>);</span><br><span class="line"></span><br><span class="line">        c-&gt;<span class="built_in">log</span>-&gt;action = <span class="string">"reading client pipelined request line"</span>;</span><br><span class="line"></span><br><span class="line">        r = ngx_http_create_request(c);</span><br><span class="line">        <span class="keyword">if</span> (r == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            ngx_http_close_connection(c);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        r-&gt;pipeline = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        c-&gt;data = r;</span><br><span class="line"></span><br><span class="line">        c-&gt;sent = <span class="number">0</span>;</span><br><span class="line">        c-&gt;destroyed = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (rev-&gt;timer_set) &#123;</span><br><span class="line">            ngx_del_timer(rev);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        rev-&gt;handler = ngx_http_process_request_line;</span><br><span class="line">        ngx_post_event(rev, &amp;ngx_posted_events);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * To keep a memory footprint as small as possible for an idle keepalive</span></span><br><span class="line"><span class="comment">     * connection we try to free c-&gt;buffer's memory if it was allocated outside</span></span><br><span class="line"><span class="comment">     * the c-&gt;pool.  The large header buffers are always allocated outside the</span></span><br><span class="line"><span class="comment">     * c-&gt;pool and are freed too.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    b = c-&gt;buffer;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_pfree(c-&gt;pool, b-&gt;start) == NGX_OK) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * the special note for ngx_http_keepalive_handler() that</span></span><br><span class="line"><span class="comment">         * c-&gt;buffer's memory was freed</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"></span><br><span class="line">        b-&gt;pos = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        b-&gt;pos = b-&gt;start;</span><br><span class="line">        b-&gt;last = b-&gt;start;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"hc free: %p"</span>,</span><br><span class="line">                   hc-&gt;<span class="built_in">free</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (hc-&gt;<span class="built_in">free</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (cl = hc-&gt;<span class="built_in">free</span>; cl; <span class="comment">/* void */</span>) &#123;</span><br><span class="line">            ln = cl;</span><br><span class="line">            cl = cl-&gt;next;</span><br><span class="line">            ngx_pfree(c-&gt;pool, ln-&gt;buf-&gt;start);</span><br><span class="line">            ngx_free_chain(c-&gt;pool, ln);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        hc-&gt;<span class="built_in">free</span> = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"hc busy: %p %i"</span>,</span><br><span class="line">                   hc-&gt;busy, hc-&gt;nbusy);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (hc-&gt;busy) &#123;</span><br><span class="line">        <span class="keyword">for</span> (cl = hc-&gt;busy; cl; <span class="comment">/* void */</span>) &#123;</span><br><span class="line">            ln = cl;</span><br><span class="line">            cl = cl-&gt;next;</span><br><span class="line">            ngx_pfree(c-&gt;pool, ln-&gt;buf-&gt;start);</span><br><span class="line">            ngx_free_chain(c-&gt;pool, ln);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        hc-&gt;busy = <span class="literal">NULL</span>;</span><br><span class="line">        hc-&gt;nbusy = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HTTP_SSL)</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;ssl) &#123;</span><br><span class="line">        ngx_ssl_free_buffer(c);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    rev-&gt;handler = ngx_http_keepalive_handler;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (wev-&gt;active &amp;&amp; (ngx_event_flags &amp; NGX_USE_LEVEL_EVENT)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (ngx_del_event(wev, NGX_WRITE_EVENT, <span class="number">0</span>) != NGX_OK) &#123;</span><br><span class="line">            ngx_http_close_connection(c);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c-&gt;<span class="built_in">log</span>-&gt;action = <span class="string">"keepalive"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;tcp_nopush == NGX_TCP_NOPUSH_SET) &#123;</span><br><span class="line">        <span class="keyword">if</span> (ngx_tcp_push(c-&gt;fd) == <span class="number">-1</span>) &#123;</span><br><span class="line">            ngx_connection_error(c, ngx_socket_errno, ngx_tcp_push_n <span class="string">" failed"</span>);</span><br><span class="line">            ngx_http_close_connection(c);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        c-&gt;tcp_nopush = NGX_TCP_NOPUSH_UNSET;</span><br><span class="line">        tcp_nodelay = ngx_tcp_nodelay_and_tcp_nopush ? <span class="number">1</span> : <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        tcp_nodelay = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tcp_nodelay &amp;&amp; clcf-&gt;tcp_nodelay &amp;&amp; ngx_tcp_nodelay(c) != NGX_OK) &#123;</span><br><span class="line">        ngx_http_close_connection(c);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> 0</span></span><br><span class="line">    <span class="comment">/* if ngx_http_request_t was freed then we need some other place */</span></span><br><span class="line">    r-&gt;http_state = NGX_HTTP_KEEPALIVE_STATE;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    c-&gt;idle = <span class="number">1</span>;</span><br><span class="line">    ngx_reusable_connection(c, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    ngx_add_timer(rev, clcf-&gt;keepalive_timeout);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (rev-&gt;ready) &#123;</span><br><span class="line">        ngx_post_event(rev, &amp;ngx_posted_events);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 
           
         
@@ -406,7 +981,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/23/nginx/408问题排查/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/17/nginx/https/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -425,7 +1000,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/23/nginx/408问题排查/" itemprop="url">408问题排查</a></h1>
+                <a class="post-title-link" href="/2019/05/17/nginx/https/" itemprop="url">https</a></h1>
         
 
         <div class="post-meta">
@@ -437,8 +1012,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-23T17:07:47+08:00">
-                2019-01-23
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-17T17:17:00+08:00">
+                2019-05-17
               </time>
             
 
@@ -477,7 +1052,28 @@
       
         
           
-            
+            <p>[TOC]</p>
+<p>本文探索nginx如何支持https请求,后续内容会分为以下部分讲解</p>
+<ul>
+<li>https服务器的配置</li>
+<li>自建https server</li>
+<li>https原理,交互流程</li>
+<li>nginx https处理方法</li>
+</ul>
+<h1 id="https原理-交互流程"><a href="#https原理-交互流程" class="headerlink" title="https原理,交互流程"></a>https原理,交互流程</h1><h1 id="自建https服务器"><a href="#自建https服务器" class="headerlink" title="自建https服务器"></a>自建https服务器</h1><h2 id="CA服务器"><a href="#CA服务器" class="headerlink" title="CA服务器"></a>CA服务器</h2><p>首先我们需要自建一个CA认证机构</p>
+<h3 id="openssl"><a href="#openssl" class="headerlink" title="openssl"></a>openssl</h3><p>首先确认已正确安装openssl,以及openssl版本<br><img src="/uploads/nginx/https/openssl.png" alt="-name"><br>如果版本低于1.0.1f，建议升级，因为1.0.1f版本之下的OpenSSL有一个Heartbleed漏洞。</p>
+<h3 id="创建CA"><a href="#创建CA" class="headerlink" title="创建CA"></a>创建CA</h3><p><strong>创建文件夹保存CA信息</strong><br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cd &amp;&amp; mkdir -p myCA/signedcerts &amp;&amp; mkdir myCA/private &amp;&amp; cd myCA</span><br></pre></td></tr></table></figure></p>
+<p>myCA 用于存放 CA 根证书，证书数据库，以及后续服务器生成的证书，密钥以及请求<br>signedcerts:保存签名证书的 copy<br>private: 包含私钥</p>
+<p><strong>配置CA相关参数</strong>,在CA目录运行<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo '01'&gt;serial &amp;&amp; touh index.txt</span><br></pre></td></tr></table></figure></p>
+<p>创建caconfig.cnf文件<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim ~/myCA/caconfig.cnf</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> My sample caconfig.cnf file.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> Default configuration to use when one is not provided on the command line.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">[ ca ]</span><br><span class="line">default_ca      = local_ca</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> Default location of directories and files needed to generate certificates.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">[ local_ca ]</span><br><span class="line">dir             = /home/&lt;username&gt;/myCA                    # 这里要将username替换为你的用户名</span><br><span class="line">certificate     = $dir/cacert.pem</span><br><span class="line">database        = $dir/index.txt</span><br><span class="line">new_certs_dir   = $dir/signedcerts</span><br><span class="line">private_key     = $dir/private/cakey.pem</span><br><span class="line">serial          = $dir/serial</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> Default expiration and encryption policies for certificates.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">default_crl_days        = 365</span><br><span class="line">default_days            = 1825</span><br><span class="line">default_md              = SHA256</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">policy          = local_ca_policy</span><br><span class="line">x509_extensions = local_ca_extensions</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> Default policy to use when generating server certificates.  The following</span><br><span class="line"><span class="meta">#</span> fields must be defined in the server certificate.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">[ local_ca_policy ]</span><br><span class="line">commonName              = supplied</span><br><span class="line">stateOrProvinceName     = supplied</span><br><span class="line">countryName             = supplied</span><br><span class="line">emailAddress            = supplied</span><br><span class="line">organizationName        = supplied</span><br><span class="line">organizationalUnitName  = supplied</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> x509 extensions to use when generating server certificates.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">[ local_ca_extensions ]</span><br><span class="line">subjectAltName          = DNS:localhost</span><br><span class="line">basicConstraints        = CA:false</span><br><span class="line">nsCertType              = server</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> The default root certificate generation policy.</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">[ req ]</span><br><span class="line">default_bits    = 2048</span><br><span class="line">default_keyfile = /home/&lt;username&gt;/myCA/private/cakey.pem  # 这里要将username替换为你的用户名</span><br><span class="line">default_md      = SHA256</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">prompt                  = no</span><br><span class="line">distinguished_name      = root_ca_distinguished_name</span><br><span class="line">x509_extensions         = root_ca_extensions</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span> Root Certificate Authority distinguished name.  Change these fields to match</span><br><span class="line"><span class="meta">#</span> your local environment!</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">[ root_ca_distinguished_name ]</span><br><span class="line">commonName              = MyOwn Root Certificate Authority # CA机构名</span><br><span class="line">stateOrProvinceName     = JS                               # CA所在省份</span><br><span class="line">countryName             = CN                               # CA所在国家（仅限2个字符）</span><br><span class="line">emailAddress            = XXXX@XXX.com                     # 邮箱</span><br><span class="line">organizationName        = XXX                              #</span><br><span class="line">organizationalUnitName  = XXX                              #</span><br><span class="line"><span class="meta">#</span></span><br><span class="line">[ root_ca_extensions ]</span><br><span class="line">basicConstraints        = CA:true</span><br></pre></td></tr></table></figure>
+<p><strong>生成CA证书</strong><br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export OPENSSL_CONF=~/myCA/caconfig.cnf       #该命令用于给环境变量 OPENSSL_CONF 赋值为caconfig.cnf。</span><br><span class="line">openssl req -x509 -newkey rsa:2048 -out cacert.pem -outform PEM -days 1825             # 生成 CA 根证书和密钥</span><br></pre></td></tr></table></figure></p>
+<p>该命令需要用户设置密码。不要忘记。<br>以上步骤生成了 CA 自签名根证书，和 RSA 公/私密钥对。证书的格式是 PEM，有效期是1825天。</p>
+<ul>
+<li>myCA/cacert.pem: CA 根证书</li>
+<li>myCA/private/cakey.pem： CA 私钥</li>
+</ul>
+<h2 id="创建服务器公私钥"><a href="#创建服务器公私钥" class="headerlink" title="创建服务器公私钥"></a>创建服务器公私钥</h2>
           
         
       
@@ -525,7 +1121,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/21/linux/docker/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/16/nginx/nginx_signal/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -544,7 +1140,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/21/linux/docker/" itemprop="url">docker</a></h1>
+                <a class="post-title-link" href="/2019/05/16/nginx/nginx_signal/" itemprop="url">nginx signal</a></h1>
         
 
         <div class="post-meta">
@@ -556,8 +1152,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-21T20:36:56+08:00">
-                2019-01-21
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-16T15:24:00+08:00">
+                2019-05-16
               </time>
             
 
@@ -596,12 +1192,141 @@
       
         
           
-            <h2 id="命令列表"><a href="#命令列表" class="headerlink" title="命令列表"></a>命令列表</h2><ul>
-<li>docker pull <strong>*</strong> 拉取docker镜像</li>
-<li>docker images  本地docker镜像列表</li>
-<li>docker run -i -d –name “随便取个名字” image(注意带上版本号) 运行当前镜像</li>
-<li>docker ps 查看docker进程</li>
-<li>docker exec -ti “你随便取得名字” /bin/bash</li>
+            <h1 id="总起"><a href="#总起" class="headerlink" title="总起"></a>总起</h1><p>nginx提供了很多一些信号功能,以提供用户在进程运行时对当前进程进行操作,主要包含一下命令<br><strong>master</strong></p>
+<ul>
+<li>QUIT</li>
+<li>TERM</li>
+<li>WINCH</li>
+<li>HUP</li>
+<li>USR1</li>
+<li>USR2</li>
+</ul>
+<h2 id="信号"><a href="#信号" class="headerlink" title="信号"></a>信号</h2><pre><code>信号提供了一种软终端机制,很多优秀的软件都提供了信号处理方法.信号提供了一种异步事件的处理方法
+</code></pre><p>,无论是正在执行的程序需要杀死还是管道连接程序的下游需要提前推出<br>    在unix早期就像用户提供了信号机制,但是其并不可靠,例如Version 7.可能丢失信号,进入临界区代码时无法<br>关闭所选的信号。终于在BSD4.3版本和SRV3版本修正了这些问题,提供了稳定信号,遗憾的是他们二者并不兼容,<br>在Posix.1标准中可靠信号标准,这也是接下来所要描述的内容。<br>    在下文中,我们将要描述集中常用信号.然后我们会审视以往信号的实现问题,从而加深对信号的理解,</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/14/music/guitar/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/05/14/music/guitar/" itemprop="url">guitar</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-14T20:14:00+08:00">
+                2019-05-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="finger-style"><a href="#finger-style" class="headerlink" title="finger style"></a>finger style</h2><ul>
+<li>花</li>
+<li>奇迹的山</li>
+<li>昭和ロマンス(昭和罗曼史)</li>
+<li>阿尔罕布拉宫的回忆</li>
 </ul>
 
           
@@ -651,7 +1376,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/18/linux/tr/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/14/think/compiler/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -670,7 +1395,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/18/linux/tr/" itemprop="url">未命名</a></h1>
+                <a class="post-title-link" href="/2019/05/14/think/compiler/" itemprop="url">compiler</a></h1>
         
 
         <div class="post-meta">
@@ -682,8 +1407,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-18T16:46:41+08:00">
-                2019-01-18
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-14T11:41:00+08:00">
+                2019-05-14
               </time>
             
 
@@ -722,7 +1447,7 @@
       
         
           
-            
+            <h2 id="front"><a href="#front" class="headerlink" title="front"></a>front</h2><h3 id="total"><a href="#total" class="headerlink" title="total"></a>total</h3>
           
         
       
@@ -770,7 +1495,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/17/php/regex/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/14/think/进修/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -789,7 +1514,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/17/php/regex/" itemprop="url">正则表达式</a></h1>
+                <a class="post-title-link" href="/2019/05/14/think/进修/" itemprop="url">进修</a></h1>
         
 
         <div class="post-meta">
@@ -801,8 +1526,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-17T16:56:13+08:00">
-                2019-01-17
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-14T11:39:00+08:00">
+                2019-05-14
               </time>
             
 
@@ -811,39 +1536,6 @@
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Code/" itemprop="url" rel="index">
-                    <span itemprop="name">Code</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Code/PHP/" itemprop="url" rel="index">
-                    <span itemprop="name">PHP</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -874,706 +1566,17 @@
       
         
           
-            <h1 id="需要转移的字符"><a href="#需要转移的字符" class="headerlink" title="需要转移的字符"></a>需要转移的字符</h1><ul>
-<li>#</li>
+            <h2 id="操作系统"><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h2><ul>
+<li>apue</li>
+<li>geek</li>
 </ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/17/linux/apue/socket/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/17/linux/apue/socket/" itemprop="url">套接字编程</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-17T11:44:39+08:00">
-                2019-01-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/apue/" itemprop="url" rel="index">
-                    <span itemprop="name">apue</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="套接字描述符"><a href="#套接字描述符" class="headerlink" title="套接字描述符"></a>套接字描述符</h2><p>类似文件描述符,类似于套接字id<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">socket</span><span class="params">(<span class="keyword">int</span> domain, <span class="keyword">int</span> type, <span class="keyword">int</span> protocol)</span></span>;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/16/c++/memory/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/16/c++/memory/" itemprop="url">内存那些事</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-16T11:21:38+08:00">
-                2019-01-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="内存出现的问题"><a href="#内存出现的问题" class="headerlink" title="内存出现的问题"></a>内存出现的问题</h2><h3 id="free报错"><a href="#free报错" class="headerlink" title="free报错"></a>free报错</h3><p>事故现场<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">main()&#123;</span><br><span class="line">    <span class="keyword">void</span>* ptr = <span class="built_in">malloc</span>(<span class="number">2014</span>);</span><br><span class="line">    ptr = ptr + <span class="number">3</span>;</span><br><span class="line">    <span class="built_in">free</span>(ptr);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>这段代码先申请一段2014 bytes的空间,然后free +3地址<br>错误信息<br><img src="/uploads/C/c_memory.png" alt="-name"></p>
-<hr>
-<p>类似的<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">main()&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">3</span>;</span><br><span class="line">    <span class="keyword">int</span>* ptr = &amp;a;</span><br><span class="line">    <span class="built_in">free</span>(ptr);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>直接free了一个栈地址,也会直接报错<br><img src="/uploads/C/c_memory_free_stack.png" alt="-name"><br>总的来说,都是<strong>invalid pointer</strong></p>
-<hr>
-<p>在测试中,还发现了了其他错误<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="keyword">int</span></span><br><span class="line">main()&#123;</span><br><span class="line">    <span class="keyword">void</span>* ptr = <span class="built_in">malloc</span>(<span class="number">2014</span>);</span><br><span class="line">    <span class="built_in">free</span>(++ptr);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><img src="/uploads/C/c_memory_free_munmap.png" alt="-name"><br>具体原因先参考</p>
-<hr>
-<h3 id="malloc报错"><a href="#malloc报错" class="headerlink" title="malloc报错"></a>malloc报错</h3><p>在某一次使用堆时,使用了过量内存,导致了这个内存鼓掌,malloc都不让了= =,后续再看下<br><img src="/uploads/C/c_memory_malloc.png" alt="-name"></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/07/csapp/csappans/chapter1/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/07/csapp/csappans/chapter1/" itemprop="url">chapter1</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-07T23:15:00+08:00">
-                2019-01-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/csapp/" itemprop="url" rel="index">
-                    <span itemprop="name">csapp</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/07/csapp/csappans/chapter2/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/07/csapp/csappans/chapter2/" itemprop="url">第二章</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-07T23:15:00+08:00">
-                2019-01-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/csapp/" itemprop="url" rel="index">
-                    <span itemprop="name">csapp</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="练习题"><a href="#练习题" class="headerlink" title="练习题"></a>练习题</h1><h3 id="2-1"><a href="#2-1" class="headerlink" title="2.1"></a>2.1</h3><p>A 001110011010011111111000 <br><br>B 0xC97B <br><br>C 11010101111001001100 <br><br>D 0x26E7B5 <br></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/07/csapp/csapp_ans/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="feyjobs">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/uploads/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="清风">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/07/csapp/csapp_ans/" itemprop="url">深入理解计算机系统答案及代码</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-07T23:08:00+08:00">
-                2019-01-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/csapp/" itemprop="url" rel="index">
-                    <span itemprop="name">csapp</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p><a href="/2019/01/07/csapp/csappans/chapter1/" title="chapter1">chapter1</a>  <br><br><a href="/2019/01/07/csapp/csappans/chapter2/" title="第二章">第二章</a>  <br></p>
-
+<h2 id="程序语言"><a href="#程序语言" class="headerlink" title="程序语言"></a>程序语言</h2><ul>
+<li>编译原理</li>
+</ul>
+<h2 id="计算机网络"><a href="#计算机网络" class="headerlink" title="计算机网络"></a>计算机网络</h2><ul>
+<li>unp</li>
+</ul>
+<h2 id="分布式"><a href="#分布式" class="headerlink" title="分布式"></a>分布式</h2><h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2>
           
         
       
@@ -1612,7 +1615,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1660,7 +1663,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">82</span>
+                  <span class="site-state-item-count">93</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1682,7 +1685,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">标签</span>
                 
               </div>
