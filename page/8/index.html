@@ -376,7 +376,8 @@
         
           
           文件系统功能性文件/proc/cpuinfo cpu相关信息的内容
-文件权限[filetype]rw
+文件权限[filetype]rwxrwxrwxll之后的文件权限相关内容,
+filetype|类型|意义||:..:|:..:||-
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -689,7 +690,15 @@ $n
 传递给脚本或者函数的参数
 
 
+$#
+传递给脚本或者函数的参数个数
 
+
+$?
+命令的退出状态0表示没有错误,非零表示有错误
+
+
+$@
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -860,8 +869,10 @@ $n
         
           
           群体心理群体的一般特征
-群体: 在某些既定条件下,并且在只有这些条件下,一群人会表现出一些新的特点,
-          ...
+群体: 在某些既定条件下,并且在只有这些条件下,一群人会表现出一些新的特点,他非常不同于组成这一群体的个人所具有的特点
+
+
+          
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/08/01/think/乌合之众/#more" rel="contents">
@@ -1009,8 +1020,12 @@ $n
         
           
           磁盘IOPS
-IOPS: Input Output per Second每秒的输入输出量,磁盘性能的
-          ...
+IOPS: Input Output per Second每秒的输入输出量,磁盘性能的主要指标
+
+随机频繁的应用,小文件存储
+##
+
+          
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/07/25/linux/计算机系统/#more" rel="contents">
@@ -1157,7 +1172,8 @@ IOPS: Input Output per Second每秒的输入输出量,磁盘性能的
       
         
           
-          sed命令格式12sed [options] &apos;command&apos; file(s)
+          sed命令格式12sed [options] &apos;command&apos; file(s)sed [options] -f scriptfile file(s)
+options123456-
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1306,7 +1322,8 @@ IOPS: Input Output per Second每秒的输入输出量,磁盘性能的
         
           
           砍需求注意联动,别特么砍了A,发现和B有关系,最后B上去了,一堆A的问题
-评审内容可能出现的sql查
+评审内容可能出现的sql查询也应该进行测试,防止出现依赖外部数据库,慢查询而无法实现。
+通用概念不应随着程序的改变而改变cas
           ...
           <!--noindex-->
           <div class="post-button text-center">

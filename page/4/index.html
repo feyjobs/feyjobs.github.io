@@ -354,7 +354,8 @@
         
           
           共享内存是nginx进程间通信的重要机制,本文讲从共享内存的使用与原理进行剖析。
-使用nginx提供
+使用nginx提供给模块开发者一些共享内存api
+数据结构12345678910111213141516struct 
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -482,7 +483,9 @@
           
           #总纲不要急,急了干不成事
 细节行为记录
-| Time | Activity | Status | 
+| Time | Activity | Status | Duration | Thinking | Interrupt|
+
+将所有时间的操作记录下来,辅助以
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -609,7 +612,7 @@
         
           
           刚好四点,忽然想写点东西。关于工作,关于人生,关于志向,关于习惯。
-遥遥一想,高中毕业毕竟7年过去了
+遥遥一想,高中毕业毕竟7年过去了,再遥遥一想初中毕业已经10年过去了,这10年来,我无时不刻在期待着顿悟与感动,而生活也无时不刻以悔
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -735,7 +738,7 @@
       
         
           
-          关键数据结构核心数据结构12345678910111213141516171819202122232
+          关键数据结构核心数据结构123456789101112131415161718192021222324252627282930313233struct ngx_command_s &#123;    
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -861,7 +864,8 @@
       
         
           
-          程序启动流程编译器=&gt;链接器=&gt;启动例程(获取命令行参数,环境变量)=&gt;启动mai
+          程序启动流程编译器=&gt;链接器=&gt;启动例程(获取命令行参数,环境变量)=&gt;启动main函数=&gt;启动历程调用exit(获取main函数返回值)
+进程退出方式退出函数12345678
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -987,7 +991,7 @@
       
         
           
-          在看apue的文件io部分,讲到lseek函数的时候,测试一段代码12345678910#inclu
+          在看apue的文件io部分,讲到lseek函数的时候,测试一段代码12345678910#include "apue.h"int main(void)&#123;    if(lseek(STDIN_
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1114,7 +1118,7 @@
         
           
           准备学一下apue,但是公司坑爹的centos,glibc版本地得令人发指,差了n多资料终于搞定
-碰
+碰到的最主要的问题是 npm包循环依赖,导致a包依赖b包,b包依赖a包,解决的方法居然是,两个包同时安
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1496,7 +1500,12 @@
 技能点
 Linux
 Operating System
-Com
+Compiler System
+Leetcode
+Network
+machion learning
+
+mo
           ...
           <!--noindex-->
           <div class="post-button text-center">

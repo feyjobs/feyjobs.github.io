@@ -353,7 +353,7 @@
       
         
           
-          安装12mkdir -p build &amp;&amp; cd buildcmake -DCMAK
+          安装12mkdir -p build &amp;&amp; cd buildcmake -DCMAKE_BUILD_TYPE=Release .. &amp;&amp; cmake --build .
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -607,7 +607,8 @@
           
           pipes缺陷:
 
-历史上,pipe是半双工的,虽然后来很多系统的管道都提供了全双工支持,但是我们没
+历史上,pipe是半双工的,虽然后来很多系统的管道都提供了全双工支持,但是我们没做调研的情况下,还是不建议默认作出这个假设
+管道一般用于父子进程之间通行,使用过程:创建pipe，f
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -734,7 +735,7 @@
         
           
           [toc]
-环境研究http2，首先我们要有一个http2的客户端,一般情况下curl不会支持htt
+环境研究http2，首先我们要有一个http2的客户端,一般情况下curl不会支持http2，所以我们要重新安装我们的curl，为了使curl支持http2，我们需要先安装nghttp2(
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -861,7 +862,10 @@
         
           
           [toc]
-参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨
+参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.
+
+tcp keepalive
+http keepalive(与此同时经常出现的还
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -990,7 +994,12 @@
           [TOC]
 本文探索nginx如何支持https请求,后续内容会分为以下部分讲解
 
-https服务器
+https服务器的配置
+自建https server
+https原理,交互流程
+nginx https处理方法
+
+h
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1116,7 +1125,16 @@ https服务器
       
         
           
-          总起nginx提供了很多一些信号功能,以提供用户在进程运行时对当前进程进行操作,主要包含一下命令ma
+          总起nginx提供了很多一些信号功能,以提供用户在进程运行时对当前进程进行操作,主要包含一下命令master
+
+QUIT
+TERM
+WINCH
+HUP
+USR1
+USR2
+
+信号信号提供了一种软终端机
           ...
           <!--noindex-->
           <div class="post-button text-center">

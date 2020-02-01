@@ -376,7 +376,7 @@
         
           
           貌似没人介绍过这个vim-markdown插件,随便翻一翻方便查阅
-安装如果你使用的是 Vundle
+安装如果你使用的是 Vundle,则在你的~/.vimrc里加上这两行配置12Plugin 'godlygeek/tabular'P
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -536,7 +536,10 @@
         
           
           重构原则何为重构
-在软件内部结构的一种调整,目的是在不改变软件可观察行为的前提下,提高其可理解性,降
+在软件内部结构的一种调整,目的是在不改变软件可观察行为的前提下,提高其可理解性,降低其修改成本使用一系列重构手法,在不改变软件可观察行为的前提下,调整其结构
+
+
+重构目的:是软件更容
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -706,7 +709,7 @@
       
         
           
-          Setting out to C++why must variables must be decla
+          Setting out to C++why must variables must be declared变量声明可以减少用户的拼写错误12CastleDark = 34;CastleDark = C
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1013,7 +1016,7 @@
       
         
           
-            陆陆续续完了5年了,星际2也快已经称帝成为一个dead game,最喜欢的选手life,也已经进
+            陆陆续续完了5年了,星际2也快已经称帝成为一个dead game,最喜欢的选手life,也已经进了铁窗。和马本一个解决,虫族的大佬们简直都有毒。刚刚结束的Gsl上决赛前无敌的男人输本再次勇夺亚军。
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1173,7 +1176,9 @@
         
           
           时间相关函数date
-string date(string $format [,int $times
+string date(string $format [,int $timestamp])
+
+将$timestamp时间戳(不传的话默认当前时间戳)按照$formate格式,格式
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1334,7 +1339,9 @@ string date(string $format [,int $times
           
           有意义的命名名副其实变量名应该告诉你:他为什么会存在,他做什么事,他应该怎么用
 
-如果名称需要注释来
+如果名称需要注释来补充,那就不算名副其实
+
+123456789   public List&lt;int []&gt;
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1495,7 +1502,7 @@ string date(string $format [,int $times
           
           445 Add two numbers 2Question:
 
-You are given two 
+You are given two non-empty linked lists representing two non-negati
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1646,7 +1653,9 @@ You are given two
           存储管理
 操作系统是如何对内存创建抽象以及如何管理内存的  
 
-无存储器抽象上古时期:每个程序都直接
+无存储器抽象上古时期:每个程序都直接访问物理内存，同一时刻只有一个进程在执行实现多进程的方法:
+
+交换机制:同一时间内存中只有一个程序,
           ...
           <!--noindex-->
           <div class="post-button text-center">
@@ -1796,7 +1805,10 @@ You are given two
           
           RLE压缩算法
 RLE压缩算法形成长度压缩算法,Run Length Encoding.
-主要用途:
+主要用途:对黑白图像和基于调色板的单调图像有很高的压缩性能。
+
+
+压缩算法基本思想基本:数据块的长度设定为1B
           ...
           <!--noindex-->
           <div class="post-button text-center">
