@@ -79,21 +79,17 @@
 
 
 
-<meta name="description" content="程序的机器级表示因为想学下AT&amp;amp;T汇编语言 所以来看看这章 磁盘存储磁盘速度 磁盘上读信息的时间为毫秒级,比DRAM慢10万b倍,比SRAM慢100万倍  磁盘结构   磁盘有盘片组成,盘片表面覆盖有磁性记录材料,盘片中央有一个旋转的主轴。  磁盘表面由一组称为磁道的同心圆组 ,每个磁道被划分为一组扇区。每个扇区包含相等数量的数据位(512byte)（要死了/之前一直以为扇区是圆心到弧的完">
+<meta name="description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="计算机系统">
-<meta property="og:url" content="https://feyjobs.github.io/2017/02/03/csapp/CSAPP/index.html">
+<meta property="og:title" content="分布式">
+<meta property="og:url" content="https://feyjobs.github.io/2019/10/29/分布式/distribute/index.html">
 <meta property="og:site_name" content="清风">
-<meta property="og:description" content="程序的机器级表示因为想学下AT&amp;amp;T汇编语言 所以来看看这章 磁盘存储磁盘速度 磁盘上读信息的时间为毫秒级,比DRAM慢10万b倍,比SRAM慢100万倍  磁盘结构   磁盘有盘片组成,盘片表面覆盖有磁性记录材料,盘片中央有一个旋转的主轴。  磁盘表面由一组称为磁道的同心圆组 ,每个磁道被划分为一组扇区。每个扇区包含相等数量的数据位(512byte)（要死了/之前一直以为扇区是圆心到弧的完">
+<meta property="og:description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/5902351-8cf0ae080447373a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/5902351-7f54a711b0bc2f78.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/5902351-d39eed62b31a89be.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
-<meta property="og:updated_time" content="2018-12-26T04:05:09.408Z">
+<meta property="og:updated_time" content="2020-02-01T06:15:14.877Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="计算机系统">
-<meta name="twitter:description" content="程序的机器级表示因为想学下AT&amp;amp;T汇编语言 所以来看看这章 磁盘存储磁盘速度 磁盘上读信息的时间为毫秒级,比DRAM慢10万b倍,比SRAM慢100万倍  磁盘结构   磁盘有盘片组成,盘片表面覆盖有磁性记录材料,盘片中央有一个旋转的主轴。  磁盘表面由一组称为磁道的同心圆组 ,每个磁道被划分为一组扇区。每个扇区包含相等数量的数据位(512byte)（要死了/之前一直以为扇区是圆心到弧的完">
-<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/5902351-8cf0ae080447373a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta name="twitter:title" content="分布式">
+<meta name="twitter:description" content="自分に同情するな。自分に同情するのは下劣な人間のやることだ。">
 
 
 
@@ -123,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="https://feyjobs.github.io/2017/02/03/csapp/CSAPP/">
+  <link rel="canonical" href="https://feyjobs.github.io/2019/10/29/分布式/distribute/">
 
 
 
 
 
-  <title>计算机系统 | 清风</title>
+  <title>分布式 | 清风</title>
   
 
 
@@ -286,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2017/02/03/csapp/CSAPP/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/10/29/分布式/distribute/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -303,7 +299,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">计算机系统</h1>
+          <h1 class="post-title" itemprop="name headline">分布式</h1>
         
 
         <div class="post-meta">
@@ -315,8 +311,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-02-03T17:43:10+08:00">
-                2017-02-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-10-29T16:55:00+08:00">
+                2019-10-29
               </time>
             
 
@@ -325,28 +321,6 @@
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/READ/" itemprop="url" rel="index">
-                    <span itemprop="name">READ</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -375,36 +349,7 @@
       
 
       
-        <h2 id="程序的机器级表示"><a href="#程序的机器级表示" class="headerlink" title="程序的机器级表示"></a>程序的机器级表示</h2><p>因为想学下AT&amp;T汇编语言 所以来看看这章</p>
-<h3 id="磁盘存储"><a href="#磁盘存储" class="headerlink" title="磁盘存储"></a>磁盘存储</h3><h4 id="磁盘速度"><a href="#磁盘速度" class="headerlink" title="磁盘速度"></a>磁盘速度</h4><blockquote>
-<p>磁盘上读信息的时间为毫秒级,比DRAM慢10万b倍,比SRAM慢100万倍</p>
-</blockquote>
-<h4 id="磁盘结构"><a href="#磁盘结构" class="headerlink" title="磁盘结构"></a>磁盘结构</h4><p><img src="http://upload-images.jianshu.io/upload_images/5902351-8cf0ae080447373a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="盘片视图"></p>
-<p>  磁盘有盘片组成,盘片表面覆盖有磁性记录材料,盘片中央有一个旋转的主轴。<br>  磁盘表面由一组称为磁道的同心圆组 ,每个磁道被划分为一组扇区。每个扇区包含相等数量的数据位(512byte)<br>（要死了/之前一直以为扇区是圆心到弧的完整扇形,原来只是一小条）。扇区之间有一些间隙（gap）分隔开,这些间隙中不存储数据位。间隙存储用来表示扇区的格式化位。</p>
-<p><img src="http://upload-images.jianshu.io/upload_images/5902351-7f54a711b0bc2f78.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="多个盘片视图"><br>    磁盘驱动器:分装在密封包装中的多个盘片。<br>    柱面:所有盘片表面上到主轴中心的距离相等的磁道的集合。</p>
-<h4 id="磁盘容量"><a href="#磁盘容量" class="headerlink" title="磁盘容量"></a>磁盘容量</h4><pre><code>记录密度：磁道每一英寸的断种可以放入的位数
-磁道密度:从盘片中心出发半径上一英寸的段内可以有的磁道数
-面密度:记录密度与磁道密度的沉积
-</code></pre><p>初设计:每个磁道分为数目相同的扇区,扇区的数目由最靠内的磁道能记录的扇区数决定。</p>
-<blockquote>
-<p>问题：面密度大的时候太尼玛浪费了，到了外层磁道间隙大过天</p>
-</blockquote>
-<p>多区记录技术:将柱面的集合分为互不相交的记录区,每个区包含一组连续的柱面。每个区中的每个柱面中的没调磁道有相同数量的扇区,扇区数有该区中最里面的磁道所能包含的扇区数决定。</p>
-<blockquote>
-<p>通过分出不同的记录区,使得外层的记录区能有更多的扇区数 但是= =就不能固定间隙空间大小 每个柱面的扇区数都不一样咩(╯‵□′)╯︵┻━┻ 等等! 注意虽然扇区数越往外越多 但是扇区的大小是不变的</p>
-</blockquote>
-<p>磁盘容量 = 字节数/扇区 * 平均扇区数/磁道 * 磁道数/表面 * 表面书/盘片 * 盘片数/磁盘</p>
-<blockquote>
-<p>稀奇古怪的写法= = 就是磁盘的盘片数*每个盘片的表面数*每个表面的磁道数*每个磁道的平均扇区数*每个扇区的字节数</p>
-</blockquote>
-<blockquote>
-<p>p.s.K M G T这样的前缀含义依赖于上下文。对于DRAM和SRAM容量相关的 为2次幂,对于与网络或磁盘这样的I/O设备容量相关的计量单位,为10次幂</p>
-</blockquote>
-<h4 id="磁盘操作"><a href="#磁盘操作" class="headerlink" title="磁盘操作"></a>磁盘操作</h4><p><img src="http://upload-images.jianshu.io/upload_images/5902351-d39eed62b31a89be.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="盘片视图"></p>
-<blockquote>
-<p>寻道时间:为读取某目标扇区的内容,传动壁轴线将读/写头定位到目标扇区的磁道上。转动传动壁的时间为寻道时间。T<sup>avg seek</sup></p>
-</blockquote>
-
+        
       
     </div>
     
@@ -457,8 +402,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/02/03/php/PHP小case/" rel="next" title="PHP小case">
-                <i class="fa fa-chevron-left"></i> PHP小case
+              <a href="/2019/10/23/gateway/diff/" rel="next" title="nginx vs envoy">
+                <i class="fa fa-chevron-left"></i> nginx vs envoy
               </a>
             
           </div>
@@ -467,8 +412,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/05/20/algorithm/算法的乐趣/" rel="prev" title="算法的乐趣">
-                算法的乐趣 <i class="fa fa-chevron-right"></i>
+              <a href="/2019/11/09/tool/mac/" rel="prev" title="mac">
+                mac <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -521,17 +466,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
@@ -609,22 +545,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#程序的机器级表示"><span class="nav-number">1.</span> <span class="nav-text">程序的机器级表示</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘存储"><span class="nav-number">1.1.</span> <span class="nav-text">磁盘存储</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘速度"><span class="nav-number">1.1.1.</span> <span class="nav-text">磁盘速度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘结构"><span class="nav-number">1.1.2.</span> <span class="nav-text">磁盘结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘容量"><span class="nav-number">1.1.3.</span> <span class="nav-text">磁盘容量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘操作"><span class="nav-number">1.1.4.</span> <span class="nav-text">磁盘操作</span></a></li></ol></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
