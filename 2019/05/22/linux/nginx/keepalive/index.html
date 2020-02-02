@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="[toc] 参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.  tcp keepalive http keepalive(与此同时经常出现的还有长短连接的考虑) * keepalived  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive    tcp首先抛出一个自己以">
+<meta property="og:type" content="article">
+<meta property="og:title" content="长连接 短连接 连接服用">
+<meta property="og:url" content="https://feyjobs.github.io/2019/05/22/linux/nginx/keepalive/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="[toc] 参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.  tcp keepalive http keepalive(与此同时经常出现的还有长短连接的考虑) * keepalived  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive    tcp首先抛出一个自己以">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/probe.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/tcp_keepalive_probes.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/handshake.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/first.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/second.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/third.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/byebye.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/anzhong.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/anzhong.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/failed.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/nginxconf.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/fuyong.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/yacegood.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/notfuyong.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/yacebad.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/nginx/kqqrlfz.jpg">
+<meta property="og:updated_time" content="2019-06-10T12:23:56.619Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="长连接 短连接 连接服用">
+<meta name="twitter:description" content="[toc] 参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.  tcp keepalive http keepalive(与此同时经常出现的还有长短连接的考虑) * keepalived  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive    tcp首先抛出一个自己以">
+<meta name="twitter:image" content="https://feyjobs.github.io/uploads/nginx/probe.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2019/05/22/linux/nginx/keepalive/">
+
+
+
+
+
+  <title>长连接 短连接 连接服用 | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/05/22/linux/nginx/keepalive/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">长连接 短连接 连接服用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-22T14:51:00+08:00">
+                2019-05-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>[toc]</p>
+<p>参与互联网项目的小伙伴经常会碰到几个相似的词语,导致概念混淆,今天花了一下午时间认真琢磨了一下各个的区别.</p>
+<ul>
+<li>tcp keepalive</li>
+<li>http keepalive(与此同时经常出现的还有长短连接的考虑) * keepalived<p><br>  keepalived是Linux下一个轻量级别的高可用解决方案。顾在此不表重点讲一下tcp和http的keepalive<br></p>
+
+</li>
+</ul>
+<h2 id="tcp"><a href="#tcp" class="headerlink" title="tcp"></a>tcp</h2><p>首先抛出一个自己以前的错误认知:</p>
+<blockquote>
+<p>tcp长连接</p>
+</blockquote>
+<p><strong>tcp没有什么长短连接</strong>,只要不出现网络异常,主动断开,tcp连接可以一直跑下去跑到天荒地老</p>
+<p>那么tcp的那一堆keepalive参数是干什么的呢?首先看下有那些keepalive参数<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /proc/sys/net/ipv4</span><br><span class="line">ll</span><br></pre></td></tr></table></figure></p>
+<p>可以看到有三个keepalive参数</p>
+<ul>
+<li>tcp_keepalive_time</li>
+<li>tcp_keepalive_probes</li>
+<li>tcp_keepalive_intvl</li>
+</ul>
+<p><font color="red">tcp_keepalive_time</font>:一个tcp连接空闲了tcp_keepalive_time秒之后,就要怀疑对方的健康状况了,注意:必须在socket上设置了<strong>SO_KEEPALIVE</strong>选项,才会触发这个机制</p>
+<p><font color="red"> tcp_keepalive_probes</font>:怎么确认对方的健康状况呢,发送侦测包(probe表示探针,也是星际二中萌萌的神族农民),如果对方能正确返回,那就说明对面还活着,这个参数描述发送几个侦测包(毕竟不要一棍子打死)</p>
+<p><img src="/uploads/nginx/probe.jpg" alt="probe"></p>
+<p><font color="red"> tcp_keepalive_intvl</font>:这个描述每隔多少tcp_keepalive_intvl发送一个侦测包</p>
+<p>ok,看到这三个参数的意义,我们就明白了,tcp的keepalive是做tcp<strong>健康检查</strong>的</p>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><h4 id="正常状况"><a href="#正常状况" class="headerlink" title="正常状况"></a>正常状况</h4><p>首先我们使用nc命令启动一个tcp server<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -l 2333</span><br></pre></td></tr></table></figure></p>
+<p>监听2333端口<br>然后我们拿python写一段tcp连接代码<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line">s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line"></span><br><span class="line">s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, <span class="number">1</span>) </span><br><span class="line">s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, <span class="number">20</span>)</span><br><span class="line">s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">s.connect((<span class="string">'127.0.0.1'</span>, <span class="number">2333</span>))</span><br><span class="line"></span><br><span class="line">time.sleep(<span class="number">61</span>)</span><br></pre></td></tr></table></figure></p>
+<p>代码中分别设置了</p>
+<ul>
+<li>SO_KEEPALIVE 启动tcp健康检查</li>
+<li>TCP_KEEPIDLE 空连接20s进行一次检查</li>
+<li>TCP_KEEPINTVL 每隔1s发送一个检查探针</li>
+<li>还有一个参数tcp_keepalive_probes取系统默认的<br>这里是<br><img src="/uploads/nginx/tcp_keepalive_probes.jpg" alt="probe"><br>也就是说,空闲20s后开始发送探测报文,每隔1s发一个最多发2个</li>
+</ul>
+<p>用tcpdump抓包<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i lo tcp port 2333</span><br></pre></td></tr></table></figure></p>
+<p>启动python<br>首先是三次tcp握手<br><img src="/uploads/nginx/handshake.jpg" alt="handshake"></p>
+<p>随后等待20s,第一次探测报文发送,server很快回复ok 表示我还活着<br><img src="/uploads/nginx/first.jpg" alt="handshake"></p>
+<p>然后他们又很无聊得等了20s,又发了一次探测报文,server再次回复ok<br><img src="/uploads/nginx/second.jpg" alt="handshake"></p>
+<p>最后他们又很无聊得等了20s,又发了一次探测报文,server再次回复ok<br><img src="/uploads/nginx/third.jpg" alt="handshake"></p>
+<p>程序退出,挥手再见<br><img src="/uploads/nginx/byebye.jpg" alt="handshake"></p>
+<p>好的,在这个情况下,client与server都愉快得交换了双发意见,达成了互相都健康得共识,接下来看一个不健康的</p>
+<h4 id="异常状况"><a href="#异常状况" class="headerlink" title="异常状况"></a>异常状况</h4><p>依然用nc命令启动server,python代码也不变,但是我们需要断网使用iptables命令<br>具体步骤</p>
+<ul>
+<li><p>启动tcpddump</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i lo tcp port 2333</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>nc启动server</p>
+</li>
+<li>运行python 完成握手</li>
+<li><strong>重要</strong> tcp握手之后快速完成端口屏蔽<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -I INPUT -p tcp --dport 2333 -s 127.0.0.1 -j DROP</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>屏蔽127.0.0.1:2333的网络连接,然后就等着下面这一幕</p>
+<ul>
+<li>兄弟 你还好吗<br><img src="/uploads/nginx/anzhong.jpg" alt="handshake"></li>
+<li>+1s 兄弟 你还好吗<br><img src="/uploads/nginx/anzhong.jpg" alt="handshake"></li>
+<li>死了,发送<strong>rst</strong>报文,表示异常终止<br><img src="/uploads/nginx/failed.jpg" alt="handshake"></li>
+</ul>
+<p>最后<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -F</span><br></pre></td></tr></table></figure></p>
+<p>恢复机器路由状况</p>
+<h2 id="http"><a href="#http" class="headerlink" title="http"></a>http</h2><p>http模式下的keepalive是用来保证tcp连接复用的.<br>在最开始的http协议中,并没有关于长连接的概念,单纯得有一个请求就建立一个tcp连接,后来人们发现太浪费了,两个相同终端,发100个请求就会建立100个tcp连接,于是诞生了http长连接keep-alive</p>
+<h3 id="http-1-0-amp-amp-1-1"><a href="#http-1-0-amp-amp-1-1" class="headerlink" title="http 1.0 &amp;&amp; 1.1"></a>http 1.0 &amp;&amp; 1.1</h3><p>在1.0版本http协议客户端就可以通过加入<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: keep-alive</span><br></pre></td></tr></table></figure></p>
+<p>头部发起一个长连接请求,服务器在收到之后如果自身也支持长连接,那么就会在返回体重也返回这个头部,表示支持长连接<br>如果server不支持长连接就可以返回<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: close</span><br></pre></td></tr></table></figure></p>
+<p>头部表示不支持长连接</p>
+<p>版本更新到1.1之后,http请求默认就是长连接,除非在客户端请求中加上<br><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Connection</span>: close</span><br></pre></td></tr></table></figure></p>
+<p>关闭长连接</p>
+<h3 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h3><p>我们以nginx为例,测试http长短连接的性能对比</p>
+<p>我们在nginx配置文件中加入配置<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">keepalive_timeout</span>  <span class="number">65</span>;</span><br></pre></td></tr></table></figure></p>
+<p>这个命令表示,在处理一个http请求后,65s内没有新的请求过来,我们就关闭当前连接</p>
+<p>我们使用wrk作压测(一个非常不错的http压测工具)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wrk -c 100 -d 10  -t 12 https://localhost:8233</span><br></pre></td></tr></table></figure></p>
+<p>上述命令表示起100个连接 12个线程压10s</p>
+<p>我们在nginx日志内容中加入<strong>$connection_requests</strong>变量,这个变量表示有多少个请求在和当前请求复用这个连接<br><img src="/uploads/nginx/nginxconf.jpg" alt="nginxconf"></p>
+<h4 id="长连接压测"><a href="#长连接压测" class="headerlink" title="长连接压测"></a>长连接压测</h4><p><img src="/uploads/nginx/fuyong.jpg" alt="nginxconf"><br>打印的第一个变量是当前请求的$connection_requests,可以看到所有连接都在处理多个请求</p>
+<p>wrk压测结果如下<br><img src="/uploads/nginx/yacegood.jpg" alt="nginxconf"></p>
+<h4 id="短连接压测"><a href="#短连接压测" class="headerlink" title="短连接压测"></a>短连接压测</h4><p><img src="/uploads/nginx/notfuyong.jpg" alt="nginxconf"><br>可以看到每个请求的当前连接都只处理一个请求</p>
+<p>wrk压测结果如下<br><img src="/uploads/nginx/yacebad.jpg" alt="nginxconf"><br>对比长连接的压测结果,可以看到<br>qps和tps都相差了<strong>12倍</strong>左右,提升效果非常明显</p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>那么长连接还有什么优化的点吗?有的<br>最明显的地方就是,一个长连接上的所有请求都是串行执行的<br>也就是说 第一个请求没有执行完,就不会执行第二个请求,再极端一点<br>客户端需要处理10个请求,但是只开了6个连接,剩下的那4个就要干等着!怎么办！</p>
+<p><img src="/uploads/nginx/kqqrlfz.jpg" alt="nginxconf"></p>
+<p><strong><font size="12">http2</font></strong></p>
+<h2 id="nginx-keepalive实现"><a href="#nginx-keepalive实现" class="headerlink" title="nginx keepalive实现"></a>nginx keepalive实现</h2><p>keepalive的关键就是在请求结束的时候不要断开tcp连接,而是继续等待,下一个请求的到来<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">ngx_http_finalize_request(<span class="keyword">ngx_http_request_t</span> *r, <span class="keyword">ngx_int_t</span> rc)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (rc == NGX_DONE) &#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">        *调用ngx_http_finalize_connection释放连接资源</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        ngx_http_finalize_connection(r);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">ngx_http_finalize_connection(<span class="keyword">ngx_http_request_t</span> *r)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *如果没有收到退出命令,并且设置了长连接,长连接未超时,则进入设置keepalive逻辑</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span> (!ngx_terminate</span><br><span class="line">         &amp;&amp; !ngx_exiting</span><br><span class="line">         &amp;&amp; r-&gt;keepalive</span><br><span class="line">         &amp;&amp; clcf-&gt;keepalive_timeout &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        ngx_http_set_keepalive(r);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">ngx_http_set_keepalive(<span class="keyword">ngx_http_request_t</span> *r)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">int</span>                        tcp_nodelay;</span><br><span class="line">    <span class="keyword">ngx_buf_t</span>                 *b, *f;</span><br><span class="line">    <span class="keyword">ngx_chain_t</span>               *cl, *ln;</span><br><span class="line">    <span class="keyword">ngx_event_t</span>               *rev, *wev;</span><br><span class="line">    <span class="keyword">ngx_connection_t</span>          *c;</span><br><span class="line">    <span class="keyword">ngx_http_connection_t</span>     *hc;</span><br><span class="line">    <span class="keyword">ngx_http_core_loc_conf_t</span>  *clcf;</span><br><span class="line"></span><br><span class="line">    c = r-&gt;connection;</span><br><span class="line">    rev = c-&gt;read;</span><br><span class="line"></span><br><span class="line">    clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);</span><br><span class="line"></span><br><span class="line">    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"set http keepalive handler"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (r-&gt;discard_body) &#123;</span><br><span class="line">        r-&gt;write_event_handler = ngx_http_request_empty_handler;</span><br><span class="line">        r-&gt;lingering_time = ngx_time() + (<span class="keyword">time_t</span>) (clcf-&gt;lingering_time / <span class="number">1000</span>);</span><br><span class="line">        ngx_add_timer(rev, clcf-&gt;lingering_timeout);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c-&gt;<span class="built_in">log</span>-&gt;action = <span class="string">"closing request"</span>;</span><br><span class="line"></span><br><span class="line">    hc = r-&gt;http_connection;</span><br><span class="line">    b = r-&gt;header_in;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *pipeline 请求特殊处理</span></span><br><span class="line"><span class="comment">    *pipeline请求就是,客户端在收到返回前先把下一个请求发送给服务端</span></span><br><span class="line"><span class="comment">    *这里把缓存的pipeline请求拿出来</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span> (b-&gt;pos &lt; b-&gt;last) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* the pipelined request */</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (b != c-&gt;buffer) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/*</span></span><br><span class="line"><span class="comment">             * If the large header buffers were allocated while the previous</span></span><br><span class="line"><span class="comment">             * request processing then we do not use c-&gt;buffer for</span></span><br><span class="line"><span class="comment">             * the pipelined request (see ngx_http_create_request()).</span></span><br><span class="line"><span class="comment">             *</span></span><br><span class="line"><span class="comment">             * Now we would move the large header buffers to the free list.</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (cl = hc-&gt;busy; cl; <span class="comment">/* void */</span>) &#123;</span><br><span class="line">                ln = cl;</span><br><span class="line">                cl = cl-&gt;next;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (ln-&gt;buf == b) &#123;</span><br><span class="line">                    ngx_free_chain(c-&gt;pool, ln);</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                f = ln-&gt;buf;</span><br><span class="line">                f-&gt;pos = f-&gt;start;</span><br><span class="line">                f-&gt;last = f-&gt;start;</span><br><span class="line"></span><br><span class="line">                ln-&gt;next = hc-&gt;<span class="built_in">free</span>;</span><br><span class="line">                hc-&gt;<span class="built_in">free</span> = ln;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            cl = ngx_alloc_chain_link(c-&gt;pool);</span><br><span class="line">            <span class="keyword">if</span> (cl == <span class="literal">NULL</span>) &#123;</span><br><span class="line">                ngx_http_close_request(r, <span class="number">0</span>);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            cl-&gt;buf = b;</span><br><span class="line">            cl-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">            hc-&gt;busy = cl;</span><br><span class="line">            hc-&gt;nbusy = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* guard against recursive call from ngx_http_finalize_connection() */</span></span><br><span class="line">    r-&gt;keepalive = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//释放当前请求</span></span><br><span class="line">    ngx_http_free_request(r, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    c-&gt;data = hc;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_handle_read_event(rev, <span class="number">0</span>) != NGX_OK) &#123;</span><br><span class="line">        ngx_http_close_connection(c);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    wev = c-&gt;write;</span><br><span class="line">    wev-&gt;handler = ngx_http_empty_handler;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">    *如果下一个请求已经被收到了,就直接进入下一个请求的开始处理</span></span><br><span class="line"><span class="comment">    *函数,将 读事件handler设置为 ngx_http_process_request_line,开始下一个请求</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span> (b-&gt;pos &lt; b-&gt;last) &#123;</span><br><span class="line"></span><br><span class="line">        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"pipelined request"</span>);</span><br><span class="line"></span><br><span class="line">        c-&gt;<span class="built_in">log</span>-&gt;action = <span class="string">"reading client pipelined request line"</span>;</span><br><span class="line"></span><br><span class="line">        r = ngx_http_create_request(c);</span><br><span class="line">        <span class="keyword">if</span> (r == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            ngx_http_close_connection(c);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        r-&gt;pipeline = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">        c-&gt;data = r;</span><br><span class="line"></span><br><span class="line">        c-&gt;sent = <span class="number">0</span>;</span><br><span class="line">        c-&gt;destroyed = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (rev-&gt;timer_set) &#123;</span><br><span class="line">            ngx_del_timer(rev);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        rev-&gt;handler = ngx_http_process_request_line;</span><br><span class="line">        ngx_post_event(rev, &amp;ngx_posted_events);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * To keep a memory footprint as small as possible for an idle keepalive</span></span><br><span class="line"><span class="comment">     * connection we try to free c-&gt;buffer's memory if it was allocated outside</span></span><br><span class="line"><span class="comment">     * the c-&gt;pool.  The large header buffers are always allocated outside the</span></span><br><span class="line"><span class="comment">     * c-&gt;pool and are freed too.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    b = c-&gt;buffer;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_pfree(c-&gt;pool, b-&gt;start) == NGX_OK) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * the special note for ngx_http_keepalive_handler() that</span></span><br><span class="line"><span class="comment">         * c-&gt;buffer's memory was freed</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"></span><br><span class="line">        b-&gt;pos = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        b-&gt;pos = b-&gt;start;</span><br><span class="line">        b-&gt;last = b-&gt;start;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"hc free: %p"</span>,</span><br><span class="line">                   hc-&gt;<span class="built_in">free</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (hc-&gt;<span class="built_in">free</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (cl = hc-&gt;<span class="built_in">free</span>; cl; <span class="comment">/* void */</span>) &#123;</span><br><span class="line">            ln = cl;</span><br><span class="line">            cl = cl-&gt;next;</span><br><span class="line">            ngx_pfree(c-&gt;pool, ln-&gt;buf-&gt;start);</span><br><span class="line">            ngx_free_chain(c-&gt;pool, ln);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        hc-&gt;<span class="built_in">free</span> = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"hc busy: %p %i"</span>,</span><br><span class="line">                   hc-&gt;busy, hc-&gt;nbusy);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (hc-&gt;busy) &#123;</span><br><span class="line">        <span class="keyword">for</span> (cl = hc-&gt;busy; cl; <span class="comment">/* void */</span>) &#123;</span><br><span class="line">            ln = cl;</span><br><span class="line">            cl = cl-&gt;next;</span><br><span class="line">            ngx_pfree(c-&gt;pool, ln-&gt;buf-&gt;start);</span><br><span class="line">            ngx_free_chain(c-&gt;pool, ln);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        hc-&gt;busy = <span class="literal">NULL</span>;</span><br><span class="line">        hc-&gt;nbusy = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HTTP_SSL)</span></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;ssl) &#123;</span><br><span class="line">        ngx_ssl_free_buffer(c);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    rev-&gt;handler = ngx_http_keepalive_handler;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (wev-&gt;active &amp;&amp; (ngx_event_flags &amp; NGX_USE_LEVEL_EVENT)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (ngx_del_event(wev, NGX_WRITE_EVENT, <span class="number">0</span>) != NGX_OK) &#123;</span><br><span class="line">            ngx_http_close_connection(c);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c-&gt;<span class="built_in">log</span>-&gt;action = <span class="string">"keepalive"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (c-&gt;tcp_nopush == NGX_TCP_NOPUSH_SET) &#123;</span><br><span class="line">        <span class="keyword">if</span> (ngx_tcp_push(c-&gt;fd) == <span class="number">-1</span>) &#123;</span><br><span class="line">            ngx_connection_error(c, ngx_socket_errno, ngx_tcp_push_n <span class="string">" failed"</span>);</span><br><span class="line">            ngx_http_close_connection(c);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        c-&gt;tcp_nopush = NGX_TCP_NOPUSH_UNSET;</span><br><span class="line">        tcp_nodelay = ngx_tcp_nodelay_and_tcp_nopush ? <span class="number">1</span> : <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        tcp_nodelay = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tcp_nodelay &amp;&amp; clcf-&gt;tcp_nodelay &amp;&amp; ngx_tcp_nodelay(c) != NGX_OK) &#123;</span><br><span class="line">        ngx_http_close_connection(c);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> 0</span></span><br><span class="line">    <span class="comment">/* if ngx_http_request_t was freed then we need some other place */</span></span><br><span class="line">    r-&gt;http_state = NGX_HTTP_KEEPALIVE_STATE;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    c-&gt;idle = <span class="number">1</span>;</span><br><span class="line">    ngx_reusable_connection(c, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    ngx_add_timer(rev, clcf-&gt;keepalive_timeout);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (rev-&gt;ready) &#123;</span><br><span class="line">        ngx_post_event(rev, &amp;ngx_posted_events);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/17/linux/nginx/https/" rel="next" title="https">
+                <i class="fa fa-chevron-left"></i> https
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/27/linux/nginx/http2/" rel="prev" title="http2">
+                http2 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">48</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp"><span class="nav-number">1.</span> <span class="nav-text">tcp</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">1.1.</span> <span class="nav-text">测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#正常状况"><span class="nav-number">1.1.1.</span> <span class="nav-text">正常状况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#异常状况"><span class="nav-number">1.1.2.</span> <span class="nav-text">异常状况</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#http"><span class="nav-number">2.</span> <span class="nav-text">http</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#http-1-0-amp-amp-1-1"><span class="nav-number">2.1.</span> <span class="nav-text">http 1.0 &amp;&amp; 1.1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能"><span class="nav-number">2.2.</span> <span class="nav-text">性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#长连接压测"><span class="nav-number">2.2.1.</span> <span class="nav-text">长连接压测</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#短连接压测"><span class="nav-number">2.2.2.</span> <span class="nav-text">短连接压测</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#问题"><span class="nav-number">2.3.</span> <span class="nav-text">问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#nginx-keepalive实现"><span class="nav-number">3.</span> <span class="nav-text">nginx keepalive实现</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

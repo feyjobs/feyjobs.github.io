@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="方法USE核心思想, 在问题排查过程中, 以资源为轴, 列举分析各种资源类型, 以及各种资源的关键指标(use), 来分析问题  资源 使用率(utilization): 60%以上就要预警了, 因为一般提供的是平均指标, 60%的使用率,很可能意味着某些短时间达到了100% 饱和度(saturation): 任何饱和现象都是问题 错误(error): 任何错误都是问题  工作负载特征归纳辨别负载">
+<meta property="og:type" content="article">
+<meta property="og:title" content="方法">
+<meta property="og:url" content="https://feyjobs.github.io/2019/11/22/linux/performance/Systems_Performance/chapter2/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="方法USE核心思想, 在问题排查过程中, 以资源为轴, 列举分析各种资源类型, 以及各种资源的关键指标(use), 来分析问题  资源 使用率(utilization): 60%以上就要预警了, 因为一般提供的是平均指标, 60%的使用率,很可能意味着某些短时间达到了100% 饱和度(saturation): 任何饱和现象都是问题 错误(error): 任何错误都是问题  工作负载特征归纳辨别负载">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-02-01T06:15:14.881Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="方法">
+<meta name="twitter:description" content="方法USE核心思想, 在问题排查过程中, 以资源为轴, 列举分析各种资源类型, 以及各种资源的关键指标(use), 来分析问题  资源 使用率(utilization): 60%以上就要预警了, 因为一般提供的是平均指标, 60%的使用率,很可能意味着某些短时间达到了100% 饱和度(saturation): 任何饱和现象都是问题 错误(error): 任何错误都是问题  工作负载特征归纳辨别负载">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2019/11/22/linux/performance/Systems_Performance/chapter2/">
+
+
+
+
+
+  <title>方法 | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2019/11/22/linux/performance/Systems_Performance/chapter2/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">方法</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-11-22T14:17:00+08:00">
+                2019-11-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h2><h3 id="USE"><a href="#USE" class="headerlink" title="USE"></a>USE</h3><p>核心思想, 在问题排查过程中, 以资源为轴, 列举分析各种资源类型, 以及各种资源的关键指标(use), 来分析问题</p>
+<ul>
+<li>资源</li>
+<li>使用率(utilization): 60%以上就要预警了, 因为一般提供的是平均指标, 60%的使用率,很可能意味着某些短时间达到了100%</li>
+<li>饱和度(saturation): 任何饱和现象都是问题</li>
+<li>错误(error): 任何错误都是问题</li>
+</ul>
+<h3 id="工作负载特征归纳"><a href="#工作负载特征归纳" class="headerlink" title="工作负载特征归纳"></a>工作负载特征归纳</h3><p>辨别负载的来源, 有时候系统出了问题不是架构有问题, 而是负载本身就超过了系统的范围</p>
+<h3 id="向下挖掘分析"><a href="#向下挖掘分析" class="headerlink" title="向下挖掘分析"></a>向下挖掘分析</h3><ul>
+<li>检测 高层级的统计数据</li>
+<li>识别 根据问题, 缩小研究范围</li>
+<li>分析<br>5 why</li>
+</ul>
+<h3 id="延时分析"><a href="#延时分析" class="headerlink" title="延时分析"></a>延时分析</h3><p>将延时分段, 然后深入分析关键延时时段, 需要与向下挖掘类似, 自顶向下深度分析</p>
+<h3 id="R方法"><a href="#R方法" class="headerlink" title="R方法"></a>R方法</h3><p>oracle 性能分析方法</p>
+<h3 id="事件追踪"><a href="#事件追踪" class="headerlink" title="事件追踪"></a>事件追踪</h3><p>系统的操作本质是一些离散的事件, cpu指令, 磁盘IO, 网络包的收发等等. 又是系统的指标,汇总数据是看不出问题的所在的, 需要我们<br>深入系统事件,进行问题排查.举个栗子:</p>
+<h4 id="网络事件"><a href="#网络事件" class="headerlink" title="网络事件"></a>网络事件</h4><p>tcpdump逐包排查</p>
+<h4 id="存储设备"><a href="#存储设备" class="headerlink" title="存储设备"></a>存储设备</h4><p>iosnoop排查系统问题</p>
+<h4 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h4><p>strace</p>
+<p>在进行系统事件追踪时, 故障时间段的上下时间段的事件也非常值得一看, 因为有些情况下, 是由于先发事件的问题,<br>导致了问题事件的表象, 实际上还是先发问题的根因造成了这个现象</p>
+<h3 id="基础线性统计"><a href="#基础线性统计" class="headerlink" title="基础线性统计"></a>基础线性统计</h3><p>将各个性能指标与时间等变量作函数曲线,观察变化</p>
+<h3 id="静态性能调整"><a href="#静态性能调整" class="headerlink" title="静态性能调整"></a>静态性能调整</h3><p>就是检查各种系统预加载或者初始系统选项</p>
+<h3 id="缓存调优"><a href="#缓存调优" class="headerlink" title="缓存调优"></a>缓存调优</h3><h3 id="微基准测试"><a href="#微基准测试" class="headerlink" title="微基准测试"></a>微基准测试</h3><h2 id="建模"><a href="#建模" class="headerlink" title="建模"></a>建模</h2><p>分析系统性能三巨头:</p>
+<ul>
+<li>生产系统的观测</li>
+<li>试验性系统的观测, 压测, 仿真</li>
+<li>根据上面的汇总的数据,进行数学建模, 进行数学预测</li>
+</ul>
+<h3 id="可视化"><a href="#可视化" class="headerlink" title="可视化"></a>可视化</h3><p>根据性能随着规模扩大的变化,查看斜率的变化,基础的数学知识</p>
+<ul>
+<li>y=ax+b 线性扩展, 完美的扩展结果</li>
+<li>y=lnx 竞争关系,某些公用的组件回造成扩容时的各个节点的竞争效应, 减小扩容效果</li>
+<li>y=(x-1)^2 分布式关系, 随着节点的增加, 节点之间数据同步备份的消耗超过了扩容带来的增益</li>
+<li>拐点, 某个因素碰到了资源的制约点, 从而改变扩展曲线</li>
+<li>扩容上线</li>
+</ul>
+<h3 id="amdahl扩展定律"><a href="#amdahl扩展定律" class="headerlink" title="amdahl扩展定律"></a>amdahl扩展定律</h3><h3 id="通用扩展定律"><a href="#通用扩展定律" class="headerlink" title="通用扩展定律"></a>通用扩展定律</h3><h3 id="排队理论"><a href="#排队理论" class="headerlink" title="排队理论"></a>排队理论</h3><p>上面上个主要描述了, 各种基于现有数据的拟合模型, 然后进行系统分析, 太特么学院派了, 遭不住</p>
+<h2 id="容量规划"><a href="#容量规划" class="headerlink" title="容量规划"></a>容量规划</h2><h3 id="资源极限"><a href="#资源极限" class="headerlink" title="资源极限"></a>资源极限</h3><p>遍历资源列表, 根据当前资源的使用率, 判断预估这个资源所能支持的最大流量， 然后进行扩容</p>
+<p>资源列表:</p>
+<h4 id="硬件"><a href="#硬件" class="headerlink" title="硬件"></a>硬件</h4><ul>
+<li>cpu使用率</li>
+<li>内存使用率</li>
+<li>磁盘iops</li>
+<li>磁盘吞吐量</li>
+<li>图盘使用率</li>
+<li>网络吞吐量<h4 id="软件"><a href="#软件" class="headerlink" title="软件"></a>软件</h4></li>
+<li>虚拟内存使用情况</li>
+<li>进程/线程/任务</li>
+<li>文件描述符</li>
+</ul>
+<h3 id="因素分析"><a href="#因素分析" class="headerlink" title="因素分析"></a>因素分析</h3><p>怎么判断为了支持一定程度的负载需要什么机器配置呢,内存, cpu, 磁盘, 网卡, 操作系统版本, 文件系统设置等等很多选项, 逐一尝试<br>工作量太大了.<br>方法:</p>
+<ul>
+<li>将所有配置都设置成最高</li>
+<li>逐一改变配置, 测量对性能的影响</li>
+<li>根据测量的结果, 对每个因素对性能的影响以及节省的成本作分析</li>
+<li>从最高性能为起点, 选择最低成本因素, 确保最后的性能可以支持负载</li>
+<li>测试配置<h2 id="统计"><a href="#统计" class="headerlink" title="统计"></a>统计</h2>各种数学学院派的东西, 先跳过</li>
+</ul>
+<h2 id="监视"><a href="#监视" class="headerlink" title="监视"></a>监视</h2><h3 id="基于时间的统计"><a href="#基于时间的统计" class="headerlink" title="基于时间的统计"></a>基于时间的统计</h3><h3 id="监视产品"><a href="#监视产品" class="headerlink" title="监视产品"></a>监视产品</h3><ul>
+<li>自研发, 运行在服务器上, 然后上传, 但是有损系统性能</li>
+<li>snmp协议,  减少客户端程序运行<h3 id="自启动信息"><a href="#自启动信息" class="headerlink" title="自启动信息"></a>自启动信息</h3>还有一些信息是操作系统启动以来自带的信息</li>
+</ul>
+<h2 id="可视化-1"><a href="#可视化-1" class="headerlink" title="可视化"></a>可视化</h2><p>各种图例信息</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/09/tool/mac/" rel="next" title="mac">
+                <i class="fa fa-chevron-left"></i> mac
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/02/03/linux/performance/Systems_Performance/index/" rel="prev" title="【性能之巅】">
+                【性能之巅】 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">48</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#方法"><span class="nav-number">1.</span> <span class="nav-text">方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#USE"><span class="nav-number">1.1.</span> <span class="nav-text">USE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#工作负载特征归纳"><span class="nav-number">1.2.</span> <span class="nav-text">工作负载特征归纳</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#向下挖掘分析"><span class="nav-number">1.3.</span> <span class="nav-text">向下挖掘分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#延时分析"><span class="nav-number">1.4.</span> <span class="nav-text">延时分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#R方法"><span class="nav-number">1.5.</span> <span class="nav-text">R方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#事件追踪"><span class="nav-number">1.6.</span> <span class="nav-text">事件追踪</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#网络事件"><span class="nav-number">1.6.1.</span> <span class="nav-text">网络事件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#存储设备"><span class="nav-number">1.6.2.</span> <span class="nav-text">存储设备</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#系统调用"><span class="nav-number">1.6.3.</span> <span class="nav-text">系统调用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基础线性统计"><span class="nav-number">1.7.</span> <span class="nav-text">基础线性统计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#静态性能调整"><span class="nav-number">1.8.</span> <span class="nav-text">静态性能调整</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存调优"><span class="nav-number">1.9.</span> <span class="nav-text">缓存调优</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#微基准测试"><span class="nav-number">1.10.</span> <span class="nav-text">微基准测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#建模"><span class="nav-number">2.</span> <span class="nav-text">建模</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#可视化"><span class="nav-number">2.1.</span> <span class="nav-text">可视化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#amdahl扩展定律"><span class="nav-number">2.2.</span> <span class="nav-text">amdahl扩展定律</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#通用扩展定律"><span class="nav-number">2.3.</span> <span class="nav-text">通用扩展定律</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#排队理论"><span class="nav-number">2.4.</span> <span class="nav-text">排队理论</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#容量规划"><span class="nav-number">3.</span> <span class="nav-text">容量规划</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#资源极限"><span class="nav-number">3.1.</span> <span class="nav-text">资源极限</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#硬件"><span class="nav-number">3.1.1.</span> <span class="nav-text">硬件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#软件"><span class="nav-number">3.1.2.</span> <span class="nav-text">软件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#因素分析"><span class="nav-number">3.2.</span> <span class="nav-text">因素分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#统计"><span class="nav-number">4.</span> <span class="nav-text">统计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监视"><span class="nav-number">5.</span> <span class="nav-text">监视</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于时间的统计"><span class="nav-number">5.1.</span> <span class="nav-text">基于时间的统计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#监视产品"><span class="nav-number">5.2.</span> <span class="nav-text">监视产品</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自启动信息"><span class="nav-number">5.3.</span> <span class="nav-text">自启动信息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可视化-1"><span class="nav-number">6.</span> <span class="nav-text">可视化</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
