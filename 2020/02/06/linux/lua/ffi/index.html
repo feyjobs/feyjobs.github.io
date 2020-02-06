@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="ffi作为luajit的核心战斗力(另一个是jit)在openresty项目中有广泛使用, 小小得研究一下 lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方文档中， lua语言调用c函数一般使用如下方法进行 123456789101112131415161718192021222324252627282930313233#include &amp;lt;lua.h&amp;gt;#incl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ffi">
+<meta property="og:url" content="https://feyjobs.github.io/2020/02/06/linux/lua/ffi/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="ffi作为luajit的核心战斗力(另一个是jit)在openresty项目中有广泛使用, 小小得研究一下 lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方文档中， lua语言调用c函数一般使用如下方法进行 123456789101112131415161718192021222324252627282930313233#include &amp;lt;lua.h&amp;gt;#incl">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-02-06T14:03:29.746Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ffi">
+<meta name="twitter:description" content="ffi作为luajit的核心战斗力(另一个是jit)在openresty项目中有广泛使用, 小小得研究一下 lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方文档中， lua语言调用c函数一般使用如下方法进行 123456789101112131415161718192021222324252627282930313233#include &amp;lt;lua.h&amp;gt;#incl">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2020/02/06/linux/lua/ffi/">
+
+
+
+
+
+  <title>ffi | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/06/linux/lua/ffi/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ffi</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-06T10:51:00+08:00">
+                2020-02-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>ffi作为luajit的核心战斗力(另一个是jit)在openresty项目中有广泛使用, 小小得研究一下</p>
+<h2 id="lua调用c"><a href="#lua调用c" class="headerlink" title="lua调用c"></a>lua调用c</h2><p>问题的起源, 首先要从lua调用c函数开始说起,在lua官方文档中， lua语言调用c函数一般使用如下方法进行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;lua.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;lauxlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;luaconf.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;lualib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;dirent.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">foo</span><span class="params">(lua_State *L)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *path = lua_tostring(L, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">int</span> pos = <span class="number">1</span>;</span><br><span class="line">    DIR *dir;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dirent</span> *<span class="title">ptr</span>;</span></span><br><span class="line">    dir = opendir(path);</span><br><span class="line">    lua_newtable(L);</span><br><span class="line">    <span class="keyword">while</span>((ptr = readdir(dir)) != <span class="literal">NULL</span>)&#123;</span><br><span class="line">        lua_pushnumber(L, pos);</span><br><span class="line">        lua_pushstring(L, ptr-&gt;d_name);</span><br><span class="line">        lua_settable(L, <span class="number">-3</span>);</span><br><span class="line">        pos++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    lua_State *L = luaL_newstate();</span><br><span class="line">    luaL_openlibs(L);</span><br><span class="line">    lua_pushcfunction(L, foo);</span><br><span class="line">    lua_setglobal(L, <span class="string">"foo"</span>);</span><br><span class="line">    luaL_loadfile(L, <span class="string">"hello.lua"</span>);</span><br><span class="line">    lua_pcall(L, <span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ans = foo(<span class="string">"/root/code/git/Lua-5.1.4-codedump/test"</span>)</span><br><span class="line"><span class="built_in">print</span>(ans[<span class="number">10</span>])</span><br></pre></td></tr></table></figure>
+<p>上面的代码中,首先启动lua虚拟机, 然后定义了lua需要调用的c函数,<br>注意这种方式lua调用的c函数有严格的格式<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(*lua_CFunction)</span> <span class="params">(lua_State *L)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>他必须接受一个lua_State作为输入, 然后返回一个int值, 这个int值表示这个c函数压到lua栈上的返回值个数,<br>可以看到foo函数读取了一个文件路径, 然后返回了这个文件路径下所有的文件<br>在lua调用这个c函数的时候, 传入一个路径， 并尝试读取了第十个文件, 以上就是原生的lua调用c函数的方法</p>
+<h2 id="ffi"><a href="#ffi" class="headerlink" title="ffi"></a>ffi</h2><h3 id="调用c函数"><a href="#调用c函数" class="headerlink" title="调用c函数"></a>调用c函数</h3><p>首先看一个<a href="http://luajit.org/ext_ffi.html" target="_blank" rel="noopener">luajit提供的起始demo</a><br><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> ffi = <span class="built_in">require</span>(<span class="string">"ffi"</span>)</span><br><span class="line"></span><br><span class="line">ffi.cdef<span class="string">[[</span></span><br><span class="line"><span class="string">int printf(const char *fmt, ...);</span></span><br><span class="line"><span class="string">]]</span></span><br><span class="line">ffi.C.printf(<span class="string">"Hello %s!"</span>, <span class="string">"world"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>一个非常简单的hello，world程序，主要流程如下</p>
+<ul>
+<li>require ffi库, 所以ffi是以一个lua库的形式提供的</li>
+<li>调用cdef 后面跟的是一个字符串, 字符串里面包c的函数, 结构体定义.(ps: 我也是惊了lua函数调用不需要()也就算了, 如果是字符串连空格都不需要)</li>
+<li>通过ffi.C.xxx调用cdef定义的c函数结构体</li>
+</ul>
+<p>现在hello world是不是觉得不能满足我们了, 我们整把大的!<br><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> ffi = <span class="built_in">require</span>(<span class="string">"ffi"</span>)</span><br><span class="line"></span><br><span class="line">ffi.cdef <span class="string">[[</span></span><br><span class="line"><span class="string">   int rmdir(const char* pathname);</span></span><br><span class="line"><span class="string">]]</span>;</span><br><span class="line">ffi.C.rmdir(<span class="string">"byebye"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>老样子, 这次我们调用gnu的redir函数, 结果也可以正常运行。</p>
+<p>但是有一个问题, 现在我们调用的函数都是要么是c标准库, 要么是glibc提供的标准库, 肯定都是luajit编译的时候编译进去的<br>我不服! 我要调用自己写的服务!</p>
+<p>先等等。 一会儿再说这个。</p>
+<p>至少到目前为止, 我们可以看到要在lua中调用c函数, 用ffi的方式调用c函数有非常大的便捷度优势。</p>
+<p>如果要用lua推荐的库类的方式来调用c函数怎么做呢<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"lua.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"lualib.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"lauxlib.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">myadd</span><span class="params">(lua_State *L)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = luaL_checknumber(L, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">int</span> b = luaL_checknumber(L, <span class="number">2</span>);</span><br><span class="line">    lua_pushnumber(L, a+b);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">luaL_Reg</span> <span class="title">mylib</span>[] = &#123;</span></span><br><span class="line">    &#123;<span class="string">"add"</span>, myadd&#125;,</span><br><span class="line">    &#123;<span class="literal">NULL</span>, <span class="literal">NULL</span>&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">luaopen_mylib</span><span class="params">(lua_State *L)</span></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *<span class="keyword">const</span> LIBRARY_NAME = <span class="string">"mylib"</span>;</span><br><span class="line">    luaL_register(L, LIBRARY_NAME, mylib);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>看上面要怎么做呢</p>
+<ul>
+<li>创建一个额外的c文件</li>
+<li>用myadd函数接受lua传递的参数, 并且校验</li>
+<li>如果更加严谨和增加复用, 你会把a+b的部分单独写成一个函数</li>
+<li>然后添加一个luaopen_xxxx的函数, 提供给require扫描</li>
+<li>最后你才可以在lua调用这个库</li>
+</ul>
+<p>是不是效果拔群?</p>
+<h3 id="调用非系统函数"><a href="#调用非系统函数" class="headerlink" title="调用非系统函数"></a>调用非系统函数</h3><p>上面的例子是lua函数调用系统|标准库函数,  那么lua怎么调用我们自己写的库函数呢<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo1</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* str)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s"</span>, str);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>上面我们写了一个非常普通的c语言函数, 把它编译成动态库<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -fPIC -shared foo.c -o foo.so       #差不都就这个意思, 可能差几个选项</span><br></pre></td></tr></table></figure></p>
+<p>那么怎么使用这个so呢<br><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> ffi = <span class="built_in">require</span>(<span class="string">"ffi"</span>)</span><br><span class="line">ffi.cdef <span class="string">[[</span></span><br><span class="line"><span class="string">    void foo1(const char* str);</span></span><br><span class="line"><span class="string">]]</span></span><br><span class="line">foo = ffi.<span class="built_in">load</span>(<span class="string">"/root/code/git/LuaJIT-2.0.5/run/test/foo.so"</span>)</span><br><span class="line">foo.foo1(<span class="string">"caonima"</span>);</span><br></pre></td></tr></table></figure></p>
+<p>其他选项都平平无奇, 唯独出现了<strong>ffi.load</strong>, 这个函数能加载一个动态库, 可以按照库的名字来载入, 也可以直接传入一个路径来载入，嗯<br>怎么看都感觉和dlopen好像, 详情请参考<a href="/2020/02/03/linux/api/dlxxx/" title="dl系列">dl系列</a>, 总的来说非常明显了</p>
+<ul>
+<li>系统函数: ffi.C.xxxxx</li>
+<li>自定义库: xxx = ffi.load(xx)  xx.xxxxxx()<br>就这个意思吧。那么问题来了！如果要用一起奇怪的数据结构, lua不支持咋办, 还怎么愉快得和c语言交互。</li>
+</ul>
+<p>新机子哇一滋莫嘿都滋.jpg</p>
+<h3 id="调用c结构体"><a href="#调用c结构体" class="headerlink" title="调用c结构体"></a>调用c结构体</h3><p>ffi允许你创建和获取c结构体, 当然 这个主要是用来配合函数一起使用的, 但是单独使用也阔以<br>废话少说直接上代码<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">A</span>&#123;</span></span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">int</span> b;</span><br><span class="line">&#125;<span class="keyword">a_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo1</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* str)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s"</span>, str);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">a_t</span> foo2(<span class="keyword">int</span> a,<span class="keyword">int</span> b)&#123;</span><br><span class="line">   <span class="keyword">a_t</span> * foo = (<span class="keyword">a_t</span>*)<span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">a_t</span>));</span><br><span class="line">   foo-&gt;a = a;</span><br><span class="line">   foo-&gt;b = b;</span><br><span class="line">   <span class="keyword">return</span> *foo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>编译成动态库foo.so<br>然后上lua代码<br><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> ffi = <span class="built_in">require</span>(<span class="string">"ffi"</span>)</span><br><span class="line">ffi.cdef <span class="string">[[</span></span><br><span class="line"><span class="string">    typedef struct A &#123;</span></span><br><span class="line"><span class="string">        int a;</span></span><br><span class="line"><span class="string">        int b;</span></span><br><span class="line"><span class="string">    &#125;a_t;</span></span><br><span class="line"><span class="string">    void foo1(const char* str);</span></span><br><span class="line"><span class="string">    a_t foo2(int a, int b);</span></span><br><span class="line"><span class="string">]]</span></span><br><span class="line"><span class="keyword">local</span> foo = ffi.<span class="built_in">load</span>(<span class="string">"/root/code/git/LuaJIT-2.0.5/run/test/foo.so"</span>)</span><br><span class="line">foo.foo1(<span class="string">"caonima"</span>);</span><br><span class="line"><span class="keyword">local</span> s=foo.foo2(<span class="number">12</span>, <span class="number">13</span>);</span><br><span class="line"><span class="built_in">print</span>(s.a)</span><br></pre></td></tr></table></figure></p>
+<p>运行结果<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">caonima12</span><br></pre></td></tr></table></figure></p>
+<p>好的, 所以说通过在ffi中声明结构体是可以在lua中直接使用的就像一个table一样</p>
+<p>最后贴上<br><a href="http://luajit.org/ext_ffi.html" target="_blank" rel="noopener">ffi官方文档</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/02/06/linux/lua/index/" rel="next" title="lua">
+                <i class="fa fa-chevron-left"></i> lua
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">57</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#lua调用c"><span class="nav-number">1.</span> <span class="nav-text">lua调用c</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ffi"><span class="nav-number">2.</span> <span class="nav-text">ffi</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#调用c函数"><span class="nav-number">2.1.</span> <span class="nav-text">调用c函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用非系统函数"><span class="nav-number">2.2.</span> <span class="nav-text">调用非系统函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用c结构体"><span class="nav-number">2.3.</span> <span class="nav-text">调用c结构体</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
