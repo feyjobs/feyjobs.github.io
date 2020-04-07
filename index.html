@@ -282,7 +282,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/06/linux/lua/ffi/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/04/02/linux/lock/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -301,7 +301,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/06/linux/lua/ffi/" itemprop="url">ffi</a></h1>
+                <a class="post-title-link" href="/2020/04/02/linux/lock/" itemprop="url">lock</a></h1>
         
 
         <div class="post-meta">
@@ -313,8 +313,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-06T10:51:00+08:00">
-                2020-02-06
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-02T15:04:00+08:00">
+                2020-04-02
               </time>
             
 
@@ -353,12 +353,12 @@
       
         
           
-          ffi作为luajit的核心战斗力(另一个是jit)在openresty项目中有广泛使用, 小小得研究一下
-lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方文档中， lua语言
+          锁是多线程编程解决并发冲突非常重要的手段, 但是这些概念脑子里依然突出一个混乱, 所以需要梳理一下。以下内容仅针对c/c++, linux环境。一些与锁相关的内容也会一起讨论。
+多线程linux环境下
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/06/linux/lua/ffi/#more" rel="contents">
+            <a class="btn" href="/2020/04/02/linux/lock/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -409,7 +409,7 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/06/linux/lua/index/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/03/09/linux/rpc/dubbo/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -428,7 +428,7 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/06/linux/lua/index/" itemprop="url">lua</a></h1>
+                <a class="post-title-link" href="/2020/03/09/linux/rpc/dubbo/" itemprop="url">dubbo</a></h1>
         
 
         <div class="post-meta">
@@ -440,8 +440,8 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-06T10:50:00+08:00">
-                2020-02-06
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-03-09T22:49:00+08:00">
+                2020-03-09
               </time>
             
 
@@ -480,12 +480,16 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
       
         
           
-          lualuajitffi
+          相关资料
+官网
+泛化调用
+hessian
 
+序列化
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/06/linux/lua/index/#more" rel="contents">
+            <a class="btn" href="/2020/03/09/linux/rpc/dubbo/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -536,7 +540,7 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/05/linux/csapp/chapter6/index/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/03/09/think/habit/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -555,7 +559,7 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/05/linux/csapp/chapter6/index/" itemprop="url">存储层次结构</a></h1>
+                <a class="post-title-link" href="/2020/03/09/think/habit/" itemprop="url">habit</a></h1>
         
 
         <div class="post-meta">
@@ -567,8 +571,8 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-05T00:38:00+08:00">
-                2020-02-05
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-03-09T08:42:00+08:00">
+                2020-03-09
               </time>
             
 
@@ -607,16 +611,31 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
       
         
           
-          程序的机器级表示因为想学下AT&amp;T汇编语言 所以来看看这章
-磁盘存储磁盘速度
-磁盘上读信息的时间为毫秒级,比DRAM慢10万b倍,比SRAM慢100万倍
+          碎片
 
-磁盘结构
-  磁盘有盘片组成,盘片表
+
+名目
+耗时
+
+
+
+
+起床洗漱做早饭泡茶
+10min
+
+
+午睡
+60min
+
+
+
+感悟
+我的每一个细胞都在反对这种改变，他们抗拒这种突然的作息变化
+发现自己的想法错误了，整个人都无法面对这种失
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/05/linux/csapp/chapter6/index/#more" rel="contents">
+            <a class="btn" href="/2020/03/09/think/habit/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -667,7 +686,7 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/05/linux/csapp/chapter7/index/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/11/think/plan/target/lua/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -686,7 +705,7 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/05/linux/csapp/chapter7/index/" itemprop="url">链接</a></h1>
+                <a class="post-title-link" href="/2020/02/11/think/plan/target/lua/" itemprop="url">lua</a></h1>
         
 
         <div class="post-meta">
@@ -698,8 +717,8 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-05T00:35:00+08:00">
-                2020-02-05
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-11T00:42:00+08:00">
+                2020-02-11
               </time>
             
 
@@ -738,19 +757,17 @@ lua调用c问题的起源, 首先要从lua调用c函数开始说起,在lua官方
       
         
           
-          链接的作用: 将各个不同的代码与数据片段组合成一个单一文件链接的分类
+          c apiuserdata
+lua程序设计 userdata部分4/5(轻量级用户数据没看)
+__gc
+upvalue
 
-编译时链接
-加载时链接
-运行时
-
-编译器以gcc为例，自上而下其实运行的过程如下
-
-cpp, 注意这个不是c++，而是一个预处理
+注意点
+写lua测试程序的时候, lua测试程序命名array.lua, 动态
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/05/linux/csapp/chapter7/index/#more" rel="contents">
+            <a class="btn" href="/2020/02/11/think/plan/target/lua/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -801,7 +818,7 @@ cpp, 注意这个不是c++，而是一个预处理
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/03/linux/api/dlxxx/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/11/think/plan/date/2020/index/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -820,7 +837,7 @@ cpp, 注意这个不是c++，而是一个预处理
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/03/linux/api/dlxxx/" itemprop="url">动态库</a></h1>
+                <a class="post-title-link" href="/2020/02/11/think/plan/date/2020/index/" itemprop="url">2020</a></h1>
         
 
         <div class="post-meta">
@@ -832,8 +849,8 @@ cpp, 注意这个不是c++，而是一个预处理
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-03T14:54:00+08:00">
-                2020-02-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-11T00:30:00+08:00">
+                2020-02-11
               </time>
             
 
@@ -872,20 +889,17 @@ cpp, 注意这个不是c++，而是一个预处理
       
         
           
-          关于链接相关的知识, 在csapp第七章有详细介绍。总的来说, 链接部分主要分成三部分内容
+          
+上一级
 
-静态链接
-编译期动态链接
-运行时动态加载, 链接
-
-dlxxx系列函数主要是在运行时动态加载, 链接
+2
 
 
 
-          ...
+          
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/03/linux/api/dlxxx/#more" rel="contents">
+            <a class="btn" href="/2020/02/11/think/plan/date/2020/index/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -936,7 +950,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/03/linux/api/index/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/11/think/plan/date/2020/2/11/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -955,7 +969,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/03/linux/api/index/" itemprop="url">linux系统调用库</a></h1>
+                <a class="post-title-link" href="/2020/02/11/think/plan/date/2020/2/11/" itemprop="url">Tue Feb 11 2020 00:00:00 GMT+0800 (CST)</a></h1>
         
 
         <div class="post-meta">
@@ -967,8 +981,8 @@ dlxxx系列函数主要是在运行时动态加载, 链接
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-03T14:48:00+08:00">
-                2020-02-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-11T00:24:00+08:00">
+                2020-02-11
               </time>
             
 
@@ -1007,12 +1021,23 @@ dlxxx系列函数主要是在运行时动态加载, 链接
       
         
           
-          动态库dl系列
+          work
+kong编译脚本
+ack
+kong版本更新方法
+
+study
+lua userdata 
+book
+
+guitar
+major &amp;&amp; minor 
+
 
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/03/linux/api/index/#more" rel="contents">
+            <a class="btn" href="/2020/02/11/think/plan/date/2020/2/11/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1063,7 +1088,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/03/linux/gateway/openresty/index/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/10/think/plan/date/2020/2/index/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1082,7 +1107,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/03/linux/gateway/openresty/index/" itemprop="url">openresty</a></h1>
+                <a class="post-title-link" href="/2020/02/10/think/plan/date/2020/2/index/" itemprop="url">2</a></h1>
         
 
         <div class="post-meta">
@@ -1094,8 +1119,8 @@ dlxxx系列函数主要是在运行时动态加载, 链接
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-03T11:18:00+08:00">
-                2020-02-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-10T05:06:00+08:00">
+                2020-02-10
               </time>
             
 
@@ -1134,11 +1159,36 @@ dlxxx系列函数主要是在运行时动态加载, 链接
       
         
           
-          lua-resty-core
+          
+上一级
+
+10
+11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/03/linux/gateway/openresty/index/#more" rel="contents">
+            <a class="btn" href="/2020/02/10/think/plan/date/2020/2/index/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1189,7 +1239,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/03/linux/gateway/kong/balancer/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/10/think/plan/date/2020/2/10/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1208,7 +1258,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/03/linux/gateway/kong/balancer/" itemprop="url">balancer</a></h1>
+                <a class="post-title-link" href="/2020/02/10/think/plan/date/2020/2/10/" itemprop="url">10.md</a></h1>
         
 
         <div class="post-meta">
@@ -1220,8 +1270,8 @@ dlxxx系列函数主要是在运行时动态加载, 链接
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-03T11:11:00+08:00">
-                2020-02-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-10T05:06:00+08:00">
+                2020-02-10
               </time>
             
 
@@ -1264,7 +1314,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/03/linux/gateway/kong/balancer/#more" rel="contents">
+            <a class="btn" href="/2020/02/10/think/plan/date/2020/2/10/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1315,7 +1365,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/03/linux/gateway/index/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/10/think/plan/date/index/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1334,7 +1384,7 @@ dlxxx系列函数主要是在运行时动态加载, 链接
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/03/linux/gateway/index/" itemprop="url">网关</a></h1>
+                <a class="post-title-link" href="/2020/02/10/think/plan/date/index/" itemprop="url">2020</a></h1>
         
 
         <div class="post-meta">
@@ -1346,8 +1396,8 @@ dlxxx系列函数主要是在运行时动态加载, 链接
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-03T10:17:00+08:00">
-                2020-02-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-10T04:48:00+08:00">
+                2020-02-10
               </time>
             
 
@@ -1386,19 +1436,17 @@ dlxxx系列函数主要是在运行时动态加载, 链接
       
         
           
-          kong
-balancer
+          
+总领
 
-
-openresty
-openresty
+2020
 
 
 
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/03/linux/gateway/index/#more" rel="contents">
+            <a class="btn" href="/2020/02/10/think/plan/date/index/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1449,7 +1497,7 @@ openresty
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/03/linux/apue/index/">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/02/10/think/plan/index/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="feyjobs">
@@ -1468,7 +1516,7 @@ openresty
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/02/03/linux/apue/index/" itemprop="url">【apue】</a></h1>
+                <a class="post-title-link" href="/2020/02/10/think/plan/index/" itemprop="url">计划一览</a></h1>
         
 
         <div class="post-meta">
@@ -1480,8 +1528,8 @@ openresty
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-03T01:37:00+08:00">
-                2020-02-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-10T04:10:00+08:00">
+                2020-02-10
               </time>
             
 
@@ -1520,18 +1568,48 @@ openresty
       
         
           
-          章节
-LinuxIO重定向原理探索
-apue-proc
-ipc
-套接字编程
+          目标型
+lua
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+流水型
+root
 
 
 
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/02/03/linux/apue/index/#more" rel="contents">
+            <a class="btn" href="/2020/02/10/think/plan/index/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1573,7 +1651,7 @@ ipc
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1621,7 +1699,7 @@ ipc
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">57</span>
+                  <span class="site-state-item-count">67</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>

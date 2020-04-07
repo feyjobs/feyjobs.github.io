@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="锁是多线程编程解决并发冲突非常重要的手段, 但是这些概念脑子里依然突出一个混乱, 所以需要梳理一下。以下内容仅针对c/c++, linux环境。一些与锁相关的内容也会一起讨论。 多线程linux环境下, 一般来说使用的多线程库是pthread(还有一种NPTL),c++11以后提供了对线程语言级别的封装(在linux其实就是对pthread做了一层封装, 使用这个库甚至还需要-lpthread,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="lock">
+<meta property="og:url" content="https://feyjobs.github.io/2020/04/02/linux/lock/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="锁是多线程编程解决并发冲突非常重要的手段, 但是这些概念脑子里依然突出一个混乱, 所以需要梳理一下。以下内容仅针对c/c++, linux环境。一些与锁相关的内容也会一起讨论。 多线程linux环境下, 一般来说使用的多线程库是pthread(还有一种NPTL),c++11以后提供了对线程语言级别的封装(在linux其实就是对pthread做了一层封装, 使用这个库甚至还需要-lpthread,">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-04-07T09:04:23.786Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="lock">
+<meta name="twitter:description" content="锁是多线程编程解决并发冲突非常重要的手段, 但是这些概念脑子里依然突出一个混乱, 所以需要梳理一下。以下内容仅针对c/c++, linux环境。一些与锁相关的内容也会一起讨论。 多线程linux环境下, 一般来说使用的多线程库是pthread(还有一种NPTL),c++11以后提供了对线程语言级别的封装(在linux其实就是对pthread做了一层封装, 使用这个库甚至还需要-lpthread,">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2020/04/02/linux/lock/">
+
+
+
+
+
+  <title>lock | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/04/02/linux/lock/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">lock</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-02T15:04:00+08:00">
+                2020-04-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>锁是多线程编程解决并发冲突非常重要的手段, 但是这些概念脑子里依然突出一个混乱, 所以需要梳理一下。<br>以下内容仅针对c/c++, linux环境。一些与锁相关的内容也会一起讨论。</p>
+<h1 id="多线程"><a href="#多线程" class="headerlink" title="多线程"></a>多线程</h1><p>linux环境下, 一般来说使用的多线程库是pthread(还有一种NPTL),<br>c++11以后提供了对线程语言级别的封装(在linux其实就是对pthread做了一层封装, 使用这个库甚至还需要-lpthread, 不考虑跨平台甚至都不需要使用c++11的多线程)。</p>
+<h2 id="pthread"><a href="#pthread" class="headerlink" title="pthread"></a>pthread</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="comment">//创建线程</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_create</span><span class="params">(<span class="keyword">pthread_t</span> * thread, <span class="keyword">const</span> <span class="keyword">pthread_arrt_t</span>* attr,<span class="keyword">void</span>*(*start_routine)(<span class="keyword">void</span> *), <span class="keyword">void</span>* arg)</span></span>;</span><br><span class="line"><span class="comment">//终止线程</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_cancel</span><span class="params">(<span class="keyword">pthread_t</span> thread)</span></span>;</span><br><span class="line"><span class="comment">//线程等待, 当前线程等待thread线程执行完毕</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">pthread_join</span><span class="params">(<span class="keyword">pthread_t</span> thread,<span class="keyword">void</span> ** retval)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>一个典型的pthread使用方法<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">count</span><span class="params">(<span class="keyword">void</span>* arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = *(<span class="keyword">int</span>*)arg;</span><br><span class="line">    <span class="keyword">while</span>(n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        sum++;</span><br><span class="line">        n--;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> arg;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pthread_t</span> thread;</span><br><span class="line">    <span class="keyword">pthread_attr_t</span> attr;</span><br><span class="line">    pthread_attr_init(&amp;attr);</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span> j = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span>* ans;</span><br><span class="line">    pthread_create(&amp;thread, &amp;attr, &amp;count, &amp;i);</span><br><span class="line">    <span class="keyword">while</span>(j &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        sum++;j--;</span><br><span class="line">    &#125;</span><br><span class="line">    pthread_join(thread,(<span class="keyword">void</span>**)&amp;ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"ans: %d\n"</span>, *ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sum: %d\n"</span>, sum);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="c-11-thread"><a href="#c-11-thread" class="headerlink" title="c++11 thread"></a>c++11 thread</h2><p>c++11引入了多线程编程的相关内容，主要是一个thread类以及相关操作,下面是一个demo<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">threadProc</span><span class="params">(<span class="keyword">int</span> seconds)</span></span>&#123;</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; seconds; i++)&#123;</span><br><span class="line">        sum++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="function">thread <span class="title">t1</span><span class="params">(threadProc, <span class="number">1000000</span>)</span></span>;</span><br><span class="line">    <span class="function">thread <span class="title">t2</span><span class="params">(threadProc, <span class="number">1000000</span>)</span></span>;</span><br><span class="line">    t1.join();</span><br><span class="line">    t2.join();</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; sum &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>记得-lpthread</p>
+<h1 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h1><p>从上面的demo实际运行可以可以非常easy得得到接过sum!=2000000, 因为两个线程竞争访问sum全局变量, 导致了资源冲突<br>这里引入第一种解决方法, <em>信号量</em></p>
+<p>非常简单的api,提供了一组初始化&amp;&amp;lock&amp;&amp;unlock的api。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;semaphore.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">sem_t</span>  sem;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">count</span><span class="params">(<span class="keyword">void</span>* arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = *(<span class="keyword">int</span>*)arg;</span><br><span class="line">    <span class="keyword">while</span>(n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        sem_wait(&amp;sem);</span><br><span class="line">        sum++;</span><br><span class="line">        n--;</span><br><span class="line">        sem_post(&amp;sem);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> arg;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pthread_t</span> thread;</span><br><span class="line">    <span class="keyword">pthread_attr_t</span> attr;</span><br><span class="line">    pthread_attr_init(&amp;attr);</span><br><span class="line">    sem_init(&amp;sem, <span class="number">0</span>, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span> j = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span>* ans;</span><br><span class="line">    pthread_create(&amp;thread, &amp;attr, &amp;count, &amp;i);</span><br><span class="line">    <span class="keyword">while</span>(j &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        sem_wait(&amp;sem);</span><br><span class="line">        j--;</span><br><span class="line">        sum++;</span><br><span class="line">        sem_post(&amp;sem);</span><br><span class="line">    &#125;</span><br><span class="line">    pthread_join(thread,(<span class="keyword">void</span>**)&amp;ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"ans: %d\n"</span>, *ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sum: %d\n"</span>, sum);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>需要指出的是, 陈硕大佬的linux多线程服务端编程,专门有一节点艹信号量和读写锁, 表示这俩没啥用。理由是</p>
+<ul>
+<li>信号量完全可以用锁+条件变量替代</li>
+<li>信号量自己在内存中存储了计数，而一般来说用户的应用程序也会存储, 造成浪费</li>
+</ul>
+<h1 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h1><h2 id="pthread系列"><a href="#pthread系列" class="headerlink" title="pthread系列"></a>pthread系列</h2><p>pthread库提供了一系列线程同步函数,大致得抄一下书<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_mutex_init</span><span class="params">(<span class="keyword">pthread_mutex_t</span> *<span class="keyword">restrict</span> mutex, <span class="keyword">const</span> <span class="keyword">pthread_mutexattr_t</span> *<span class="keyword">restrict</span> attr)</span></span>; <span class="comment">//初始化</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_mutex_destroy</span><span class="params">(<span class="keyword">pthread_mutex_t</span> *mutex)</span></span>; <span class="comment">//销毁</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_mutex_lock</span><span class="params">(<span class="keyword">pthread_mutex_t</span> *mutex)</span></span>; <span class="comment">//上锁</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_mutex_trylock</span><span class="params">(<span class="keyword">pthread_mutex_t</span> *mutex)</span></span>; <span class="comment">//尝试上锁, 如果已经被上锁了, 就返回失败, 相比上面得,优点在不会阻塞</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_mutex_unlock</span><span class="params">(<span class="keyword">pthread_mutex_t</span> *mutex)</span></span>;<span class="comment">//解锁</span></span><br></pre></td></tr></table></figure></p>
+<p>参考demo<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;semaphore.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">pthread_mutex_t</span> lock;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">count</span><span class="params">(<span class="keyword">void</span>* arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = *(<span class="keyword">int</span>*)arg;</span><br><span class="line">    <span class="keyword">while</span>(n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        pthread_mutex_lock(&amp;lock);</span><br><span class="line">        sum++;</span><br><span class="line">        n--;</span><br><span class="line">        pthread_mutex_unlock(&amp;lock);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> arg;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pthread_t</span> thread;</span><br><span class="line">    <span class="keyword">pthread_attr_t</span> attr;</span><br><span class="line">    pthread_attr_init(&amp;attr);</span><br><span class="line"></span><br><span class="line">    pthread_mutex_init(&amp;lock, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span> j = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span>* ans;</span><br><span class="line">    pthread_create(&amp;thread, &amp;attr, &amp;count, &amp;i);</span><br><span class="line">    <span class="keyword">while</span>(j &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        pthread_mutex_lock(&amp;lock);</span><br><span class="line">        j--;</span><br><span class="line">        sum++;</span><br><span class="line">        pthread_mutex_unlock(&amp;lock);</span><br><span class="line">    &#125;</span><br><span class="line">    pthread_join(thread,(<span class="keyword">void</span>**)&amp;ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"ans: %d\n"</span>, *ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sum: %d\n"</span>, sum);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="pthread-spin-lock"><a href="#pthread-spin-lock" class="headerlink" title="pthread spin lock"></a>pthread spin lock</h3><p>pthread系列还提供了一套spin lock用于线程同步,所谓spin lock就是当线程尝试抢锁时如果失败, 会一直尝试而不进入阻塞状态<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_spin_init</span><span class="params">(<span class="keyword">pthread_spinlock_t</span> *lock, <span class="keyword">int</span> pshared)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_spin_destroy</span><span class="params">(<span class="keyword">pthread_spinlock_t</span> *lock)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_spin_lock</span><span class="params">(<span class="keyword">pthread_spinlock_t</span> *lock)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_spin_trylock</span><span class="params">(<span class="keyword">pthread_spinlock_t</span> *lock)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_spin_unlock</span><span class="params">(<span class="keyword">pthread_spinlock_t</span> *lock)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>基本和上面的api一样一样的，注意下init函数的pshared可以设置PTHREAD_PROCESS_SHARED or PTHREAD_PROCESS_PRIVATE,意思是是否允许其他进程的线程访问这个lock<br>demo<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;semaphore.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">pthread_spinlock_t</span> lock;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">count</span><span class="params">(<span class="keyword">void</span>* arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = *(<span class="keyword">int</span>*)arg;</span><br><span class="line">    <span class="keyword">while</span>(n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        pthread_spin_lock(&amp;lock);</span><br><span class="line">        sum++;</span><br><span class="line">        n--;</span><br><span class="line">        pthread_spin_unlock(&amp;lock);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> arg;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pthread_t</span> thread;</span><br><span class="line">    <span class="keyword">pthread_attr_t</span> attr;</span><br><span class="line">    pthread_attr_init(&amp;attr);</span><br><span class="line"></span><br><span class="line">    pthread_spin_init(&amp;lock, PTHREAD_PROCESS_SHARED);</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span> j = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span>* ans;</span><br><span class="line">    pthread_create(&amp;thread, &amp;attr, &amp;count, &amp;i);</span><br><span class="line">    <span class="keyword">while</span>(j &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        pthread_spin_lock(&amp;lock);</span><br><span class="line">        j--;</span><br><span class="line">        sum++;</span><br><span class="line">        pthread_spin_unlock(&amp;lock);</span><br><span class="line">    &#125;</span><br><span class="line">    pthread_join(thread,(<span class="keyword">void</span>**)&amp;ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"ans: %d\n"</span>, *ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sum: %d\n"</span>, sum);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="自己实现系列"><a href="#自己实现系列" class="headerlink" title="自己实现系列"></a>自己实现系列</h2><p>在研究nginx的时候发现, nginx进程间通信并没有使用pthread系列提供的锁, 而是非常硬核得自己实现了原子操作,对锁进行了封装<br>下面小小描述下nginx实现锁的</p>
+<p>首先要有锁, 我们要有一个互斥的内容, 简单起见, 我们就规定一个特殊的int类型为原子类型<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">int</span> <span class="keyword">atomic_t</span>;</span><br></pre></td></tr></table></figure></p>
+<p>确定了类型, 我们就需要对这个类型进行一系列操作的封装啊, 不然普通的+-*\依然后会线程冲突啊.<br>这里取+作为例子<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> NGX_SMP_LOCK  <span class="meta-string">"lock;"</span></span></span><br><span class="line"><span class="keyword">static</span> ngx_inline <span class="keyword">ngx_atomic_int_t</span></span><br><span class="line">ngx_atomic_fetch_add(<span class="keyword">ngx_atomic_t</span> *value, <span class="keyword">ngx_atomic_int_t</span> add)</span><br><span class="line">&#123;</span><br><span class="line">    __<span class="function">asm__ <span class="title">volatile</span> <span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params"></span></span></span><br><span class="line"><span class="function"><span class="params">         NGX_SMP_LOCK</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="string">"    xaddq  %0, %1;   "</span></span></span></span><br><span class="line"><span class="function"><span class="params"></span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"+r"</span> (add) : <span class="string">"m"</span> (*value) : <span class="string">"cc"</span>, <span class="string">"memory"</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> add;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里使用在c语言内内嵌汇编代码来实现<br><strong>asm</strong>是一个gcc提供的功能后面可以追加汇编代码<br>volatile关键词的意义是:告诉编译器, 不要优化这块代码, 就按照我写的运行!</p>
+<p>不想看的汇编生成的的小伙伴可以直接gcc -S -O0 生成代码相应的汇编代码查看这段汇编最终形态<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lock;    </span><br><span class="line">   xaddl  %eax, (%rdx);</span><br></pre></td></tr></table></figure></p>
+<p>总的来说两句话, 第一个指令lock,锁住cpu总线, 现在开始只有我可以访问内存!</p>
+<p>第二个函数 value值会进入rdx寄存器, add进入eax寄存器, 非常简单 xaddl从rdx寄存器取地址,并获取内存中的内容, 加上eax寄存器中的临时值,并写回内存<br>所以！ 这块功能的核心在于<strong>lock;</strong>指令, 这个指令会指定下一个指令运行期间锁住总线, 其他cpu访问内存都会失败, 所以这个才是锁在操作系统层面的实现原理, 至于x86怎么实现的<br>告辞。至此我们有理由可以猜测, 操作系统的锁相关的核心都是这个lock;指令以及xaddq这类单命令完成读写内存操作的指令, 只是有些锁在竞争中失败后阻塞睡眠了, 有些锁<br>锲而不舍的一直尝试加锁, 这个层面就是cpu空跑与线程状态切换的成本博弈了。</p>
+<p>想琢磨怎么这个汇编怎么生成的小伙伴可以参考下面的链接帮助理解<br>参考资料: <a href="https://www.cnblogs.com/xphh/p/11491489.html" target="_blank" rel="noopener">gcc内联汇编</a></p>
+<h2 id="杀鸡用牛刀"><a href="#杀鸡用牛刀" class="headerlink" title="杀鸡用牛刀"></a>杀鸡用牛刀</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">atomic_fetch_add</span><span class="params">(<span class="keyword">int</span>* value, <span class="keyword">int</span> add)</span></span>&#123;</span><br><span class="line">    __<span class="function">asm__ <span class="title">volatile</span> <span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="string">"lock;"</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="string">"    xaddl  %0, %1;   "</span></span></span></span><br><span class="line"><span class="function"><span class="params"></span></span></span><br><span class="line"><span class="function"><span class="params">    : <span class="string">"+r"</span> (add) : <span class="string">"m"</span> (*value) : <span class="string">"cc"</span>, <span class="string">"memory"</span>)</span></span>;</span><br><span class="line">    <span class="keyword">return</span> add;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">count</span><span class="params">(<span class="keyword">void</span>* arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = *(<span class="keyword">int</span>*)arg;</span><br><span class="line">    <span class="keyword">while</span>(n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        atomic_fetch_add(&amp;sum, <span class="number">1</span>);</span><br><span class="line">        n--;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> arg;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pthread_t</span> thread;</span><br><span class="line">    <span class="keyword">pthread_attr_t</span> attr;</span><br><span class="line">    pthread_attr_init(&amp;attr);</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span> j = <span class="number">1000000</span>;</span><br><span class="line">    <span class="keyword">int</span>* ans;</span><br><span class="line">    pthread_create(&amp;thread, &amp;attr, &amp;count, &amp;i);</span><br><span class="line">    <span class="keyword">while</span>(j &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        atomic_fetch_add(&amp;sum, <span class="number">1</span>);</span><br><span class="line">        j--;</span><br><span class="line">    &#125;</span><br><span class="line">    pthread_join(thread,(<span class="keyword">void</span>**)&amp;ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"ans: %d\n"</span>, *ans);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sum: %d\n"</span>, sum);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这上面我们自己封装了原子操作，实现了锁功能</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/03/09/linux/rpc/dubbo/" rel="next" title="dubbo">
+                <i class="fa fa-chevron-left"></i> dubbo
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">67</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#多线程"><span class="nav-number">1.</span> <span class="nav-text">多线程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#pthread"><span class="nav-number">1.1.</span> <span class="nav-text">pthread</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#c-11-thread"><span class="nav-number">1.2.</span> <span class="nav-text">c++11 thread</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#信号量"><span class="nav-number">2.</span> <span class="nav-text">信号量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#锁"><span class="nav-number">3.</span> <span class="nav-text">锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#pthread系列"><span class="nav-number">3.1.</span> <span class="nav-text">pthread系列</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#pthread-spin-lock"><span class="nav-number">3.1.1.</span> <span class="nav-text">pthread spin lock</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自己实现系列"><span class="nav-number">3.2.</span> <span class="nav-text">自己实现系列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#杀鸡用牛刀"><span class="nav-number">3.3.</span> <span class="nav-text">杀鸡用牛刀</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
