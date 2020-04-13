@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="epoll事件机制是linux下高性能服务器的核心战斗力, nginx envoy等服务器也在linux下使用了该技术。首先简单说一下这个技术是什么，解决什么问题, 众所周知高并发服务器需要处理大量连接请求, 来来往往的tcp, udp连接络绎不绝为了能处理这么多的请求, 一般有几种方法, 多线程，异步化。但是线程是不可能无限制得创建的, 毕竟cpu核数是固定的，真的来一个连接就创建一个线程处理,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="epoll">
+<meta property="og:url" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="epoll事件机制是linux下高性能服务器的核心战斗力, nginx envoy等服务器也在linux下使用了该技术。首先简单说一下这个技术是什么，解决什么问题, 众所周知高并发服务器需要处理大量连接请求, 来来往往的tcp, udp连接络绎不绝为了能处理这么多的请求, 一般有几种方法, 多线程，异步化。但是线程是不可能无限制得创建的, 毕竟cpu核数是固定的，真的来一个连接就创建一个线程处理,">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/uploads/nginx/epoll/demo1.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/uploads/nginx/epoll/square.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/uploads/nginx/epoll/EPOLLETinput.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/uploads/nginx/epoll/EPOLLEToutput.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/uploads/nginx/epoll/EPOLLLToutput.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/uploads/nginx/epoll/cats.jpg">
+<meta property="og:updated_time" content="2020-04-13T12:59:57.917Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="epoll">
+<meta name="twitter:description" content="epoll事件机制是linux下高性能服务器的核心战斗力, nginx envoy等服务器也在linux下使用了该技术。首先简单说一下这个技术是什么，解决什么问题, 众所周知高并发服务器需要处理大量连接请求, 来来往往的tcp, udp连接络绎不绝为了能处理这么多的请求, 一般有几种方法, 多线程，异步化。但是线程是不可能无限制得创建的, 毕竟cpu核数是固定的，真的来一个连接就创建一个线程处理,">
+<meta name="twitter:image" content="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/uploads/nginx/epoll/demo1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/">
+
+
+
+
+
+  <title>epoll | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/04/10/linux/nginx/epoll/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">epoll</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-10T23:27:00+08:00">
+                2020-04-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p></p><p><br>epoll事件机制是linux下高性能服务器的核心战斗力, nginx envoy等服务器也在linux下使用了该技术。<br>首先简单说一下这个技术是什么，解决什么问题, 众所周知高并发服务器需要处理大量连接请求, 来来往往的tcp, udp连接络绎不绝<br>为了能处理这么多的请求, 一般有几种方法, 多线程，异步化。但是线程是不可能无限制得创建的, 毕竟cpu核数是固定的，真的来一个连接就创建一个线程处理,<br>势必造成线程数大大超过核数, cpu处理不过来，造成频繁的线程状态切换, 浪费cpu性能。<br>而异步化呢, 就是将一个链接中所有能够异步处理的操作都异步化, 异步读, 异步写, 那么既然异步化了, 怎么知道有没有信息可以读, 写完了没有呢<br>这就是IO多路复用的作用了, epoll就是其中一种io多路复用机制, 我们可以将读写事件注册在epoll上, 当有相应的操作触发时, epoll就会通知我们进行相应的处理，<br>从而避免了在读写操作上的阻塞</p>
+<p>
+
+</p><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>epoll的核心api只有三个<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_create</span><span class="params">(<span class="keyword">int</span> size)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="keyword">int</span> epfd, <span class="keyword">int</span> op, <span class="keyword">int</span> fd,struct epoll_event *event)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="keyword">int</span> epfd, struct epoll_event *events, <span class="keyword">int</span> maxevents, <span class="keyword">int</span> timeout)</span></span></span><br></pre></td></tr></table></figure></p>
+<p>核心数据结构一个<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">union</span> epoll_data</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">void</span> *ptr;</span><br><span class="line">  <span class="keyword">int</span> fd;</span><br><span class="line">  <span class="keyword">uint32_t</span> u32;</span><br><span class="line">  <span class="keyword">uint64_t</span> u64;</span><br><span class="line">&#125; <span class="keyword">epoll_data_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 表示该event关注的事件, 就是epoll_ctl第三个参数fd可能发生的事件</span></span><br><span class="line"><span class="comment">  * EPOLLIN  读事件</span></span><br><span class="line"><span class="comment">  * EPOLLOUT 写事件</span></span><br><span class="line"><span class="comment">  * EPOLLPRI  </span></span><br><span class="line"><span class="comment">  * EPOLLERR fd错误</span></span><br><span class="line"><span class="comment">  * EPOLLHUP fd挂断</span></span><br><span class="line"><span class="comment">  * EPOLLONESHOT 只出发一次epoll事件</span></span><br><span class="line"><span class="comment">  * EPOLLET 边缘触发模式</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  <span class="keyword">uint32_t</span> events;	<span class="comment">/* Epoll events */</span></span><br><span class="line">  <span class="keyword">epoll_data_t</span> data;	<span class="comment">/* User data variable */</span></span><br><span class="line">&#125; __EPOLL_PACKED;</span><br></pre></td></tr></table></figure></p>
+<h3 id="epoll-create"><a href="#epoll-create" class="headerlink" title="epoll_create"></a>epoll_create</h3><p>创建一个epoll对象返回epfd,用于epoll_ctl, epoll_wait, size参数表示这个epoll对象监听的fd数, 在高版本里这个参数已经没有意义, 系统会自动根据添加的fd动态分配内存,<br>但是还是需要设置成非负数</p>
+<h3 id="epoll-ctl"><a href="#epoll-ctl" class="headerlink" title="epoll_ctl"></a>epoll_ctl</h3><p>操作一个epfd, 操作的动作根据第二个参数确定<br>op参数的作用</p>
+<ul>
+<li>EPOLL_CTL_ADD 注册一个fd的事件(event)到该epoll实例上去, event描述fd的事件类型</li>
+<li>EPOLL_CTL_MOD 编辑一个fd的event</li>
+<li>EPOLL_CTL_DEL 删除该fd, event可以为空</li>
+</ul>
+<h3 id="epoll-wait"><a href="#epoll-wait" class="headerlink" title="epoll_wait"></a>epoll_wait</h3><p>获取epfd上触发的事件列表, 通过第二个参数events返回, maxevents表示最多返回多少event, timeout表示epoll_wait至少等待几秒, -1 一直等待， 0 不等待，该函数返回值表示获取的event数</p>
+<h3 id="demo"><a href="#demo" class="headerlink" title="demo"></a>demo</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;netinet/in.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> nullptr (void*)-1;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">servaddr</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr</span> <span class="title">addr</span>;</span></span><br><span class="line">    <span class="keyword">int</span> flags;</span><br><span class="line">    <span class="keyword">int</span> epfd;</span><br><span class="line">    <span class="keyword">int</span> cnt;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">int</span> n;</span><br><span class="line">    <span class="keyword">int</span> sfd;</span><br><span class="line">    <span class="keyword">char</span> buf[<span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">socklen_t</span> len;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> <span class="title">event</span>, *<span class="title">ee</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span>* <span class="title">events</span> = (<span class="title">struct</span> <span class="title">epoll_event</span>*)<span class="title">malloc</span>(<span class="title">sizeof</span>(<span class="title">struct</span> <span class="title">epoll_event</span>)* 1024);</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//监听端口, 启动服务</span></span><br><span class="line">    servaddr.sin_family = AF_INET;</span><br><span class="line">    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);</span><br><span class="line">    servaddr.sin_port = htons(<span class="number">1024</span>);</span><br><span class="line">    <span class="keyword">int</span> sockfd = socket(AF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sockfd: %d\n"</span>, sockfd);</span><br><span class="line">    flags = fcntl(sockfd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">    fcntl(sockfd, F_SETFL, flags| O_NONBLOCK);</span><br><span class="line">    bind(sockfd, (struct sockaddr*)&amp;servaddr, <span class="keyword">sizeof</span>(servaddr));</span><br><span class="line">    perror(<span class="string">"bind"</span>);</span><br><span class="line">    listen(sockfd, <span class="number">1024</span>);</span><br><span class="line">    perror(<span class="string">"listen"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建epoll fd, 将上面的监听socket放进epoll</span></span><br><span class="line">    epfd = epoll_create(<span class="number">1024</span>);</span><br><span class="line">    event.events = EPOLLIN;</span><br><span class="line">    event.data.fd = sockfd;</span><br><span class="line">    epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &amp;event);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">        <span class="comment">//获取当前的已发生的事件列表</span></span><br><span class="line">        cnt = epoll_wait(epfd, events, <span class="number">1024</span>, <span class="number">10</span>*<span class="number">1000</span>);</span><br><span class="line">        <span class="keyword">if</span> (cnt &gt; <span class="number">0</span>)&#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"%d events got\n"</span>, cnt);</span><br><span class="line">            <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; cnt; i++)&#123;</span><br><span class="line">                ee = &amp;events[i];</span><br><span class="line">                sfd = ee-&gt;data.fd;</span><br><span class="line">                <span class="keyword">if</span> (ee-&gt;events &amp; EPOLLRDHUP) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"%d: EPOLLRDHUP occurred\n"</span>, sfd);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (ee-&gt;events &amp; EPOLLIN) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"%d: EPOLLIN occurred\n"</span>, sfd);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//判断是不是监听套接字触发了, 如果是的话就要accept, 将链接套接字放进epoll</span></span><br><span class="line">                <span class="keyword">if</span> (sfd == sockfd)&#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"got a listen socket \n"</span>);</span><br><span class="line">                    sfd = accept(sockfd, &amp;addr, &amp;len);</span><br><span class="line">                    <span class="keyword">if</span> (sfd != <span class="number">-1</span>)&#123;</span><br><span class="line">                        event.events = EPOLLIN|EPOLLET|EPOLLRDHUP;</span><br><span class="line">                        event.data.fd = sfd;</span><br><span class="line">                        flags = fcntl(sfd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">                        fcntl(sfd, F_SETFL, flags| O_NONBLOCK);</span><br><span class="line">                        epoll_ctl(epfd, EPOLL_CTL_ADD, sfd, &amp;event);</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"accept failed!\n"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//如果是链接套接字触发了, 则读取套接字中的缓冲区内容</span></span><br><span class="line">                n = recv(sfd, buf, <span class="number">1024</span>, <span class="number">0</span>);</span><br><span class="line">                <span class="keyword">if</span> (n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">                    buf[n] = <span class="number">0</span>;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"%d: %s \n"</span>,sfd, buf);</span><br><span class="line">                    <span class="built_in">memset</span>(buf, <span class="number">0</span>, <span class="number">1024</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//如果缓冲区返回0字节, 则表示对端关闭了链接, 这边也关闭链接, 将事件删除</span></span><br><span class="line">                <span class="keyword">if</span> (n == <span class="number">0</span>) &#123;</span><br><span class="line">                    epoll_ctl(epfd, EPOLL_CTL_DEL, sfd, <span class="number">0</span>);</span><br><span class="line">                    close(sfd);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"close fd %d \n"</span>, sfd);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"did not recv any events, errno: %d\n"</span>,errno);</span><br><span class="line">        sleep(<span class="number">10</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>简单对上面demo做一个总的解释, 服务会启动一个监听套接字监听tcp链接的到来, 对每一个tcp链接都会创建一个链接套接字, 进行这个链接上的读写<br><img src="uploads/nginx/epoll/demo1.jpg" alt="demo1"></p>
+<h3 id="EPOLLET"><a href="#EPOLLET" class="headerlink" title="EPOLLET"></a>EPOLLET</h3><p>这个epoll_ctl的event类型必须仔细聊一聊, 上面的说明里, 写了设置这个选项后, 这个事件将会以边缘模式触发, 怎么解释呢。<br><img src="uploads/nginx/epoll/square.jpg" alt="square"><br>途中红线部分表示边缘, 绿线部分表示水平, epoll在默认情况下是水平触发的什么意思, 这要这个事件还存在, 他就会一直epoll_wait返回,<br>而水平触发呢, epoll_wait返回之后, 如果没有新的事件到来，epoll_wait就不会继续返回这个事件, 比方说有个链接到了, 我们epoll_wait读到了事件<br>但是没有accept创建链接, 那么除非有新的链接事件到来, 否则epoll_wait就不会再返回这个事件了, 边缘触发可以通过一个简单的修改演示<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;netinet/in.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> nullptr (void*)-1;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> <span class="title">servaddr</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr</span> <span class="title">addr</span>;</span></span><br><span class="line">    <span class="keyword">int</span> flags;</span><br><span class="line">    <span class="keyword">int</span> epfd;</span><br><span class="line">    <span class="keyword">int</span> cnt;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">int</span> n;</span><br><span class="line">    <span class="keyword">int</span> sfd;</span><br><span class="line">    <span class="keyword">char</span> buf[<span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">socklen_t</span> len;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> <span class="title">event</span>, *<span class="title">ee</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span>* <span class="title">events</span> = (<span class="title">struct</span> <span class="title">epoll_event</span>*)<span class="title">malloc</span>(<span class="title">sizeof</span>(<span class="title">struct</span> <span class="title">epoll_event</span>)* 1024);</span></span><br><span class="line"></span><br><span class="line">    servaddr.sin_family = AF_INET;</span><br><span class="line">    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);</span><br><span class="line">    servaddr.sin_port = htons(<span class="number">1024</span>);</span><br><span class="line">    <span class="keyword">int</span> sockfd = socket(AF_INET, SOCK_STREAM, <span class="number">0</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"sockfd: %d\n"</span>, sockfd);</span><br><span class="line">    flags = fcntl(sockfd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">    fcntl(sockfd, F_SETFL, flags| O_NONBLOCK);</span><br><span class="line">    bind(sockfd, (struct sockaddr*)&amp;servaddr, <span class="keyword">sizeof</span>(servaddr));</span><br><span class="line">    perror(<span class="string">"bind"</span>);</span><br><span class="line">    listen(sockfd, <span class="number">1024</span>);</span><br><span class="line">    perror(<span class="string">"listen"</span>);</span><br><span class="line"></span><br><span class="line">    epfd = epoll_create(<span class="number">1024</span>);</span><br><span class="line">    event.events = EPOLLIN;</span><br><span class="line">    event.data.fd = sockfd;</span><br><span class="line">    epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &amp;event);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">        cnt = epoll_wait(epfd, events, <span class="number">1024</span>, <span class="number">10</span>*<span class="number">1000</span>);</span><br><span class="line">        <span class="keyword">if</span> (cnt &gt; <span class="number">0</span>)&#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"%d events got\n"</span>, cnt);</span><br><span class="line">            <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; cnt; i++)&#123;</span><br><span class="line">                ee = &amp;events[i];</span><br><span class="line">                sfd = ee-&gt;data.fd;</span><br><span class="line">                <span class="keyword">if</span> (ee-&gt;events &amp; EPOLLRDHUP) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"%d: EPOLLRDHUP occurred\n"</span>, sfd);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (ee-&gt;events &amp; EPOLLIN) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"%d: EPOLLIN occurred\n"</span>, sfd);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (sfd == sockfd)&#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"got a listen socket \n"</span>);</span><br><span class="line">                    sfd = accept(sockfd, &amp;addr, &amp;len);</span><br><span class="line">                    <span class="keyword">if</span> (sfd != <span class="number">-1</span>)&#123;</span><br><span class="line">                        <span class="comment">//这里指定了边缘触发</span></span><br><span class="line">                        event.events = EPOLLIN|EPOLLET|EPOLLRDHUP;</span><br><span class="line">                        event.data.fd = sfd;</span><br><span class="line">                        flags = fcntl(sfd, F_GETFL, <span class="number">0</span>);</span><br><span class="line">                        fcntl(sfd, F_SETFL, flags| O_NONBLOCK);</span><br><span class="line">                        epoll_ctl(epfd, EPOLL_CTL_ADD, sfd, &amp;event);</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"accept failed!\n"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//注意:!! 这里读取缓冲区的内容只读取1字节, 造成读事件没有结束</span></span><br><span class="line">                n = recv(sfd, buf, <span class="number">1</span>, <span class="number">0</span>);</span><br><span class="line">                <span class="keyword">if</span> (n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">                    buf[n] = <span class="number">0</span>;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"%d: %s \n"</span>,sfd, buf);</span><br><span class="line">                    <span class="built_in">memset</span>(buf, <span class="number">0</span>, <span class="number">1024</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (n == <span class="number">0</span>) &#123;</span><br><span class="line">                    epoll_ctl(epfd, EPOLL_CTL_DEL, sfd, <span class="number">0</span>);</span><br><span class="line">                    close(sfd);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"close fd %d \n"</span>, sfd);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"did not recv any events, errno: %d\n"</span>,errno);</span><br><span class="line">        sleep(<span class="number">10</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><img src="uploads/nginx/epoll/EPOLLETinput.jpg" alt="EPOLLETinput"><br><img src="uploads/nginx/epoll/EPOLLEToutput.jpg" alt="EPOLLEToutput"><br>可以看到, 我们输入一串q, 但是事件触发后只读取一个q后, epoll_wait就不再返回剩下的字符串了, 但是如果我们把EPOLLET去掉, 接过如下<br><img src="uploads/nginx/epoll/EPOLLLToutput.jpg" alt="EPOLLLToutput"><br>每次epoll_wait都返回了fd5的读事件, 并且读出一个字节。</p>
+<p>在nginx设计中, 大部分的读写事件都被设置成了EPOLLET模式, 即边沿触发, 唯独监听套接字的读事件采用的水平触发, 因为如果一个链接创建请求被读取, 而没有被accept就必须要等下一个链接进来<br>才能accept, 为了方式链接创建阶段超时, nginx为了防止这种现象, 将他们设置成了水平触发的模式。</p>
+<h2 id="惊群"><a href="#惊群" class="headerlink" title="惊群"></a>惊群</h2><p><img src="uploads/nginx/epoll/cats.jpg" alt="cats"><br>何为惊群? 一条小鱼干送到小奶猫们脸上, 每只小奶猫都会抬起头嗷嗷待哺, 但是! 只有一条小鱼干, 所以最终也就只有一直小奶猫会吃到小鱼干,<br>其他小猫咪都白抬头了！！<br>惊群描述的就是这么一个现象。多个线程同时监听同一个套接字, 当这个套接字来了一个请求时, 他们都齐刷刷accept,但是最终只会有一个线程创建链接成功, 造成了其他线程资源浪费<br>,于是在某一个上古版本(2.6)中, accept函数的惊群现象终于被修复了!</p>
+<p>accept惊群虽然修复了, 然而多个epoll对象监听同一个套接字的链接创建事件, 在epoll_wait时依然会造成惊群</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/04/08/linux/nginx/variable/" rel="next" title="variable">
+                <i class="fa fa-chevron-left"></i> variable
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">69</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用"><span class="nav-number">1.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-create"><span class="nav-number">1.1.</span> <span class="nav-text">epoll_create</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-ctl"><span class="nav-number">1.2.</span> <span class="nav-text">epoll_ctl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-wait"><span class="nav-number">1.3.</span> <span class="nav-text">epoll_wait</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#demo"><span class="nav-number">1.4.</span> <span class="nav-text">demo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EPOLLET"><span class="nav-number">1.5.</span> <span class="nav-text">EPOLLET</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#惊群"><span class="nav-number">2.</span> <span class="nav-text">惊群</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
