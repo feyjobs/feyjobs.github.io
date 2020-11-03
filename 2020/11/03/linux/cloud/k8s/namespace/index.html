@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="玩过docker都知道容器的两大基石, 一个是Namespace一个是cgroup,这两个都有什么作用呢, 怎么运作的呢, 这个博客将重点讲下namespace的作用本文内容基于一个YouTube上的namespace介绍视屏完成 研究一个东西，无非从两个方向入手, 文档&amp;amp;&amp;amp;源码 那就先看文档, 首先看看docker自己介绍自己的大概  Docker is written in t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="namespace">
+<meta property="og:url" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="玩过docker都知道容器的两大基石, 一个是Namespace一个是cgroup,这两个都有什么作用呢, 怎么运作的呢, 这个博客将重点讲下namespace的作用本文内容基于一个YouTube上的namespace介绍视屏完成 研究一个东西，无非从两个方向入手, 文档&amp;amp;&amp;amp;源码 那就先看文档, 首先看看docker自己介绍自己的大概  Docker is written in t">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/container_watch.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/host_watch.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/pstree.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/containerd.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/docker.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/strace_containerd.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/strace_unshare.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/clone.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/rename.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/clone2.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/total.jpg">
+<meta property="og:updated_time" content="2020-11-03T12:55:45.750Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="namespace">
+<meta name="twitter:description" content="玩过docker都知道容器的两大基石, 一个是Namespace一个是cgroup,这两个都有什么作用呢, 怎么运作的呢, 这个博客将重点讲下namespace的作用本文内容基于一个YouTube上的namespace介绍视屏完成 研究一个东西，无非从两个方向入手, 文档&amp;amp;&amp;amp;源码 那就先看文档, 首先看看docker自己介绍自己的大概  Docker is written in t">
+<meta name="twitter:image" content="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/uploads/namespace/container_watch.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/">
+
+
+
+
+
+  <title>namespace | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/11/03/linux/cloud/k8s/namespace/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">namespace</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-03T14:49:00+08:00">
+                2020-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>玩过docker都知道容器的两大基石, 一个是Namespace一个是cgroup,这两个都有什么作用呢, 怎么运作的呢, 这个博客将重点讲下namespace的作用<br>本文内容基于一个YouTube上的namespace<a href="https://www.youtube.com/watch?v=-YnMr1lj4Z8" target="_blank" rel="noopener">介绍视屏完成</a></p>
+<p>研究一个东西，无非从两个方向入手, 文档&amp;&amp;源码</p>
+<p>那就先看文档, 首先看看docker自己介绍自己的大概</p>
+<blockquote>
+<p>Docker is written in the Go programming language and takes advantage of several features of the Linux kernel to deliver its functionality.</p>
+</blockquote>
+<ul>
+<li>go写的</li>
+<li>基于一些linux内核 feature做的</li>
+</ul>
+<p>紧接着就是介绍namespace</p>
+<blockquote>
+<p>Docker uses a technology called namespaces to provide the isolated workspace called the container. When you run a container, Docker creates a set of namespaces for that container.</p>
+</blockquote>
+<p>docker使用linux namespace技术去创造一个隔离的工作环境, 称之为container. 如果你运行一个容器, docker会为那个容器创造一系列的namespace</p>
+<blockquote>
+<p>These namespaces provide a layer of isolation. Each aspect of a container runs in a separate namespace and its access is limited to that namespace.</p>
+</blockquote>
+<p>这些命名空间提供了一层隔离效果。 每个容器每一个方面都被限定在某一个隔离的namespace中<br>那么有哪些namespace类型呢, docker主要使用了以下这些</p>
+<ul>
+<li>The <em>pid</em> namespace: Process isolation (PID: Process ID).</li>
+<li>The <em>net</em> namespace: Managing network interfaces (NET: Networking).</li>
+<li>The <em>ipc</em> namespace: Managing access to IPC resources (IPC: InterProcess Communication).</li>
+<li>The <em>mnt</em> namespace: Managing filesystem mount points (MNT: Mount).</li>
+<li>The <em>uts</em> namespace: Isolating kernel and version identifiers. (UTS: Unix Timesharing System).</li>
+</ul>
+<p>接下来就以pid namespace为例看看namespace怎么运作的,<br>首先我们进入容器运行<code>watch ps ax</code>,可以看到如下图所示<br><img src="uploads/namespace/container_watch.jpg" alt="容器内watch"><br>我们可以看到容器内一个12517的watch进程, 但是我们都知道容器其实本身就是一个进程, 那我们就去看看在宿主机里这个进程长什么样运行<code>ps aux|grep watch</code><br><img src="uploads/namespace/host_watch.jpg" alt="宿主机watch"><br>可以看到宿主机里是一个3166的进程, 并且也可以清楚的看到容器内的京城无法查看宿主机的进程</p>
+<p>接下来我们来看下进程的继承树, 通过<code>pstree -p</code>命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line">systemd(1)─┬─AliSecGuard(1437)─┬─&#123;AliSecGuard&#125;(1438)</span><br><span class="line">           │                   ├─&#123;AliSecGuard&#125;(1439)</span><br><span class="line">           │                   ├─&#123;AliSecGuard&#125;(1441)</span><br><span class="line">           │                   ├─&#123;AliSecGuard&#125;(1443)</span><br><span class="line">           │                   ├─&#123;AliSecGuard&#125;(1444)</span><br><span class="line">           │                   └─&#123;AliSecGuard&#125;(8715)</span><br><span class="line">           ├─agetty(631)</span><br><span class="line">           ├─agetty(632)</span><br><span class="line">           ├─aliyun-service(24632)─┬─&#123;aliyun-service&#125;(24634)</span><br><span class="line">           │                       └─&#123;aliyun-service&#125;(24635)</span><br><span class="line">           ├─atd(611)</span><br><span class="line">           ├─auditd(15078)───&#123;auditd&#125;(15079)</span><br><span class="line">           ├─bash(14803)───sleep(4913)</span><br><span class="line">           ├─chronyd(572)</span><br><span class="line">           ├─containerd(28005)─┬─containerd-shim(18789)─┬─bash(18839)</span><br><span class="line">           │                   │                        ├─bash(19001)───watch(3166)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18790)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18791)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18792)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18797)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18798)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18799)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18800)</span><br><span class="line">           │                   │                        ├─&#123;containerd-shim&#125;(18801)</span><br><span class="line">           │                   │                        └─&#123;containerd-shim&#125;(18894)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28006)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28007)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28008)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28009)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28010)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28011)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28012)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28013)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28014)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28015)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28016)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28017)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28018)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28020)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28234)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28235)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(28262)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(30566)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(31196)</span><br><span class="line">           │                   ├─&#123;containerd&#125;(31304)</span><br><span class="line">           │                   └─&#123;containerd&#125;(16377)</span><br><span class="line">           ├─crond(14951)</span><br><span class="line">           ├─dbus-daemon(562)</span><br><span class="line">           ├─dhclient(823)</span><br><span class="line">           ├─dockerd(28021)─┬─&#123;dockerd&#125;(28022)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28023)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28024)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28025)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28026)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28027)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28028)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28029)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28030)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28031)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28032)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28033)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28034)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28035)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28036)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28343)</span><br><span class="line">           │                ├─&#123;dockerd&#125;(28370)</span><br><span class="line">           │                └─&#123;dockerd&#125;(29004)</span><br><span class="line">           ├─irqbalance(545)</span><br><span class="line">           ├─openresty(21172)───openresty(14285)</span><br><span class="line">           ├─polkitd(541)─┬─&#123;polkitd&#125;(607)</span><br><span class="line">           │              ├─&#123;polkitd&#125;(608)</span><br><span class="line">           │              ├─&#123;polkitd&#125;(615)</span><br><span class="line">           │              ├─&#123;polkitd&#125;(616)</span><br><span class="line">           │              └─&#123;polkitd&#125;(622)</span><br><span class="line">           ├─rsyslogd(890)─┬─&#123;rsyslogd&#125;(942)</span><br><span class="line">           │               └─&#123;rsyslogd&#125;(1030)</span><br><span class="line">           ├─sshd(1322)───sshd(16840)─┬─zsh(16842)───docker(18980)─┬─&#123;docker&#125;(18981)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18982)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18983)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18984)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18985)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18986)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18987)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18988)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18989)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18990)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18991)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(18992)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(19071)</span><br><span class="line">                                      │                            ├─&#123;docker&#125;(19072)</span><br><span class="line">                                      │                            └─&#123;docker&#125;(32674)</span><br><span class="line">                                      └─zsh(18943)───pstree(4920)</span><br></pre></td></tr></table></figure></p>
+<p>上面是我的机器上的运行结果, 在去除一些非必要信息后我们可以看到整个进程系统以systemd进程为起始, fork出各类进程, 所以基本上你也可以非常清楚得明白linux的基本运作原理了, systemd为起始, 各种fork之后生成各种子进程运行各类服务, 其中最下面我们可以看到用于ssh连接的sshd服务, 一个用户连接之后就会fork出一个ssh连接进程, 然后我们就可以随便操作了</p>
+<p>然后我们来看我们在容器中运行的<code>watch ps ax</code>在宿主机上在哪里<br><img src="uploads/namespace/pstree.jpg" alt="宿主机pstreepid"><br>我们可以看到这个进程父子链路<code>systemd-&gt;containerd-&gt;containerd-shim-&gt;bash-&gt;watch</code></p>
+<p>我们来到梦开始的地方<em>containerd</em>, 我们继续来找官网介绍<br><img src="uploads/namespace/containerd.jpg" alt="宿主机pstreepid"><br>可以看到containerd的官方解释: 一个简单, 健壮且可移植的工业级容器运行时。 这个容器运行时就很抽象, 我就暂时把它理解为一个容器管理系统, 就是他！ 负责拉镜像起容器, 杀容器等等操作<br>那么他是怎么进行这一些列操作的呢, 在containerd的github readme里简单介绍了</p>
+<blockquote>
+<p>Runtime requirements for containerd are very minimal. Most interactions with the Linux and Windows container feature sets are handled via runc and/or OS-specific libraries (e.g. hcsshim for Microsoft). The current required version of runc is always listed in RUNC.md.</p>
+</blockquote>
+<p>说白了, containerd是通过一个叫做<code>runc</code>来进行核心的容器操作的. ok, 到目前为止, 我们理解了docker运行的大概架构图<br><img src="uploads/namespace/docker.jpg" alt="docker"><br>docker启动之后会启动一个dockerd进程, dockerd进程会拉起一个containerd进程, containerd进程使用runc来进行container的管理</p>
+<p>让我们收束世界线, 回到今天的主题, namespace, 那么runc是如何使用namespace来管理containerd的呢, 我们使用<code>strace</code>命令对容器启动时的系统调用进行捕获<br>捕获到的系统调用非常之多, 很多与namespace无关<br>我们在strace日志中搜索execve调用, 可以看到第一个出来的是<br><img src="uploads/namespace/strace_containerd.jpg" alt="docker"><br>结合上面的进程父子关系图, 我们可以知道这个就是实际容器进程的父进程.</p>
+<p>继续向下搜索, 我们找到了我们梦寐以求的runc</p>
+<p>继续往下搜索, 这次搜索的是unshare系统调用,<br><img src="uploads/namespace/strace_unshare.jpg" alt="unshare"><br>到这里我们要介绍下这个unshare函数是干什么的</p>
+<blockquote>
+<p>unshare() allows a process (or thread) to disassociate parts of its<br>      execution context that are currently being shared with other<br>      processes (or threads).  Part of the execution context, such as the<br>      mount namespace, is shared implicitly when a new process is created<br>      using fork(2) or vfork(2), while other parts, such as virtual memory,<br>      may be shared by explicit request when creating a process or thread<br>      using clone(2).<br>unshare函数使一个进程可以调整与其他进程共享的部分可执行内容, 这里所谓部分的可以执行内容, 比方说mount命名空间, 默认是父子进程共享的,<br>而其他部分比方说虚拟内存, 必须指定某些系统参数才能共享</p>
+</blockquote>
+<blockquote>
+<p>The main use of unshare() is to allow a process to control its shared<br>execution context without creating a new process.<br>unshare的主要用处是允许一个进程在不创建新进程的情况下就创建出一个命名空间</p>
+</blockquote>
+<blockquote>
+<p>The flags argument is a bit mask that specifies which parts of the<br>execution context should be unshared.  This argument is specified by<br>ORing together zero or more of the following constants:<br>unshare的第三个参数flag标识的进程是哪部分内容与原来的进程脱钩<br>我们重点来看下<em>CLONE_NEWPID</em></p>
+</blockquote>
+<blockquote>
+<p>CLONE_NEWPID (since Linux 3.8)<br>             This flag has the same effect as the clone(2) CLONE_NEWPID<br>             flag.  Unshare the PID namespace, so that the calling process<br>             has a new PID namespace for its children which is not shared<br>             with any previously existing process.  The calling process is<br>             not moved into the new namespace.  The first child created by<br>             the calling process will have the process ID 1 and will assume<br>             the role of init(1) in the new namespace.  CLONE_NEWPID<br>             automatically implies CLONE_THREAD as well.  Use of<br>             CLONE_NEWPID requires the CAP_SYS_ADMIN capability.  For<br>             further information, see pid_namespaces(7).<br>这个flag和带CLONE_NEWPID标识的clone有相同效果, 调用进程为他的子进程创造一个新的PID namespace. 调用进程本身不会被放入这个新的namespace中,<br>在调用unshare后第一个子进程, 他的进程号为1, 并成为新namespace下的init进程</p>
+</blockquote>
+<p>ok现在很明显了, 这个进程18910创造的下一个子进程, 就进入新的namespace了, 继续追clone调用<br><img src="uploads/namespace/clone.jpg" alt="clone"><br>找到了18910诞生了id为18911的子进程!!让我们来康康他干了什么!! 他给自己改头换面换了个名字, 管自己叫INIT<br><img src="uploads/namespace/rename.jpg" alt="clone"><br>继续往下看, 18911他生儿子了！！儿子的名字还是<em>2</em>, 所以很明显在新的namespace里他的pid就是2, 那他在宿主机上的pid是多少呢 18913<br><img src="uploads/namespace/clone2.jpg" alt="clone"><br>至此为止我们知道了pidnamespace的大概运行流程, containerd execve出runc父进程, runc创造新的namespace, runc父进程cloneINIT进程, INIT进程在新的namespace里撒野<br><img src="uploads/namespace/total.jpg" alt="total"></p>
+<p>其他还有很多namespace类型, 都可以在unshare调用里看具体作用, 就不做赘述了</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/11/02/linux/cloud/k8s/coredns/" rel="next" title="coredns">
+                <i class="fa fa-chevron-left"></i> coredns
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">79</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

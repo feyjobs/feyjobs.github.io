@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="kubernetes系统中的网络多且复杂,涉及各种虚拟化设备, 需要专门研究一下, 彻底搞清楚. 相关概念vxlan要梳理vxlan是什么东西, 我们先来看局域网络的发展史, 忽然发现这个虚拟化方面的东西, 和容器化关系不大, 下次再说吧 lan &amp;amp;&amp;amp; vlan一开始我们有一个最原始的的局域网架构多个终端连接到一个集线器, 由于集线器是一个工作在1层(物理层)的网络设备, 他的作用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="network">
+<meta property="og:url" content="https://feyjobs.github.io/2020/07/21/linux/cloud/k8s/network/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="kubernetes系统中的网络多且复杂,涉及各种虚拟化设备, 需要专门研究一下, 彻底搞清楚. 相关概念vxlan要梳理vxlan是什么东西, 我们先来看局域网络的发展史, 忽然发现这个虚拟化方面的东西, 和容器化关系不大, 下次再说吧 lan &amp;amp;&amp;amp; vlan一开始我们有一个最原始的的局域网架构多个终端连接到一个集线器, 由于集线器是一个工作在1层(物理层)的网络设备, 他的作用">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/k8s/network/lan.png">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/k8s/network/switch.png">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/k8s/network/switch2.png">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/k8s/network/router.png">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/k8s/network/vlan.png">
+<meta property="og:updated_time" content="2020-07-21T12:00:50.265Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="network">
+<meta name="twitter:description" content="kubernetes系统中的网络多且复杂,涉及各种虚拟化设备, 需要专门研究一下, 彻底搞清楚. 相关概念vxlan要梳理vxlan是什么东西, 我们先来看局域网络的发展史, 忽然发现这个虚拟化方面的东西, 和容器化关系不大, 下次再说吧 lan &amp;amp;&amp;amp; vlan一开始我们有一个最原始的的局域网架构多个终端连接到一个集线器, 由于集线器是一个工作在1层(物理层)的网络设备, 他的作用">
+<meta name="twitter:image" content="https://feyjobs.github.io/uploads/k8s/network/lan.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2020/07/21/linux/cloud/k8s/network/">
+
+
+
+
+
+  <title>network | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/07/21/linux/cloud/k8s/network/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">network</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-07-21T14:46:00+08:00">
+                2020-07-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>kubernetes系统中的网络多且复杂,涉及各种虚拟化设备, 需要专门研究一下, 彻底搞清楚.</p>
+<h2 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h2><h3 id="vxlan"><a href="#vxlan" class="headerlink" title="vxlan"></a>vxlan</h3><p>要梳理vxlan是什么东西, 我们先来看局域网络的发展史, 忽然发现这个虚拟化方面的东西, 和容器化关系不大, 下次再说吧</p>
+<h4 id="lan-amp-amp-vlan"><a href="#lan-amp-amp-vlan" class="headerlink" title="lan &amp;&amp; vlan"></a>lan &amp;&amp; vlan</h4><p>一开始我们有一个最原始的的局域网架构<br><img src="/uploads/k8s/network/lan.png" alt="lan"><br>多个终端连接到一个集线器, 由于集线器是一个工作在1层(物理层)的网络设备, 他的作用是对收到的某一个端口的信号进行维持-放大-发送到每一个链接的端口上</p>
+<p>但是这样所有终端设备都连在一个集线器上, 而每次只能有一个设备进行信号发送, 这就造成信号冲突, 所以那帮网络大佬设计了一大堆冲突避免算法, 比方说csma/ca, csma/cd<br>为了减少冲突, 就引入了交换机, 每个交换机可以连接多个网络终端, 每个与交换机相连的终端都成为该子网的冲突域<br><img src="/uploads/k8s/network/switch.png" alt="lan"></p>
+<p><img src="/uploads/k8s/network/switch2.png" alt="lan"><br>上图可以看到, 每个交换机的端口都形成了一个冲突域, 第一个冲突域中多个终端依然走同一个集线器, 造成信号冲突. </p>
+<p>引入交换机之后, 虽然冲突域划分了, 也就减少了冲突域的大小, 但是他们依然在同一个广播域下面, 即每个终端设备发送广播, 改交换机下所有终端都能收到</p>
+<p>分割广播域的任务就交到了路由器的身上, 广播发送时都会使用255.255.255.255作为目的地址，这时路由器不会转发这个数据包到其他端口中。<br><img src="/uploads/k8s/network/router.png" alt="lan"></p>
+<p>所以一个lan就是一个交换机下一组终端组成的局域网<br>那么vlan的这个v是作用在哪里的呢?<br>vlan其实是一个交换机, 虚拟出多个虚拟交换机. 如下所示, 该虚拟交换机的虚拟了3个交换机, 组成了3个广播域<br><img src="/uploads/k8s/network/vlan.png" alt="lan"></p>
+<p>那么vlan有什么问题呢?<br>vlan的实现方法在IEEE802.1q中做了详细描述, 其中对vlan标签帧规定如下<br>|Preamble(7bytes)|SFD(1bytes)|DA(6bytes)|SA(6bytes)|TPID(2bytes)|TCI(2bytes)|Type Length(2bytes)|Data(42~149bytes)|CRC(4bytes)|<br>其中TCI字段占2bytes, 其中3位用于User Priority, 1位用于CFI, 最后剩下12位作为vlan id, 所以一个物理交换机最多可以虚拟出2^12=4096个vlan.</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a href="https://blog.csdn.net/phunxm/article/details/9498829" target="_blank" rel="noopener">VLAN原理详解</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/01/linux/nginx/hash/" rel="next" title="hash">
+                <i class="fa fa-chevron-left"></i> hash
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/16/think/cs/" rel="prev" title="计算机指南">
+                计算机指南 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">79</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#相关概念"><span class="nav-number">1.</span> <span class="nav-text">相关概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#vxlan"><span class="nav-number">1.1.</span> <span class="nav-text">vxlan</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#lan-amp-amp-vlan"><span class="nav-number">1.1.1.</span> <span class="nav-text">lan &amp;&amp; vlan</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">2.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

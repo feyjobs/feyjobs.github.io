@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="事件驱动是nginx高性能的基石也是核心, 正是基于事件驱动构造永不阻塞的线程运行机制, 减少了线程的上下文切换带来的损耗, 从而造就了nginx的高性能除了事件部分, connection的创建销毁也是event模块关注的 配置解析ngx_events_module首先是event的NGX_CORE_MODULE类型模块12345678910111213141516171819202122232">
+<meta property="og:type" content="article">
+<meta property="og:title" content="event事件模块">
+<meta property="og:url" content="https://feyjobs.github.io/2020/06/09/linux/nginx/event/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="事件驱动是nginx高性能的基石也是核心, 正是基于事件驱动构造永不阻塞的线程运行机制, 减少了线程的上下文切换带来的损耗, 从而造就了nginx的高性能除了事件部分, connection的创建销毁也是event模块关注的 配置解析ngx_events_module首先是event的NGX_CORE_MODULE类型模块12345678910111213141516171819202122232">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-06-09T13:12:14.365Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="event事件模块">
+<meta name="twitter:description" content="事件驱动是nginx高性能的基石也是核心, 正是基于事件驱动构造永不阻塞的线程运行机制, 减少了线程的上下文切换带来的损耗, 从而造就了nginx的高性能除了事件部分, connection的创建销毁也是event模块关注的 配置解析ngx_events_module首先是event的NGX_CORE_MODULE类型模块12345678910111213141516171819202122232">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2020/06/09/linux/nginx/event/">
+
+
+
+
+
+  <title>event事件模块 | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2020/06/09/linux/nginx/event/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">event事件模块</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-06-09T16:22:00+08:00">
+                2020-06-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>事件驱动是nginx高性能的基石也是核心, 正是基于事件驱动构造永不阻塞的线程运行机制, 减少了线程的上下文切换带来的损耗, 从而造就了nginx的高性能<br>除了事件部分, connection的创建销毁也是event模块关注的</p>
+<h2 id="配置解析"><a href="#配置解析" class="headerlink" title="配置解析"></a>配置解析</h2><h3 id="ngx-events-module"><a href="#ngx-events-module" class="headerlink" title="ngx_events_module"></a>ngx_events_module</h3><p>首先是event的<strong>NGX_CORE_MODULE</strong>类型模块<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ngx_module_t</span>  ngx_events_module = &#123;</span><br><span class="line">    NGX_MODULE_V1,</span><br><span class="line">    &amp;ngx_events_module_ctx,                <span class="comment">/* module context */</span></span><br><span class="line">    ngx_events_commands,                   <span class="comment">/* module directives */</span></span><br><span class="line">    NGX_CORE_MODULE,                       <span class="comment">/* module type */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* init master */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* init module */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* init process */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* init thread */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* exit thread */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* exit process */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* exit master */</span></span><br><span class="line">    NGX_MODULE_V1_PADDING</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">ngx_core_module_t</span>  ngx_events_module_ctx = &#123;</span><br><span class="line">    ngx_string(<span class="string">"events"</span>),</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1.15.2之前只检查是否创建了配置结构体，无其他操作</span></span><br><span class="line">    <span class="comment">// 因为event模块只有一个events指令</span></span><br><span class="line">    <span class="comment">// 1.15.2之后增加新的代码</span></span><br><span class="line">    <span class="comment">// 主要是对套接字进行了检查</span></span><br><span class="line">    ngx_event_init_conf</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1.15.2之前只检查是否创建了配置结构体，无其他操作</span></span><br><span class="line"><span class="comment">// 因为event模块只有一个events指令</span></span><br><span class="line"><span class="comment">// 1.15.2之后增加新的代码</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">char</span> *</span><br><span class="line">ngx_event_init_conf(<span class="keyword">ngx_cycle_t</span> *cycle, <span class="keyword">void</span> *conf)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 1.15.2新增部分检查代码</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_REUSEPORT)</span></span><br><span class="line">    <span class="keyword">ngx_uint_t</span>        i;</span><br><span class="line">    <span class="keyword">ngx_listening_t</span>  *ls;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 要求必须有events&#123;&#125;配置块</span></span><br><span class="line">    <span class="comment">// 1.15.2之前只有这一段</span></span><br><span class="line">    <span class="keyword">if</span> (ngx_get_conf(cycle-&gt;conf_ctx, ngx_events_module) == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        ngx_log_error(NGX_LOG_EMERG, cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>,</span><br><span class="line">                      <span class="string">"no \"events\" section in configuration"</span>);</span><br><span class="line">        <span class="keyword">return</span> NGX_CONF_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 检查连接数，需要大于监听端口数量</span></span><br><span class="line">    <span class="keyword">if</span> (cycle-&gt;connection_n &lt; cycle-&gt;listening.nelts + <span class="number">1</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * there should be at least one connection for each listening</span></span><br><span class="line"><span class="comment">         * socket, plus an additional connection for channel</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"></span><br><span class="line">        ngx_log_error(NGX_LOG_EMERG, cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>,</span><br><span class="line">                      <span class="string">"%ui worker_connections are not enough "</span></span><br><span class="line">                      <span class="string">"for %ui listening sockets"</span>,</span><br><span class="line">                      cycle-&gt;connection_n, cycle-&gt;listening.nelts);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> NGX_CONF_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_REUSEPORT)</span></span><br><span class="line"></span><br><span class="line">    ls = cycle-&gt;listening.elts;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; cycle-&gt;listening.nelts; i++) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!ls[i].reuseport || ls[i].worker != <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// reuseport专用的函数，1.8.x没有</span></span><br><span class="line">        <span class="comment">// 拷贝了worker数量个的监听结构体, in ngx_connection.c</span></span><br><span class="line">        <span class="comment">// 从ngx_stream_optimize_servers等函数处转移过来</span></span><br><span class="line">        <span class="keyword">if</span> (ngx_clone_listening(cycle, &amp;ls[i]) != NGX_OK) &#123;</span><br><span class="line">            <span class="keyword">return</span> NGX_CONF_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* cloning may change cycle-&gt;listening.elts */</span></span><br><span class="line"></span><br><span class="line">        ls = cycle-&gt;listening.elts;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NGX_CONF_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1.10新函数，专为reuseport使用</span></span><br><span class="line"><span class="comment">// 拷贝了worker数量个的监听结构体</span></span><br><span class="line"><span class="comment">// 在ngx_stream_optimize_servers等函数创建端口时调用</span></span><br><span class="line"><span class="keyword">ngx_int_t</span></span><br><span class="line">ngx_clone_listening(<span class="keyword">ngx_cycle_t</span> *cycle, <span class="keyword">ngx_listening_t</span> *ls)</span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">// configure脚本可以检测系统是否支持reuseport</span></span><br><span class="line"><span class="comment">// 使用宏来控制条件编译</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_REUSEPORT)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">ngx_int_t</span>         n;</span><br><span class="line">    <span class="keyword">ngx_core_conf_t</span>  *ccf;</span><br><span class="line">    <span class="keyword">ngx_listening_t</span>   ols;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 监听指令需要配置了reuseport</span></span><br><span class="line">    <span class="keyword">if</span> (!ls-&gt;reuseport || ls-&gt;worker != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_OK;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ls在之前已经正确设置了若干参数</span></span><br><span class="line">    <span class="comment">// 例如type/handler/backlog等等</span></span><br><span class="line">    ols = *ls;</span><br><span class="line"></span><br><span class="line">    ccf = (<span class="keyword">ngx_core_conf_t</span> *) ngx_get_conf(cycle-&gt;conf_ctx, ngx_core_module);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ccf-&gt;worker_processes是nginx的worker进程数</span></span><br><span class="line">    <span class="comment">// 拷贝了worker数量个的监听结构体</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// 注意从1开始，这样拷贝后总数就是worker数量个</span></span><br><span class="line">    <span class="comment">// 最开始的一个就是被克隆的ls监听结构体</span></span><br><span class="line">    <span class="keyword">for</span> (n = <span class="number">1</span>; n &lt; ccf-&gt;worker_processes; n++) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* create a socket for each worker process */</span></span><br><span class="line"></span><br><span class="line">        ls = ngx_array_push(&amp;cycle-&gt;listening);</span><br><span class="line">        <span class="keyword">if</span> (ls == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 完全拷贝结构体</span></span><br><span class="line">        *ls = ols;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置worker的序号</span></span><br><span class="line">        <span class="comment">// 被克隆的对象的worker是0</span></span><br><span class="line">        <span class="comment">//</span></span><br><span class="line">        <span class="comment">// worker的使用是在ngx_event.c:ngx_event_process_init</span></span><br><span class="line">        <span class="comment">// 只有worker id是本worker的listen才会enable</span></span><br><span class="line">        ls-&gt;worker = n;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NGX_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h4><h5 id="events"><a href="#events" class="headerlink" title="events"></a>events</h5><p>event模块只有一个<strong>events</strong>命令, 用来放其他事件模块的命令</p>
+<h3 id="ngx-event-core-module-t"><a href="#ngx-event-core-module-t" class="headerlink" title="ngx_event_core_module_t"></a>ngx_event_core_module_t</h3><p>这里出现了第一个<strong>ngx_event_module_t</strong><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ngx_event_module_t</span></span><br><span class="line"><span class="comment">// 事件模块的函数指针表</span></span><br><span class="line"><span class="comment">// 核心是actions，即事件处理函数</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="comment">// 事件模块的名字，如epoll/select/kqueue</span></span><br><span class="line">    <span class="keyword">ngx_str_t</span>              *name;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 事件模块的配置相关函数比较简单</span></span><br><span class="line">    <span class="keyword">void</span>                 *(*create_conf)(<span class="keyword">ngx_cycle_t</span> *cycle);</span><br><span class="line">    <span class="keyword">char</span>                 *(*init_conf)(<span class="keyword">ngx_cycle_t</span> *cycle, <span class="keyword">void</span> *conf);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 事件模块访问接口，是一个函数表</span></span><br><span class="line">    <span class="keyword">ngx_event_actions_t</span>     actions;</span><br><span class="line">&#125; <span class="keyword">ngx_event_module_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ngx_event_actions_t</span></span><br><span class="line"><span class="comment">// 全局的事件模块访问接口，是一个函数表</span></span><br><span class="line"><span class="comment">// 由epoll/kqueue/select等模块实现</span></span><br><span class="line"><span class="comment">// epoll的实现在modules/ngx_epoll_module.c</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="comment">// 添加事件,事件发生时epoll调用可以获取</span></span><br><span class="line">    <span class="comment">// epoll添加事件</span></span><br><span class="line">    <span class="comment">// 检查事件关联的连接对象，决定是新添加还是修改</span></span><br><span class="line">    <span class="comment">// 避免误删除了读写事件的关注</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*add)(<span class="keyword">ngx_event_t</span> *ev, <span class="keyword">ngx_int_t</span> event, <span class="keyword">ngx_uint_t</span> flags);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 删除事件,epoll不再关注该事件</span></span><br><span class="line">    <span class="comment">// epoll删除事件</span></span><br><span class="line">    <span class="comment">// 检查事件关联的连接对象，决定是完全删除还是修改</span></span><br><span class="line">    <span class="comment">// 避免误删除了读写事件的关注</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*del)(<span class="keyword">ngx_event_t</span> *ev, <span class="keyword">ngx_int_t</span> event, <span class="keyword">ngx_uint_t</span> flags);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 同add</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*enable)(<span class="keyword">ngx_event_t</span> *ev, <span class="keyword">ngx_int_t</span> event, <span class="keyword">ngx_uint_t</span> flags);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 同del</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*disable)(<span class="keyword">ngx_event_t</span> *ev, <span class="keyword">ngx_int_t</span> event, <span class="keyword">ngx_uint_t</span> flags);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 添加一个连接，也就是读写事件都添加</span></span><br><span class="line">    <span class="comment">// epoll关注连接的读写事件</span></span><br><span class="line">    <span class="comment">// 添加事件成功，读写事件都是活跃的，即已经使用</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*add_conn)(<span class="keyword">ngx_connection_t</span> *c);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 删除一个连接，该连接的读写事件都不再关注</span></span><br><span class="line">    <span class="comment">// epoll删除连接的读写事件</span></span><br><span class="line">    <span class="comment">// 删除事件成功，读写事件都不活跃</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*del_conn)(<span class="keyword">ngx_connection_t</span> *c, <span class="keyword">ngx_uint_t</span> flags);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 目前仅多线程使用，通知</span></span><br><span class="line">    <span class="comment">// 调用系统函数eventfd，创建一个可以用于通知的描述符，用于实现notify</span></span><br><span class="line">    <span class="comment">// 模仿此用法也可以实现自己的通知机制</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*notify)(ngx_event_handler_pt handler);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 事件模型的核心功能，处理发生的事件</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// epoll模块核心功能，调用epoll_wait处理发生的事件</span></span><br><span class="line">    <span class="comment">// 使用event_list和nevents获取内核返回的事件</span></span><br><span class="line">    <span class="comment">// timer是无事件发生时最多等待的时间，即超时时间</span></span><br><span class="line">    <span class="comment">// 函数可以分为两部分，一是用epoll获得事件，二是处理事件，加入延后队列</span></span><br><span class="line">    <span class="comment">// 在ngx_process_events_and_timers里被调用</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*process_events)(<span class="keyword">ngx_cycle_t</span> *cycle, <span class="keyword">ngx_msec_t</span> timer,</span><br><span class="line">                                 <span class="keyword">ngx_uint_t</span> flags);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化事件模块</span></span><br><span class="line">    <span class="comment">// 调用epoll_create初始化epoll机制</span></span><br><span class="line">    <span class="comment">// 参数size=cycle-&gt;connection_n / 2，但并无实际意义</span></span><br><span class="line">    <span class="comment">// 设置全局变量，操作系统提供的底层数据收发接口</span></span><br><span class="line">    <span class="comment">// 初始化全局的事件模块访问接口，指向epoll的函数</span></span><br><span class="line">    <span class="comment">// 默认使用et模式，边缘触发，高速</span></span><br><span class="line">    <span class="keyword">ngx_int_t</span>  (*init)(<span class="keyword">ngx_cycle_t</span> *cycle, <span class="keyword">ngx_msec_t</span> timer);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 事件模块结束时的收尾工作</span></span><br><span class="line">    <span class="comment">// epoll模块结束工作，关闭epoll句柄和通知句柄，释放内存</span></span><br><span class="line">    <span class="keyword">void</span>       (*done)(<span class="keyword">ngx_cycle_t</span> *cycle);</span><br><span class="line">&#125; <span class="keyword">ngx_event_actions_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 全局的事件模块访问接口，是一个函数表</span></span><br><span class="line"><span class="comment">// 定义了若干宏简化对它的操作</span></span><br><span class="line"><span class="comment">// 常用的有ngx_add_event/ngx_del_event</span></span><br><span class="line"><span class="comment">// 在epoll模块的ngx_epoll_init里设置，指向epoll的函数</span></span><br><span class="line"><span class="comment">// ngx_event_actions = ngx_epoll_module_ctx.actions;</span></span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">ngx_event_actions_t</span>   ngx_event_actions;</span><br><span class="line"><span class="comment">// 访问的时候就可以直接actions.add 访问具体的事件模块定义的方法</span></span><br></pre></td></tr></table></figure></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 但它不实现具体的事件模型，所以actions函数表全是空指针</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">ngx_event_module_t</span>  ngx_event_core_module_ctx = &#123;</span><br><span class="line">    <span class="comment">// event_core模块的名字："event_core"</span></span><br><span class="line">    &amp;event_core_name,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建event_core模块的配置结构体，成员初始化为unset</span></span><br><span class="line">    ngx_event_core_create_conf,            <span class="comment">/* create configuration */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 所有模块配置解析完毕后，对配置进行初始化</span></span><br><span class="line">    <span class="comment">// 如果有的指令没有写，就要给正确的默认值</span></span><br><span class="line">    <span class="comment">// 模块默认使用epoll</span></span><br><span class="line">    <span class="comment">// 默认不接受多个请求，也就是一次只accept一个连接</span></span><br><span class="line">    <span class="comment">// 1.11.3之前默认使用负载均衡锁，之后默认关闭</span></span><br><span class="line">    ngx_event_core_init_conf,              <span class="comment">/* init configuration */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不实现具体的事件模型，所以actions函数表全是空指针</span></span><br><span class="line">    &#123; <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建event_core模块的配置结构体，成员初始化为unset</span></span><br><span class="line"><span class="comment">// event_core的配置项好少</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> *</span><br><span class="line">ngx_event_core_create_conf(<span class="keyword">ngx_cycle_t</span> *cycle)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">ngx_event_conf_t</span>  *ecf;</span><br><span class="line"></span><br><span class="line">    ecf = ngx_palloc(cycle-&gt;pool, <span class="keyword">sizeof</span>(<span class="keyword">ngx_event_conf_t</span>));</span><br><span class="line">    <span class="keyword">if</span> (ecf == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ecf-&gt;connections = NGX_CONF_UNSET_UINT;</span><br><span class="line">    ecf-&gt;use = NGX_CONF_UNSET_UINT;</span><br><span class="line">    ecf-&gt;multi_accept = NGX_CONF_UNSET;</span><br><span class="line">    ecf-&gt;accept_mutex = NGX_CONF_UNSET;</span><br><span class="line">    ecf-&gt;accept_mutex_delay = NGX_CONF_UNSET_MSEC;</span><br><span class="line">    ecf-&gt;name = (<span class="keyword">void</span> *) NGX_CONF_UNSET;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_DEBUG)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_array_init(&amp;ecf-&gt;debug_connection, cycle-&gt;pool, <span class="number">4</span>,</span><br><span class="line">                       <span class="keyword">sizeof</span>(<span class="keyword">ngx_cidr_t</span>)) == NGX_ERROR)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ecf;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 所有模块配置解析完毕后，对配置进行初始化</span></span><br><span class="line"><span class="comment">// 如果有的指令没有写，就要给正确的默认值</span></span><br><span class="line"><span class="comment">// 模块默认使用epoll</span></span><br><span class="line"><span class="comment">// 默认不接受多个请求，也就是一次只accept一个连接</span></span><br><span class="line"><span class="comment">// 1.11.3之前默认使用负载均衡锁，之后默认关闭</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">char</span> *</span><br><span class="line">ngx_event_core_init_conf(<span class="keyword">ngx_cycle_t</span> *cycle, <span class="keyword">void</span> *conf)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">ngx_event_conf_t</span>  *ecf = conf;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_EPOLL) &amp;&amp; !(NGX_TEST_BUILD_EPOLL)</span></span><br><span class="line">    <span class="keyword">int</span>                  fd;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// rtsig在nginx 1.9.x已经删除</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">ngx_int_t</span>            i;</span><br><span class="line">    <span class="keyword">ngx_module_t</span>        *<span class="keyword">module</span>;</span><br><span class="line">    <span class="keyword">ngx_event_module_t</span>  *event_module;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">module</span> = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 测试epoll是否可用</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_EPOLL) &amp;&amp; !(NGX_TEST_BUILD_EPOLL)</span></span><br><span class="line"></span><br><span class="line">    fd = epoll_create(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// epoll调用可用，那么模块默认使用epoll</span></span><br><span class="line">    <span class="keyword">if</span> (fd != <span class="number">-1</span>) &#123;</span><br><span class="line">        (<span class="keyword">void</span>) close(fd);</span><br><span class="line">        <span class="comment">// epoll调用可用，那么模块默认使用epoll</span></span><br><span class="line">        <span class="keyword">module</span> = &amp;ngx_epoll_module;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ngx_errno != NGX_ENOSYS) &#123;</span><br><span class="line">        <span class="comment">// epoll调用可用，那么模块默认使用epoll</span></span><br><span class="line">        <span class="keyword">module</span> = &amp;ngx_epoll_module;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// rtsig在nginx 1.9.x已经删除</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_DEVPOLL) &amp;&amp; !(NGX_TEST_BUILD_DEVPOLL)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">module</span> = &amp;ngx_devpoll_module;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_KQUEUE)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">module</span> = &amp;ngx_kqueue_module;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果epoll不可用，那么默认使用select</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_SELECT)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">module</span> == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">module</span> = &amp;ngx_select_module;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 还没有决定默认的事件模型</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">module</span> == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="comment">// 遍历所有的事件模块</span></span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; cycle-&gt;modules[i]; i++) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (cycle-&gt;modules[i]-&gt;type != NGX_EVENT_MODULE) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            event_module = cycle-&gt;modules[i]-&gt;ctx;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 跳过event_core模块</span></span><br><span class="line">            <span class="keyword">if</span> (ngx_strcmp(event_module-&gt;name-&gt;data, event_core_name.data) == <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 使用数组里的第一个事件模块</span></span><br><span class="line">            <span class="keyword">module</span> = cycle-&gt;modules[i];</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 最后还没有决定默认的事件模型，出错</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">module</span> == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        ngx_log_error(NGX_LOG_EMERG, cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"no events module found"</span>);</span><br><span class="line">        <span class="keyword">return</span> NGX_CONF_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// nginx每个进程可使用的连接数量，即cycle里的连接池大小</span></span><br><span class="line">    ngx_conf_init_uint_value(ecf-&gt;connections, DEFAULT_CONNECTIONS);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果没有使用worker_connections指令，在这里设置</span></span><br><span class="line">    cycle-&gt;connection_n = ecf-&gt;connections;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 决定使用的事件模型,之前的module只作为默认值，如果已经使用了use则无效</span></span><br><span class="line">    ngx_conf_init_uint_value(ecf-&gt;use, <span class="keyword">module</span>-&gt;ctx_index);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化使用的事件模块的名字</span></span><br><span class="line">    event_module = <span class="keyword">module</span>-&gt;ctx;</span><br><span class="line">    ngx_conf_init_ptr_value(ecf-&gt;name, event_module-&gt;name-&gt;data);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 默认不接受多个请求，也就是一次只accept一个连接</span></span><br><span class="line">    ngx_conf_init_value(ecf-&gt;multi_accept, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1.11.3之前默认使用负载均衡锁，之后默认关闭</span></span><br><span class="line">    ngx_conf_init_value(ecf-&gt;accept_mutex, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 默认负载均衡锁的等待时间是500毫秒</span></span><br><span class="line">    ngx_conf_init_msec_value(ecf-&gt;accept_mutex_delay, <span class="number">500</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NGX_CONF_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br><span class="line">404</span><br><span class="line">405</span><br><span class="line">406</span><br><span class="line">407</span><br><span class="line">408</span><br><span class="line">409</span><br><span class="line">410</span><br><span class="line">411</span><br><span class="line">412</span><br><span class="line">413</span><br><span class="line">414</span><br><span class="line">415</span><br><span class="line">416</span><br><span class="line">417</span><br><span class="line">418</span><br><span class="line">419</span><br><span class="line">420</span><br><span class="line">421</span><br><span class="line">422</span><br><span class="line">423</span><br><span class="line">424</span><br><span class="line">425</span><br><span class="line">426</span><br><span class="line">427</span><br><span class="line">428</span><br><span class="line">429</span><br><span class="line">430</span><br><span class="line">431</span><br><span class="line">432</span><br><span class="line">433</span><br><span class="line">434</span><br><span class="line">435</span><br><span class="line">436</span><br><span class="line">437</span><br><span class="line">438</span><br><span class="line">439</span><br><span class="line">440</span><br><span class="line">441</span><br><span class="line">442</span><br><span class="line">443</span><br><span class="line">444</span><br><span class="line">445</span><br><span class="line">446</span><br><span class="line">447</span><br><span class="line">448</span><br><span class="line">449</span><br><span class="line">450</span><br><span class="line">451</span><br><span class="line">452</span><br><span class="line">453</span><br><span class="line">454</span><br><span class="line">455</span><br><span class="line">456</span><br><span class="line">457</span><br><span class="line">458</span><br><span class="line">459</span><br><span class="line">460</span><br><span class="line">461</span><br><span class="line">462</span><br><span class="line">463</span><br><span class="line">464</span><br><span class="line">465</span><br><span class="line">466</span><br><span class="line">467</span><br><span class="line">468</span><br><span class="line">469</span><br><span class="line">470</span><br><span class="line">471</span><br><span class="line">472</span><br><span class="line">473</span><br><span class="line">474</span><br><span class="line">475</span><br><span class="line">476</span><br><span class="line">477</span><br><span class="line">478</span><br><span class="line">479</span><br><span class="line">480</span><br><span class="line">481</span><br><span class="line">482</span><br><span class="line">483</span><br><span class="line">484</span><br><span class="line">485</span><br><span class="line">486</span><br><span class="line">487</span><br><span class="line">488</span><br><span class="line">489</span><br><span class="line">490</span><br><span class="line">491</span><br><span class="line">492</span><br><span class="line">493</span><br><span class="line">494</span><br><span class="line">495</span><br><span class="line">496</span><br><span class="line">497</span><br><span class="line">498</span><br><span class="line">499</span><br><span class="line">500</span><br><span class="line">501</span><br><span class="line">502</span><br><span class="line">503</span><br><span class="line">504</span><br><span class="line">505</span><br><span class="line">506</span><br><span class="line">507</span><br><span class="line">508</span><br><span class="line">509</span><br><span class="line">510</span><br><span class="line">511</span><br><span class="line">512</span><br><span class="line">513</span><br><span class="line">514</span><br><span class="line">515</span><br><span class="line">516</span><br><span class="line">517</span><br><span class="line">518</span><br><span class="line">519</span><br><span class="line">520</span><br><span class="line">521</span><br><span class="line">522</span><br><span class="line">523</span><br><span class="line">524</span><br><span class="line">525</span><br><span class="line">526</span><br><span class="line">527</span><br><span class="line">528</span><br><span class="line">529</span><br><span class="line">530</span><br><span class="line">531</span><br><span class="line">532</span><br><span class="line">533</span><br><span class="line">534</span><br><span class="line">535</span><br><span class="line">536</span><br><span class="line">537</span><br><span class="line">538</span><br><span class="line">539</span><br><span class="line">540</span><br><span class="line">541</span><br><span class="line">542</span><br><span class="line">543</span><br><span class="line">544</span><br><span class="line">545</span><br><span class="line">546</span><br><span class="line">547</span><br><span class="line">548</span><br><span class="line">549</span><br><span class="line">550</span><br><span class="line">551</span><br><span class="line">552</span><br><span class="line">553</span><br><span class="line">554</span><br><span class="line">555</span><br><span class="line">556</span><br><span class="line">557</span><br><span class="line">558</span><br><span class="line">559</span><br><span class="line">560</span><br><span class="line">561</span><br><span class="line">562</span><br><span class="line">563</span><br><span class="line">564</span><br><span class="line">565</span><br><span class="line">566</span><br><span class="line">567</span><br><span class="line">568</span><br><span class="line">569</span><br><span class="line">570</span><br><span class="line">571</span><br><span class="line">572</span><br><span class="line">573</span><br><span class="line">574</span><br><span class="line">575</span><br><span class="line">576</span><br><span class="line">577</span><br><span class="line">578</span><br><span class="line">579</span><br><span class="line">580</span><br><span class="line">581</span><br><span class="line">582</span><br><span class="line">583</span><br><span class="line">584</span><br><span class="line">585</span><br><span class="line">586</span><br><span class="line">587</span><br><span class="line">588</span><br><span class="line">589</span><br><span class="line">590</span><br><span class="line">591</span><br><span class="line">592</span><br><span class="line">593</span><br><span class="line">594</span><br><span class="line">595</span><br><span class="line">596</span><br><span class="line">597</span><br><span class="line">598</span><br><span class="line">599</span><br><span class="line">600</span><br><span class="line">601</span><br><span class="line">602</span><br><span class="line">603</span><br><span class="line">604</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ngx_module_t</span>  ngx_event_core_module = &#123;</span><br><span class="line">    NGX_MODULE_V1,</span><br><span class="line">    &amp;ngx_event_core_module_ctx,            <span class="comment">/* module context */</span></span><br><span class="line">    ngx_event_core_commands,               <span class="comment">/* module directives */</span></span><br><span class="line">    NGX_EVENT_MODULE,                      <span class="comment">/* module type */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* init master */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在ngx_init_cycle里调用，fork子进程之前</span></span><br><span class="line">    <span class="comment">// 创建共享内存，存放负载均衡锁和统计用的原子变量</span></span><br><span class="line">    ngx_event_module_init,                 <span class="comment">/* init module */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化cycle里的连接和事件数组</span></span><br><span class="line">    <span class="comment">// fork之后，worker进程初始化时调用，即每个worker里都会执行</span></span><br><span class="line">    <span class="comment">// 初始化两个延后处理的事件队列,初始化定时器红黑树</span></span><br><span class="line">    <span class="comment">// 发送定时信号，更新时间用</span></span><br><span class="line">    <span class="comment">// 初始化cycle里的连接和事件数组</span></span><br><span class="line">    <span class="comment">// 设置接受连接的回调函数为ngx_event_accept，可以接受连接</span></span><br><span class="line">    ngx_event_process_init,                <span class="comment">/* init process */</span></span><br><span class="line"></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* init thread */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* exit thread */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* exit process */</span></span><br><span class="line">    <span class="literal">NULL</span>,                                  <span class="comment">/* exit master */</span></span><br><span class="line">    NGX_MODULE_V1_PADDING</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在ngx_init_cycle里调用，fork子进程之前</span></span><br><span class="line"><span class="comment">// 创建共享内存，存放负载均衡锁和统计用的原子变量</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">ngx_int_t</span></span><br><span class="line">ngx_event_module_init(<span class="keyword">ngx_cycle_t</span> *cycle)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">void</span>              ***cf;</span><br><span class="line">    u_char              *shared;</span><br><span class="line">    <span class="keyword">size_t</span>               size, cl;</span><br><span class="line">    <span class="keyword">ngx_shm_t</span>            shm;</span><br><span class="line">    <span class="keyword">ngx_time_t</span>          *tp;</span><br><span class="line">    <span class="keyword">ngx_core_conf_t</span>     *ccf;</span><br><span class="line">    <span class="keyword">ngx_event_conf_t</span>    *ecf;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// events模块的配置结构体</span></span><br><span class="line">    <span class="comment">// 实际上是一个存储void*指针的数组</span></span><br><span class="line">    cf = ngx_get_conf(cycle-&gt;conf_ctx, ngx_events_module);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// event_core模块的配置结构体</span></span><br><span class="line">    <span class="comment">// 从数组cf里按序号查找</span></span><br><span class="line">    ecf = (*cf)[ngx_event_core_module.ctx_index];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 上面的两行代码相当于:</span></span><br><span class="line">    <span class="comment">// ngx_event_get_conf(cycle-&gt;conf_ctx, ngx_event_core_module)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!ngx_test_config &amp;&amp; ngx_process &lt;= NGX_PROCESS_MASTER) &#123;</span><br><span class="line">        ngx_log_error(NGX_LOG_NOTICE, cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>,</span><br><span class="line">                      <span class="string">"using the \"%s\" event method"</span>, ecf-&gt;name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// core模块的配置结构体</span></span><br><span class="line">    ccf = (<span class="keyword">ngx_core_conf_t</span> *) ngx_get_conf(cycle-&gt;conf_ctx, ngx_core_module);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取核心配置的时间精度，用在epoll里更新缓存时间</span></span><br><span class="line">    ngx_timer_resolution = ccf-&gt;timer_resolution;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// unix专用代码, 可打开的最多文件描述符</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> !(NGX_WIN32)</span></span><br><span class="line">    &#123;</span><br><span class="line">    <span class="keyword">ngx_int_t</span>      limit;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rlimit</span>  <span class="title">rlmt</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 系统调用getrlimit，Linux内核对进程的限制</span></span><br><span class="line">    <span class="comment">// RLIMIT_NOFILE,进程可打开的最大文件描述符数量，超出将产生EMFILE错误</span></span><br><span class="line">    <span class="keyword">if</span> (getrlimit(RLIMIT_NOFILE, &amp;rlmt) == <span class="number">-1</span>) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 系统调用失败则记录alert级别日志</span></span><br><span class="line">        ngx_log_error(NGX_LOG_ALERT, cycle-&gt;<span class="built_in">log</span>, ngx_errno,</span><br><span class="line">                      <span class="string">"getrlimit(RLIMIT_NOFILE) failed, ignored"</span>);</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 成功获取内核参数</span></span><br><span class="line">        <span class="comment">//</span></span><br><span class="line">        <span class="comment">// rlmt.rlim_cur是系统的软限制</span></span><br><span class="line">        <span class="comment">// event里配置的连接数不能超过系统内核限制</span></span><br><span class="line">        <span class="comment">// 或者是配置的rlimit_nofile限制</span></span><br><span class="line">        <span class="keyword">if</span> (ecf-&gt;connections &gt; (<span class="keyword">ngx_uint_t</span>) rlmt.rlim_cur</span><br><span class="line">            &amp;&amp; (ccf-&gt;rlimit_nofile == NGX_CONF_UNSET</span><br><span class="line">                || ecf-&gt;connections &gt; (<span class="keyword">ngx_uint_t</span>) ccf-&gt;rlimit_nofile))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// 如果超过了报警告级别日志</span></span><br><span class="line">            <span class="comment">// limit就是上限</span></span><br><span class="line">            limit = (ccf-&gt;rlimit_nofile == NGX_CONF_UNSET) ?</span><br><span class="line">                         (<span class="keyword">ngx_int_t</span>) rlmt.rlim_cur : ccf-&gt;rlimit_nofile;</span><br><span class="line"></span><br><span class="line">            ngx_log_error(NGX_LOG_WARN, cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>,</span><br><span class="line">                          <span class="string">"%ui worker_connections exceed "</span></span><br><span class="line">                          <span class="string">"open file resource limit: %i"</span>,</span><br><span class="line">                          ecf-&gt;connections, limit);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* !(NGX_WIN32) */</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果非master/worker进程，即只启动一个进程，那么就没必要使用负载均衡锁</span></span><br><span class="line">    <span class="keyword">if</span> (ccf-&gt;master == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_OK;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 已经有了负载均衡锁，已经初始化过了，就没必要再做操作</span></span><br><span class="line">    <span class="keyword">if</span> (ngx_accept_mutex_ptr) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_OK;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* cl should be equal to or greater than cache line size */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// cl是一个基本长度，可以容纳原子变量</span></span><br><span class="line">    <span class="comment">// 对齐到cache line，操作更快</span></span><br><span class="line">    cl = <span class="number">128</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 最基本的三个：负载均衡锁，连接计数器,</span></span><br><span class="line">    size = cl            <span class="comment">/* ngx_accept_mutex */</span></span><br><span class="line">           + cl          <span class="comment">/* ngx_connection_counter */</span></span><br><span class="line">           + cl;         <span class="comment">/* ngx_temp_number */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 其他统计用的原子变量</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_STAT_STUB)</span></span><br><span class="line"></span><br><span class="line">    size += cl           <span class="comment">/* ngx_stat_accepted */</span></span><br><span class="line">           + cl          <span class="comment">/* ngx_stat_handled */</span></span><br><span class="line">           + cl          <span class="comment">/* ngx_stat_requests */</span></span><br><span class="line">           + cl          <span class="comment">/* ngx_stat_active */</span></span><br><span class="line">           + cl          <span class="comment">/* ngx_stat_reading */</span></span><br><span class="line">           + cl          <span class="comment">/* ngx_stat_writing */</span></span><br><span class="line">           + cl;         <span class="comment">/* ngx_stat_waiting */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建共享内存，存放负载均衡锁和统计用的原子变量</span></span><br><span class="line">    <span class="comment">// 因为内存很小，而且仅用做统计，比较简单</span></span><br><span class="line">    <span class="comment">// 所以不用slab管理</span></span><br><span class="line">    shm.size = size;</span><br><span class="line">    ngx_str_set(&amp;shm.name, <span class="string">"nginx_shared_zone"</span>);</span><br><span class="line">    shm.<span class="built_in">log</span> = cycle-&gt;<span class="built_in">log</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 分配一块共享内存</span></span><br><span class="line">    <span class="keyword">if</span> (ngx_shm_alloc(&amp;shm) != NGX_OK) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// shared是共享内存的地址指针</span></span><br><span class="line">    shared = shm.addr;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 第一个就是负载均衡锁</span></span><br><span class="line">    ngx_accept_mutex_ptr = (<span class="keyword">ngx_atomic_t</span> *) shared;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// spin是-1则不使用信号量</span></span><br><span class="line">    <span class="comment">// 只会自旋，不会导致进程睡眠等待</span></span><br><span class="line">    <span class="comment">// 这样避免抢accept锁时的性能降低</span></span><br><span class="line">    ngx_accept_mutex.spin = (<span class="keyword">ngx_uint_t</span>) <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化互斥锁</span></span><br><span class="line">    <span class="comment">// spin是-1则不使用信号量</span></span><br><span class="line">    <span class="comment">// 只会自旋，不会导致进程睡眠等待</span></span><br><span class="line">    <span class="keyword">if</span> (ngx_shmtx_create(&amp;ngx_accept_mutex, (<span class="keyword">ngx_shmtx_sh_t</span> *) shared,</span><br><span class="line">                         cycle-&gt;lock_file.data)</span><br><span class="line">        != NGX_OK)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 连接计数器</span></span><br><span class="line">    ngx_connection_counter = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">1</span> * cl);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 计数器置1</span></span><br><span class="line">    (<span class="keyword">void</span>) ngx_atomic_cmp_set(ngx_connection_counter, <span class="number">0</span>, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>,</span><br><span class="line">                   <span class="string">"counter: %p, %uA"</span>,</span><br><span class="line">                   ngx_connection_counter, *ngx_connection_counter);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 临时文件用</span></span><br><span class="line">    ngx_temp_number = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">2</span> * cl);</span><br><span class="line"></span><br><span class="line">    tp = ngx_timeofday();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 随机数</span></span><br><span class="line">    <span class="comment">// 每个进程不同</span></span><br><span class="line">    ngx_random_number = (tp-&gt;msec &lt;&lt; <span class="number">16</span>) + ngx_pid;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_STAT_STUB)</span></span><br><span class="line"></span><br><span class="line">    ngx_stat_accepted = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">3</span> * cl);</span><br><span class="line">    ngx_stat_handled = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">4</span> * cl);</span><br><span class="line">    ngx_stat_requests = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">5</span> * cl);</span><br><span class="line">    ngx_stat_active = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">6</span> * cl);</span><br><span class="line">    ngx_stat_reading = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">7</span> * cl);</span><br><span class="line">    ngx_stat_writing = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">8</span> * cl);</span><br><span class="line">    ngx_stat_waiting = (<span class="keyword">ngx_atomic_t</span> *) (shared + <span class="number">9</span> * cl);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NGX_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> !(NGX_WIN32)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// sigalarm信号的处理函数，只设置ngx_event_timer_alarm变量</span></span><br><span class="line"><span class="comment">// 在epoll的ngx_epoll_process_events里检查，更新时间的标志</span></span><br><span class="line"><span class="comment">// 信号处理函数应该尽量简单，避免阻塞进程</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">ngx_timer_signal_handler(<span class="keyword">int</span> signo)</span><br><span class="line">&#123;</span><br><span class="line">    ngx_event_timer_alarm = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> 1</span></span><br><span class="line">    ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ngx_cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>, <span class="string">"timer signal"</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// fork之后，worker进程初始化时调用，即每个worker里都会执行</span></span><br><span class="line"><span class="comment">// 初始化两个延后处理的事件队列,初始化定时器红黑树</span></span><br><span class="line"><span class="comment">// 发送定时信号，更新时间用</span></span><br><span class="line"><span class="comment">// 初始化cycle里的连接和事件数组</span></span><br><span class="line"><span class="comment">// 设置接受连接的回调函数为ngx_event_accept，可以接受连接</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">ngx_int_t</span></span><br><span class="line">ngx_event_process_init(<span class="keyword">ngx_cycle_t</span> *cycle)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">ngx_uint_t</span>           m, i;</span><br><span class="line">    <span class="keyword">ngx_event_t</span>         *rev, *wev;</span><br><span class="line">    <span class="keyword">ngx_listening_t</span>     *ls;</span><br><span class="line">    <span class="keyword">ngx_connection_t</span>    *c, *next, *old;</span><br><span class="line">    <span class="keyword">ngx_core_conf_t</span>     *ccf;</span><br><span class="line">    <span class="keyword">ngx_event_conf_t</span>    *ecf;</span><br><span class="line">    <span class="keyword">ngx_event_module_t</span>  *<span class="keyword">module</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// core模块的配置结构体</span></span><br><span class="line">    ccf = (<span class="keyword">ngx_core_conf_t</span> *) ngx_get_conf(cycle-&gt;conf_ctx, ngx_core_module);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// event_core模块的配置结构体</span></span><br><span class="line">    ecf = ngx_event_get_conf(cycle-&gt;conf_ctx, ngx_event_core_module);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用master/worker多进程，使用负载均衡</span></span><br><span class="line">    <span class="keyword">if</span> (ccf-&gt;master &amp;&amp; ccf-&gt;worker_processes &gt; <span class="number">1</span> &amp;&amp; ecf-&gt;accept_mutex) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置全局变量</span></span><br><span class="line">        <span class="comment">// 使用负载均衡，刚开始未持有锁，设置抢锁的等待时间</span></span><br><span class="line">        ngx_use_accept_mutex = <span class="number">1</span>;</span><br><span class="line">        ngx_accept_mutex_held = <span class="number">0</span>;</span><br><span class="line">        ngx_accept_mutex_delay = ecf-&gt;accept_mutex_delay;</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 单进程、未明确指定负载均衡，就不使用负载均衡</span></span><br><span class="line">        ngx_use_accept_mutex = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_WIN32)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * disable accept mutex on win32 as it may cause deadlock if</span></span><br><span class="line"><span class="comment">     * grabbed by a process which can't accept connections</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    ngx_use_accept_mutex = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化两个延后处理的事件队列</span></span><br><span class="line">    ngx_queue_init(&amp;ngx_posted_accept_events);</span><br><span class="line">    ngx_queue_init(&amp;ngx_posted_next_events);</span><br><span class="line">    ngx_queue_init(&amp;ngx_posted_events);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化定时器红黑树</span></span><br><span class="line">    <span class="keyword">if</span> (ngx_event_timer_init(cycle-&gt;<span class="built_in">log</span>) == NGX_ERROR) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 遍历事件模块，但只执行实际使用的事件模块对应初始化函数</span></span><br><span class="line">    <span class="keyword">for</span> (m = <span class="number">0</span>; cycle-&gt;modules[m]; m++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (cycle-&gt;modules[m]-&gt;type != NGX_EVENT_MODULE) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 找到use指令使用的事件模型，或者是默认事件模型</span></span><br><span class="line">        <span class="keyword">if</span> (cycle-&gt;modules[m]-&gt;ctx_index != ecf-&gt;use) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 找到事件模块</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">module</span> = cycle-&gt;modules[m]-&gt;ctx;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 调用事件模块的事件初始化函数</span></span><br><span class="line">        <span class="comment">//</span></span><br><span class="line">        <span class="comment">// 调用epoll_create初始化epoll机制</span></span><br><span class="line">        <span class="comment">// 参数size=cycle-&gt;connection_n / 2，但并无实际意义</span></span><br><span class="line">        <span class="comment">// 设置全局变量，操作系统提供的底层数据收发接口</span></span><br><span class="line">        <span class="comment">// 初始化全局的事件模块访问接口，指向epoll的函数</span></span><br><span class="line">        <span class="comment">// 默认使用et模式，边缘触发，高速</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">module</span>-&gt;actions.init(cycle, ngx_timer_resolution) != NGX_OK) &#123;</span><br><span class="line">            <span class="comment">/* fatal */</span></span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">2</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 找到一个事件模块即退出循环</span></span><br><span class="line">        <span class="comment">// 也就是说只能使用一种事件模型</span></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// unix代码, 发送定时信号，更新时间用</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> !(NGX_WIN32)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// NGX_USE_TIMER_EVENT标志量只有eventport/kqueue,epoll无此标志位</span></span><br><span class="line">    <span class="comment">// ngx_timer_resolution = ccf-&gt;timer_resolution;默认值是0</span></span><br><span class="line">    <span class="comment">// 所以只有使用了timer_resolution指令才会发信号</span></span><br><span class="line">    <span class="keyword">if</span> (ngx_timer_resolution &amp;&amp; !(ngx_event_flags &amp; NGX_USE_TIMER_EVENT)) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span>  <span class="title">sa</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">itimerval</span>  <span class="title">itv</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置信号掩码，sigalarm</span></span><br><span class="line">        ngx_memzero(&amp;sa, <span class="keyword">sizeof</span>(struct sigaction));</span><br><span class="line">        sa.sa_handler = ngx_timer_signal_handler;</span><br><span class="line">        sigemptyset(&amp;sa.sa_mask);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (sigaction(SIGALRM, &amp;sa, <span class="literal">NULL</span>) == <span class="number">-1</span>) &#123;</span><br><span class="line">            ngx_log_error(NGX_LOG_ALERT, cycle-&gt;<span class="built_in">log</span>, ngx_errno,</span><br><span class="line">                          <span class="string">"sigaction(SIGALRM) failed"</span>);</span><br><span class="line">            <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置信号发送的时间间隔，也就是nginx的时间精度</span></span><br><span class="line">        <span class="comment">// 收到信号会设置设置ngx_event_timer_alarm变量</span></span><br><span class="line">        <span class="comment">// 在epoll的ngx_epoll_process_events里检查，更新时间的标志</span></span><br><span class="line">        itv.it_interval.tv_sec = ngx_timer_resolution / <span class="number">1000</span>;</span><br><span class="line">        itv.it_interval.tv_usec = (ngx_timer_resolution % <span class="number">1000</span>) * <span class="number">1000</span>;</span><br><span class="line">        itv.it_value.tv_sec = ngx_timer_resolution / <span class="number">1000</span>;</span><br><span class="line">        itv.it_value.tv_usec = (ngx_timer_resolution % <span class="number">1000</span> ) * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (setitimer(ITIMER_REAL, &amp;itv, <span class="literal">NULL</span>) == <span class="number">-1</span>) &#123;</span><br><span class="line">            ngx_log_error(NGX_LOG_ALERT, cycle-&gt;<span class="built_in">log</span>, ngx_errno,</span><br><span class="line">                          <span class="string">"setitimer() failed"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// poll, /dev/poll进入这个分支处理</span></span><br><span class="line">    <span class="keyword">if</span> (ngx_event_flags &amp; NGX_USE_FD_EVENT) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rlimit</span>  <span class="title">rlmt</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (getrlimit(RLIMIT_NOFILE, &amp;rlmt) == <span class="number">-1</span>) &#123;</span><br><span class="line">            ngx_log_error(NGX_LOG_ALERT, cycle-&gt;<span class="built_in">log</span>, ngx_errno,</span><br><span class="line">                          <span class="string">"getrlimit(RLIMIT_NOFILE) failed"</span>);</span><br><span class="line">            <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        cycle-&gt;files_n = (<span class="keyword">ngx_uint_t</span>) rlmt.rlim_cur;</span><br><span class="line"></span><br><span class="line">        cycle-&gt;files = ngx_calloc(<span class="keyword">sizeof</span>(<span class="keyword">ngx_connection_t</span> *) * cycle-&gt;files_n,</span><br><span class="line">                                  cycle-&gt;<span class="built_in">log</span>);</span><br><span class="line">        <span class="keyword">if</span> (cycle-&gt;files == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ngx_timer_resolution &amp;&amp; !(ngx_event_flags &amp; NGX_USE_TIMER_EVENT)) &#123;</span><br><span class="line">        ngx_log_error(NGX_LOG_WARN, cycle-&gt;<span class="built_in">log</span>, <span class="number">0</span>,</span><br><span class="line">                      <span class="string">"the \"timer_resolution\" directive is not supported "</span></span><br><span class="line">                      <span class="string">"with the configured event method, ignored"</span>);</span><br><span class="line">        ngx_timer_resolution = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建连接池数组，大小是cycle-&gt;connection_n</span></span><br><span class="line">    <span class="comment">// 直接使用malloc分配内存，没有使用内存池</span></span><br><span class="line">    cycle-&gt;connections =</span><br><span class="line">        ngx_alloc(<span class="keyword">sizeof</span>(<span class="keyword">ngx_connection_t</span>) * cycle-&gt;connection_n, cycle-&gt;<span class="built_in">log</span>);</span><br><span class="line">    <span class="keyword">if</span> (cycle-&gt;connections == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c = cycle-&gt;connections;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建读事件池数组，大小是cycle-&gt;connection_n</span></span><br><span class="line">    cycle-&gt;read_events = ngx_alloc(<span class="keyword">sizeof</span>(<span class="keyword">ngx_event_t</span>) * cycle-&gt;connection_n,</span><br><span class="line">                                   cycle-&gt;<span class="built_in">log</span>);</span><br><span class="line">    <span class="keyword">if</span> (cycle-&gt;read_events == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 读事件对象初始化</span></span><br><span class="line">    rev = cycle-&gt;read_events;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; cycle-&gt;connection_n; i++) &#123;</span><br><span class="line">        rev[i].closed = <span class="number">1</span>;</span><br><span class="line">        rev[i].instance = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建写事件池数组，大小是cycle-&gt;connection_n</span></span><br><span class="line">    cycle-&gt;write_events = ngx_alloc(<span class="keyword">sizeof</span>(<span class="keyword">ngx_event_t</span>) * cycle-&gt;connection_n,</span><br><span class="line">                                    cycle-&gt;<span class="built_in">log</span>);</span><br><span class="line">    <span class="keyword">if</span> (cycle-&gt;write_events == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 写事件对象初始化</span></span><br><span class="line">    wev = cycle-&gt;write_events;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; cycle-&gt;connection_n; i++) &#123;</span><br><span class="line">        wev[i].closed = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// i是数组的末尾</span></span><br><span class="line">    i = cycle-&gt;connection_n;</span><br><span class="line">    next = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 把连接对象与读写事件关联起来</span></span><br><span class="line">    <span class="comment">// 注意i是数组的末尾，从最后遍历</span></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        i--;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 使用data成员，把连接对象串成链表</span></span><br><span class="line">        c[i].data = next;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 读写事件</span></span><br><span class="line">        c[i].read = &amp;cycle-&gt;read_events[i];</span><br><span class="line">        c[i].write = &amp;cycle-&gt;write_events[i];</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 连接的描述符是-1，表示无效</span></span><br><span class="line">        c[i].fd = (<span class="keyword">ngx_socket_t</span>) <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// next指针指向数组的前一个元素</span></span><br><span class="line">        next = &amp;c[i];</span><br><span class="line">    &#125; <span class="keyword">while</span> (i);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 连接对象已经串成链表，现在设置空闲链表指针</span></span><br><span class="line">    <span class="comment">// 此时next指向连接对象数组的第一个元素</span></span><br><span class="line">    cycle-&gt;free_connections = next;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 连接没有使用，全是空闲连接</span></span><br><span class="line">    cycle-&gt;free_connection_n = cycle-&gt;connection_n;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* for each listening socket */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为每个监听端口分配一个连接对象</span></span><br><span class="line">    ls = cycle-&gt;listening.elts;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; cycle-&gt;listening.nelts; i++) &#123;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_REUSEPORT)</span></span><br><span class="line">        <span class="comment">// 注意这里</span></span><br><span class="line">        <span class="comment">// 只有worker id是本worker的listen才会enable</span></span><br><span class="line">        <span class="comment">// 也就是说虽然克隆了多个listening，但只有一个会enable</span></span><br><span class="line">        <span class="comment">// 即reuseport的端口只会在某个worker进程监听</span></span><br><span class="line">        <span class="keyword">if</span> (ls[i].reuseport &amp;&amp; ls[i].worker != ngx_worker) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取一个空闲连接</span></span><br><span class="line">        c = ngx_get_connection(ls[i].fd, cycle-&gt;<span class="built_in">log</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (c == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        c-&gt;type = ls[i].type;</span><br><span class="line">        c-&gt;<span class="built_in">log</span> = &amp;ls[i].<span class="built_in">log</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 连接的listening对象</span></span><br><span class="line">        <span class="comment">// 两者相互连接</span></span><br><span class="line">        c-&gt;listening = &amp;ls[i];</span><br><span class="line">        ls[i].connection = c;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 监听端口只关心读事件</span></span><br><span class="line">        rev = c-&gt;read;</span><br><span class="line"></span><br><span class="line">        rev-&gt;<span class="built_in">log</span> = c-&gt;<span class="built_in">log</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置accept标志，接受连接</span></span><br><span class="line">        rev-&gt;accept = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_DEFERRED_ACCEPT)</span></span><br><span class="line">        rev-&gt;deferred_accept = ls[i].deferred_accept;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!(ngx_event_flags &amp; NGX_USE_IOCP_EVENT)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (ls[i].previous) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * delete the old accept events that were bound to</span></span><br><span class="line"><span class="comment">                 * the old cycle read events array</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line"></span><br><span class="line">                old = ls[i].previous-&gt;connection;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (ngx_del_event(old-&gt;read, NGX_READ_EVENT, NGX_CLOSE_EVENT)</span><br><span class="line">                    == NGX_ERROR)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                old-&gt;fd = (<span class="keyword">ngx_socket_t</span>) <span class="number">-1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_WIN32)</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ngx_event_flags &amp; NGX_USE_IOCP_EVENT) &#123;</span><br><span class="line">            <span class="keyword">ngx_iocp_conf_t</span>  *iocpcf;</span><br><span class="line"></span><br><span class="line">            rev-&gt;handler = ngx_event_acceptex;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (ngx_use_accept_mutex) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (ngx_add_event(rev, <span class="number">0</span>, NGX_IOCP_ACCEPT) == NGX_ERROR) &#123;</span><br><span class="line">                <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            ls[i].<span class="built_in">log</span>.handler = ngx_acceptex_log_error;</span><br><span class="line"></span><br><span class="line">            iocpcf = ngx_event_get_conf(cycle-&gt;conf_ctx, ngx_iocp_module);</span><br><span class="line">            <span class="keyword">if</span> (ngx_event_post_acceptex(&amp;ls[i], iocpcf-&gt;post_acceptex)</span><br><span class="line">                == NGX_ERROR)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            rev-&gt;handler = ngx_event_accept;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (ngx_use_accept_mutex) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (ngx_add_event(rev, NGX_READ_EVENT, <span class="number">0</span>) == NGX_ERROR) &#123;</span><br><span class="line">                <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 重要！！</span></span><br><span class="line">        <span class="comment">// 设置接受连接的回调函数为ngx_event_accept</span></span><br><span class="line">        <span class="comment">// 监听端口上收到连接请求时的回调函数，即事件handler</span></span><br><span class="line">        <span class="comment">// 从cycle的连接池里获取连接</span></span><br><span class="line">        <span class="comment">// 关键操作 ls-&gt;handler(c);调用其他模块的业务handler</span></span><br><span class="line">        <span class="comment">// 1.10使用ngx_event_recvmsg接收udp</span></span><br><span class="line">        rev-&gt;handler = (c-&gt;type == SOCK_STREAM) ? ngx_event_accept</span><br><span class="line">                                                : ngx_event_recvmsg;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_REUSEPORT)</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// reuseport无视负载均衡，直接开始监听</span></span><br><span class="line">        <span class="keyword">if</span> (ls[i].reuseport) &#123;</span><br><span class="line">            <span class="keyword">if</span> (ngx_add_event(rev, NGX_READ_EVENT, <span class="number">0</span>) == NGX_ERROR) &#123;</span><br><span class="line">                <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果使用负载均衡，不向epoll添加事件，只有抢到锁才添加</span></span><br><span class="line">        <span class="keyword">if</span> (ngx_use_accept_mutex) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (NGX_HAVE_EPOLLEXCLUSIVE)</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((ngx_event_flags &amp; NGX_USE_EPOLL_EVENT)</span><br><span class="line">            &amp;&amp; ccf-&gt;worker_processes &gt; <span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// nginx 1.9.x不再使用rtsig</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// 单进程、未明确指定负载均衡，不使用负载均衡</span></span><br><span class="line">            <span class="comment">// 直接加入epoll事件，开始监听，可以接受请求</span></span><br><span class="line">            <span class="comment">// 如果支持EPOLLEXCLUSIVE，使用特殊的标志位</span></span><br><span class="line">            <span class="keyword">if</span> (ngx_add_event(rev, NGX_READ_EVENT, NGX_EXCLUSIVE_EVENT)</span><br><span class="line">                == NGX_ERROR)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 跳过下面的普通add event</span></span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 单进程、未明确指定负载均衡，不使用负载均衡</span></span><br><span class="line">        <span class="comment">// 直接加入epoll事件，开始监听，可以接受请求</span></span><br><span class="line">        <span class="keyword">if</span> (ngx_add_event(rev, NGX_READ_EVENT, <span class="number">0</span>) == NGX_ERROR) &#123;</span><br><span class="line">            <span class="keyword">return</span> NGX_ERROR;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    &#125; <span class="comment">// 为每个监听端口分配一个连接对象循环结束</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NGX_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h4><h5 id="worker-connections"><a href="#worker-connections" class="headerlink" title="worker_connections"></a>worker_connections</h5><p>单个进程所能创建的最大连接数, 注意不只是代理的连接, 是进程上用到的所有连接</p>
+<h5 id="use"><a href="#use" class="headerlink" title="use"></a>use</h5><p>用哪个事件响应机制</p>
+<h5 id="multi-accept"><a href="#multi-accept" class="headerlink" title="multi_accept"></a>multi_accept</h5><p>决定了一次accept能接收多少个请求, off一次接1个, on一次能接多少接多少</p>
+<h5 id="accept-mutex"><a href="#accept-mutex" class="headerlink" title="accept_mutex"></a>accept_mutex</h5><p>负载均衡锁</p>
+<h5 id="accept-mutex-delay"><a href="#accept-mutex-delay" class="headerlink" title="accept_mutex_delay"></a>accept_mutex_delay</h5><p>负载均衡锁上等待最多多少时间</p>
+<h5 id="debug-connection"><a href="#debug-connection" class="headerlink" title="debug_connection"></a>debug_connection</h5><blockquote>
+<p>debug_connection address | CIDR | unix:;<br>对某些client打印debug日志</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/05/01/linux/lua/effectivelua/" rel="next" title="effectivelua">
+                <i class="fa fa-chevron-left"></i> effectivelua
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/06/15/architecture/auth2/" rel="prev" title="OAuth2&&oidc">
+                OAuth2&&oidc <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">79</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#配置解析"><span class="nav-number">1.</span> <span class="nav-text">配置解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ngx-events-module"><span class="nav-number">1.1.</span> <span class="nav-text">ngx_events_module</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#命令"><span class="nav-number">1.1.1.</span> <span class="nav-text">命令</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#events"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">events</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ngx-event-core-module-t"><span class="nav-number">1.2.</span> <span class="nav-text">ngx_event_core_module_t</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#指令"><span class="nav-number">1.2.1.</span> <span class="nav-text">指令</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#worker-connections"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">worker_connections</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#use"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">use</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#multi-accept"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">multi_accept</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#accept-mutex"><span class="nav-number">1.2.1.4.</span> <span class="nav-text">accept_mutex</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#accept-mutex-delay"><span class="nav-number">1.2.1.5.</span> <span class="nav-text">accept_mutex_delay</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#debug-connection"><span class="nav-number">1.2.1.6.</span> <span class="nav-text">debug_connection</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
