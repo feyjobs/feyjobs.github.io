@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="docker网络通信方式是理解kubernetes网络原理的基础, 所以本系列文章主要分成两块  docker本地网络通信原理 跨node网络通信原理  docker本机容器通信基本原理介绍在介绍docker本地网络通信之前, 首先需要介绍一个虚拟设备veth-pair顾名思义, veth-pair就是一个成对出现的虚拟设备， 他们一端连接着网络协议栈, 另一端连接这彼此, 大概就是这个意思 直连">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker network">
+<meta property="og:url" content="https://feyjobs.github.io/2021/04/13/linux/cloud/k8s/network/docker/index.html">
+<meta property="og:site_name" content="清风">
+<meta property="og:description" content="docker网络通信方式是理解kubernetes网络原理的基础, 所以本系列文章主要分成两块  docker本地网络通信原理 跨node网络通信原理  docker本机容器通信基本原理介绍在介绍docker本地网络通信之前, 首先需要介绍一个虚拟设备veth-pair顾名思义, veth-pair就是一个成对出现的虚拟设备， 他们一端连接着网络协议栈, 另一端连接这彼此, 大概就是这个意思 直连">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/veth.png">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/vethpaircreate.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/vethipcreate.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/vethping.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/linuxbridge.png">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/dockerps.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/items.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/brctl.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/iplink.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/iplinkdocker.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/route.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/dockertcpdump.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/cap-curl.jpg">
+<meta property="og:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/dockerlocal.png">
+<meta property="og:updated_time" content="2021-04-15T12:05:14.571Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="docker network">
+<meta name="twitter:description" content="docker网络通信方式是理解kubernetes网络原理的基础, 所以本系列文章主要分成两块  docker本地网络通信原理 跨node网络通信原理  docker本机容器通信基本原理介绍在介绍docker本地网络通信之前, 首先需要介绍一个虚拟设备veth-pair顾名思义, veth-pair就是一个成对出现的虚拟设备， 他们一端连接着网络协议栈, 另一端连接这彼此, 大概就是这个意思 直连">
+<meta name="twitter:image" content="https://feyjobs.github.io/uploads/linux/k8s/docker/veth.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://feyjobs.github.io/2021/04/13/linux/cloud/k8s/network/docker/">
+
+
+
+
+
+  <title>docker network | 清风</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">清风</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">乱翻书</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-code">
+          <a href="/Coding" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-code-fork"></i> <br>
+            
+            code
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-game">
+          <a href="/game" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-gamepad"></i> <br>
+            
+            game
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-guitar">
+          <a href="/Guitar" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-music"></i> <br>
+            
+            guitar
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-read">
+          <a href="/Reading" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-book"></i> <br>
+            
+            read
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-thinking">
+          <a href="/Thinking" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-balance-scale"></i> <br>
+            
+            thinking
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://feyjobs.github.io/2021/04/13/linux/cloud/k8s/network/docker/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="feyjobs">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="清风">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">docker network</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-04-13T22:13:00+08:00">
+                2021-04-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>docker网络通信方式是理解kubernetes网络原理的基础, 所以本系列文章主要分成两块</p>
+<ul>
+<li>docker本地网络通信原理</li>
+<li>跨node网络通信原理</li>
+</ul>
+<h2 id="docker本机容器通信"><a href="#docker本机容器通信" class="headerlink" title="docker本机容器通信"></a>docker本机容器通信</h2><h3 id="基本原理介绍"><a href="#基本原理介绍" class="headerlink" title="基本原理介绍"></a>基本原理介绍</h3><p>在介绍docker本地网络通信之前, 首先需要介绍一个虚拟设备veth-pair<br>顾名思义, veth-pair就是一个成对出现的虚拟设备， 他们一端连接着网络协议栈, 另一端连接这彼此, 大概就是这个意思<br><img src="/uploads/linux/k8s/docker/veth.png" alt="dockerps"></p>
+<h4 id="直连"><a href="#直连" class="headerlink" title="直连"></a>直连</h4><p>测试一下<br>首先我们创建两个namespace<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip netns add ns1</span><br><span class="line">ip netns add ns2</span><br></pre></td></tr></table></figure></p>
+<p>创建一个veth-pair<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip link add veth0 type veth peer name veth1</span><br></pre></td></tr></table></figure></p>
+<p>通过以下命令可以查看新创建的veth-pair设备<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip a s</span><br></pre></td></tr></table></figure></p>
+<p><img src="/uploads/linux/k8s/docker/vethpaircreate.jpg" alt="dockerps"></p>
+<p>然后我们将两个设备移动到相应的namespace<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip link set veth0 netns ns1</span><br><span class="line">ip link set veth1 netns ns2</span><br></pre></td></tr></table></figure></p>
+<p>接下来给两个网络设备添加ip地址<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 ip addr add local 192.168.10.200/24 dev veth0</span><br><span class="line">ip netns exec ns2 ip addr add local 192.168.10.201/24 dev veth1</span><br></pre></td></tr></table></figure></p>
+<p><img src="/uploads/linux/k8s/docker/vethipcreate.jpg" alt="dockerps"></p>
+<p>然后我们启用这两个虚拟网络设备<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 ifconfig veth0 up</span><br><span class="line">ip netns exec ns2 ifconfig veth1 up</span><br></pre></td></tr></table></figure></p>
+<p>然后我们在ns1中ping对端ip<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 ping 192.168.10.201</span><br></pre></td></tr></table></figure></p>
+<p><img src="/uploads/linux/k8s/docker/vethping.jpg" alt="dockerps"><br>通过 无问题<br>好了现在我们大概理解了vethpair的作用, <em>可以跨过namespace进行网络通信</em></p>
+<h4 id="网桥"><a href="#网桥" class="headerlink" title="网桥"></a>网桥</h4><p>ok 现在我们通过veth直接连接方式完成了namespace之间的网络通信, 但是就像现实中网络不可能两个需要联网的人自己拉一根网线一样, 在虚拟设备的网络规划中<br>也需要一个交换机的角色, 来帮助管理大量互联的网络设备, 由此诞生了<em>网桥</em>设备, 网桥可以理解成一个虚拟的网络交换机<br><img src="/uploads/linux/k8s/docker/linuxbridge.png" alt="dockerps"></p>
+<p>我们测试下通过网桥打通不同namespace的网络通信<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip l a br0 type bridge</span><br><span class="line">ip l s br0 up</span><br></pre></td></tr></table></figure></p>
+<p>创建veth-pair设备<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip l a br-veth0 type veth peer name brvethotherend0</span><br><span class="line">ip l a br-veth1 type veth peer name brvethotherend1</span><br></pre></td></tr></table></figure></p>
+<p>将veth设备放到相应的namespace中<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip l s br-veth0 netns ns1</span><br></pre></td></tr></table></figure></p>
+<p>将veth设备另一段放到网桥上<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip l s brvethotherend0 master br0</span><br><span class="line">ip l s brvethotherend0 up</span><br></pre></td></tr></table></figure></p>
+<p>对br-veth1执行相同的操作</p>
+<p>为两个namespace下的设备绑定ip, 并且启用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 ip a a 192.168.11.200/24 dev br-veth0</span><br><span class="line">ip netns exec ns1 ip l s br-veth0 up</span><br></pre></td></tr></table></figure></p>
+<p>另一侧进行同样的操作</p>
+<p>最后我们在ns1中ping 192.168.11.201看能否成功<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip netns exec ns1 ping 192.168.11.201</span><br></pre></td></tr></table></figure></p>
+<h3 id="基本环境介绍"><a href="#基本环境介绍" class="headerlink" title="基本环境介绍"></a>基本环境介绍</h3><p>启动两个docker容器<br><img src="/uploads/linux/k8s/docker/dockerps.jpg" alt="dockerps"></p>
+<p>宿主机查看设备情况<br><img src="/uploads/linux/k8s/docker/items.jpg" alt="dockerps"><br>可以看到docker创建了一个id为docker0的网桥, 这个网桥设备会起到本节点docker容器间网络通信纽带的作用</p>
+<p>查看网桥详细信息<br><img src="/uploads/linux/k8s/docker/brctl.jpg" alt="brctl"><br>可以看到docker0网桥挂载了两个vethpair分别是, veth792b0d2 vethcc3a695</p>
+<p>现在有了一个问题, 我们创建了很多个vethpaire, 我们怎么知道哪个vethpair和哪个docker中的eth0设备关联在一起呢<br><img src="/uploads/linux/k8s/docker/iplink.jpg" alt="iplink"><br>可以看到在宿主机上的vethpair有一个link id<br><img src="/uploads/linux/k8s/docker/iplinkdocker.jpg" alt="iplink"><br>而在docker中的eth0设备也存在一个linkid</p>
+<p>查看宿主机的路由表<br><img src="/uploads/linux/k8s/docker/route.jpg" alt="route"><br>通过路由表我们可以看到172.17.0.0/16网段的请求都会被打向docker0网桥, 然后docker0设备会帮我们路由到相应的docker容器</p>
+<h3 id="docker通信测试"><a href="#docker通信测试" class="headerlink" title="docker通信测试"></a>docker通信测试</h3><p>现在我们创建了两个容器, 然后让他们进行本地容器间通信<br>我们在容器nginx-2中运行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl 172.17.0.2</span><br></pre></td></tr></table></figure></p>
+<p>然后在容器内监听eth0网卡的网络传输<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0 -w cap</span><br></pre></td></tr></table></figure></p>
+<p><img src="/uploads/linux/k8s/docker/dockertcpdump.jpg" alt="route"><br>现在我们可以看到在容器内发送一个http请求被转发到另一个容器的过程, 同时还意外捕获了arp数据包刷新ip对应mac地址的数据包</p>
+<p>之后我们在宿主机监听docker0网桥,同样可以捕获到相同的数据流<br><img src="/uploads/linux/k8s/docker/cap-curl.jpg" alt="route"></p>
+<p>由此我们验证了docker容器在单机环境下的网络通信数据流。<br><img src="/uploads/linux/k8s/docker/dockerlocal.png" alt="route"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>好饿好饿好饿 我真的好饿</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/uploads/wechat-reward-image.jpeg" alt="feyjobs 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/uploads/alipay-reward-imag.jpeg" alt="feyjobs 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/12/23/linux/golang/dep-manager/" rel="next" title="依赖管理">
+                <i class="fa fa-chevron-left"></i> 依赖管理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/04/14/tool/dev/" rel="prev" title="dev">
+                dev <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/head.jpg" alt="feyjobs">
+            
+              <p class="site-author-name" itemprop="name">feyjobs</p>
+              <p class="site-description motion-element" itemprop="description">自分に同情するな。自分に同情するのは下劣な人間のやることだ。</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">90</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/feyjobs" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:wherever230@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#docker本机容器通信"><span class="nav-number">1.</span> <span class="nav-text">docker本机容器通信</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本原理介绍"><span class="nav-number">1.1.</span> <span class="nav-text">基本原理介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#直连"><span class="nav-number">1.1.1.</span> <span class="nav-text">直连</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网桥"><span class="nav-number">1.1.2.</span> <span class="nav-text">网桥</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基本环境介绍"><span class="nav-number">1.2.</span> <span class="nav-text">基本环境介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker通信测试"><span class="nav-number">1.3.</span> <span class="nav-text">docker通信测试</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">feyjobs</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
